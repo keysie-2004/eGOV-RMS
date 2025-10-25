@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Request for Quotation</title>
+  <link href="/src/table.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png"/>
+</head>
+
+<body class="bg-blue-50 font-sans">
+  <!-- Include Sidebar -->
+  <%- include('partials/sidebar') %>
+
+  <!-- Main Content -->
+  <div class="lg:ml-64 p-7 lg:p-10">
+    <div class="w-full">
+      <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
+        <h2 class="text-2xl font-bold text-blue-700 mb-6">Request for Quotation</h2>
+
+        <!-- PR Info Card -->
+        <% if (purchaseRequest) { %>
+        <div class="mb-6 bg-blue-50 p-5 rounded-lg">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-gray-600 mb-2">Purchase Request No.</label>
+              <input type="text" class="w-full p-3 border rounded-lg bg-blue-50" value="<%= purchaseRequest.pr_id %>" readonly>
+            </div>
+            <div>
+              <label class="block text-gray-600 mb-2">Department</label>
+              <input type="text" class="w-full p-3 border rounded-lg bg-blue-50" value="<%= purchaseRequest.department %>" readonly>
+            </div>
+            <div>
+              <label class="block text-gray-600 mb-2">Project Description</label>
+              <input type="text" class="w-full p-3 border rounded-lg bg-blue-50" value="<%= purchaseRequest.purpose %>" readonly>
+            </div>
+            <div>
+              <label class="block text-gray-600 mb-2">Status</label>
+              <input type="text" class="w-full p-3 border rounded-lg bg-blue-50" value="Approved" readonly>
+            </div>
+          </div>
+        </div>
+        <% } %>
+
+        <!-- Supplier Forms -->
+        <div class="space-y-6">
+          <% ['Supplier 1', 'Supplier 2', 'Supplier 3'].forEach((supplier, index) => { 
+            const supplierIndex = index;
+            const borderColor = ['border-blue-500', 'border-green-500', 'border-purple-500'][index];
+            const bgColor = ['bg-blue-50', 'bg-green-50', 'bg-purple-50'][index];
+            const iconColor = ['text-blue-500', 'text-green-500', 'text-purple-500'][index];
+          %>
+          <div class="bg-white rounded-lg shadow-sm border-l-4 <%= borderColor %>">
+            <div class="p-5">
+              <h3 class="text-xl font-bold text-blue-700 flex items-center">
+                <i class="fas fa-building <%= iconColor %> mr-3"></i><%= supplier %>
+              </h3>
+            </div>
+            
+          <form id="supplier<%= supplierIndex + 1 %>Form" onsubmit="saveQuotes(event, 'supplier<%= supplierIndex + 1 %>')" class="p-5">
+            <input type="-hidden" name="pr_id" value="<%= purchaseRequest.pr_id %>">
+            <input type="hidden" name="supplier_name" value="<%= supplier %>">
+            <input type="hidden" name="total_items" value="<%= items.length %>">
+            <!-- Add requestor and BAC Secretariat details -->
+            <input type="hidden" name="requestor_name" value="<%= requestorAndBac.requestor_name || '' %>">
+            <input type="hidden" name="requestor_position" value="<%= requestorAndBac.requestor_position || '' %>">
+            <input type="hidden" name="bac_secretariat_name" value="<%= requestorAndBac.bac_secretariat_name || '' %>">
+            <input type="hidden" name="bac_secretariat_position" value="<%= requestorAndBac.bac_secretariat_position || '' %>">
+
+              <!-- Supplier Info -->
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div>
+                  <label class="block text-gray-600 mb-2"><i class="fas fa-building text-gray-400 mr-2"></i>Company Name</label>
+                  <input type="text" name="company_name" class="w-full p-3 border rounded-lg bg-blue-50" 
+                    value="<%= suppliers[supplierIndex]?.rfq?.company_name || '' %>" required>
+                </div>
+                <div>
+                  <label class="block text-gray-600 mb-2"><i class="far fa-calendar-alt text-gray-400 mr-2"></i>Date Sent</label>
+                  <input type="date" name="date_sent" class="w-full p-3 border rounded-lg bg-blue-50" 
+                    value="<%= suppliers[supplierIndex]?.rfq?.date_sent ? new Date(suppliers[supplierIndex].rfq.date_sent).toISOString().split('T')[0] : '' %>" required>
+                </div>
+                <div>
+                  <label class="block text-gray-600 mb-2"><i class="fas fa-hashtag text-gray-400 mr-2"></i>Quotation No.</label>
+                  <input type="text" name="quotation_number" class="w-full p-3 border rounded-lg bg-blue-50" 
+                    value="<%= suppliers[supplierIndex]?.rfq?.quotation_number || '' %>" required>
+                </div>
+                <div>
+                  <label class="block text-gray-600 mb-2"><i class="fas fa-signature text-gray-400 mr-2"></i>Printed Name</label>
+                  <input type="text" name="printed_name" class="w-full p-3 border rounded-lg bg-blue-50" 
+                    value="<%= suppliers[supplierIndex]?.rfq?.printed_name || '' %>" required>
+                </div>
+                <div>
+                  <label class="block text-gray-600 mb-2"><i class="fas fa-phone-alt text-gray-400 mr-2"></i>Contact</label>
+                  <input type="text" name="contact" class="w-full p-3 border rounded-lg bg-blue-50" 
+                    value="<%= suppliers[supplierIndex]?.rfq?.contact || '' %>" required>
+                </div>
+                <div>
+                  <label class="block text-gray-600 mb-2"><i class="far fa-calendar-check text-gray-400 mr-2"></i>Date</label>
+                  <input type="date" name="date" class="w-full p-3 border rounded-lg bg-blue-50" 
+                    value="<%= suppliers[supplierIndex]?.rfq?.date ? new Date(suppliers[supplierIndex].rfq.date).toISOString().split('T')[0] : '' %>" required>
+                </div>
+              </div>
+
+              <!-- Items Table -->
+              <div class="mb-6 overflow-x-auto rounded-lg border border-gray-200">
+                <table class="w-full border-collapse">
+                  <thead class="bg-blue-700 text-white">
+                    <tr>
+                      <th class="p-3 text-left font-semibold">Item No.</th>
+                      <th class="p-3 text-left font-semibold">Description</th>
+                      <th class="p-3 text-left font-semibold">Qty</th>
+                      <th class="p-3 text-left font-semibold">Unit</th>
+                      <th class="p-3 text-left font-semibold">Brand</th>
+                      <th class="p-3 text-left font-semibold">Unit Cost</th>
+                      <th class="p-3 text-left font-semibold">Total Cost</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% items.forEach((item, itemIndex) => { 
+                      const quote = suppliers[supplierIndex]?.quotes?.find(q => q.item_id === item.item_id);
+                    %>
+                      <tr class="<%= itemIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50' %> hover:bg-blue-50">
+                        <td class="p-3 border-t border-gray-200"><%= item.item_no %></td>
+                        <td class="p-3 border-t border-gray-200"><%= item.item_description %></td>
+                        <td class="p-3 border-t border-gray-200">
+                          <input type="number" name="quantity_<%= itemIndex %>" 
+                            value="<%= item.quantity %>" class="w-full p-2 border rounded-lg bg-blue-50" required>
+                        </td>
+                        <td class="p-3 border-t border-gray-200"><%= item.unit %></td>
+                        <td class="p-3 border-t border-gray-200">
+                          <input type="text" name="brand_<%= itemIndex %>" 
+                            value="<%= quote?.brand || '' %>" class="w-full p-2 border rounded-lg bg-blue-50" required>
+                        </td>
+                        <td class="p-3 border-t border-gray-200">
+                          <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-2 text-gray-500">₱</span>
+                            <input type="number" name="unit_cost_<%= itemIndex %>" 
+                              value="<%= quote?.unit_cost || '' %>" 
+                              class="w-full p-2 border rounded-lg bg-blue-50 pl-8" 
+                              required 
+                              oninput="calculateTotalCost('supplier<%= supplierIndex + 1 %>', '<%= itemIndex %>')" 
+                              step="0.01" 
+                              min="0">
+                          </div>
+                        </td>
+                        <td class="p-3 border-t border-gray-200">
+                          <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-2 text-gray-500">₱</span>
+                            <input type="number" name="total_cost_<%= itemIndex %>" 
+                              value="<%= quote?.total_cost || '' %>" 
+                              class="w-full p-2 border rounded-lg bg-gray-50 pl-8" readonly>
+                          </div>
+                        </td>
+                        <input type="hidden" name="item_id_<%= itemIndex %>" value="<%= item.item_id %>">
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+
+            <!-- Total and Actions -->
+            <div class="flex justify-between items-center <%= bgColor %> p-4 rounded-lg">
+              <!-- Total -->
+              <div class="text-lg font-bold text-blue-700">
+                <span class="mr-2">Total Amount:</span>
+                <span class="text-2xl">₱<span id="supplier<%= supplierIndex + 1 %>Total">
+                  <%= (suppliers[supplierIndex]?.quotes?.reduce((sum, quote) => sum + (parseFloat(quote?.total_cost) || 0), 0) || 0).toFixed(2) %>
+                </span></span>
+              </div>
+
+              <!-- Actions -->
+              <div class="flex space-x-3 ml-auto">
+                <button type="button" onclick="printForm('supplier<%= supplierIndex + 1 %>')" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
+                  <i class="fas fa-print mr-2"></i> Print
+                </button>
+                <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">
+                  <i class="fas fa-save mr-2"></i> Save Quotes
+                </button>
+              </div>
+            </div>
+            </form>
+          </div><br>
+          <% }) %> 
+
+          <!-- Navigation Buttons -->
+          <div class="flex justify-end space-x-3 mt-6">
+            <a href="/rfq" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
+              <i class="fas fa-arrow-left mr-2"></i> Previous
+            </a>
+            <a href="/abstract/<%= purchaseRequest.token %>" class="bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-800">
+              <i class="fas fa-arrow-right mr-2"></i> Next Step
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function calculateTotalCost(supplier, itemIndex) {
+      const form = document.getElementById(`${supplier}Form`);
+      const quantity = parseFloat(form.querySelector(`input[name="quantity_${itemIndex}"]`).value) || 0;
+      const unitCost = parseFloat(form.querySelector(`input[name="unit_cost_${itemIndex}"]`).value) || 0;
+      const totalCost = quantity * unitCost;
+
+      form.querySelector(`input[name="total_cost_${itemIndex}"]`).value = totalCost.toFixed(2);
+
+      // Calculate total for all items
+      let total = 0;
+      const totalInputs = form.querySelectorAll(`input[name^="total_cost_"]`);
+      totalInputs.forEach(input => {
+        total += parseFloat(input.value) || 0;
+      });
+
+      document.getElementById(`${supplier}Total`).textContent = total.toFixed(2);
+    }
+
+    async function saveQuotes(event, supplier) {
+      event.preventDefault();
+      const form = document.getElementById(`${supplier}Form`);
+      const formData = new FormData(form);
+      const pr_id = formData.get('pr_id');
+      const supplier_name = formData.get('supplier_name');
+      const totalItems = parseInt(formData.get('total_items'));
+
+      const data = {
+        pr_id,
+        supplier_name,
+        company_name: formData.get('company_name'),
+        date_sent: formData.get('date_sent'),
+        quotation_number: formData.get('quotation_number'),
+        printed_name: formData.get('printed_name'),
+        contact: formData.get('contact'),
+        date: formData.get('date'),
+        items: []
+      };
+
+      let total = 0;
+      
+      // Use the actual number of items instead of searching for inputs
+      for (let index = 0; index < totalItems; index++) {
+        const item_id = formData.get(`item_id_${index}`);
+        const quantity = parseFloat(formData.get(`quantity_${index}`)) || 0;
+        const unit_cost = parseFloat(formData.get(`unit_cost_${index}`)) || 0;
+        const brand = formData.get(`brand_${index}`);
+        const total_cost = quantity * unit_cost;
+        
+        if (item_id) { // Only add if item_id exists
+          data.items.push({
+            item_id,
+            brand,
+            unit_cost,
+            total_cost
+          });
+          
+          total += total_cost;
+        }
+      }
+
+      data.total = total;
+
+      try {
+        const response = await fetch('/save-supplier-quotes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          alert(`${supplier_name} quotes saved successfully!`);
+          window.location.reload();
+        } else {
+          alert(`Error saving ${supplier_name} quotes: ${result.message}`);
+        }
+      } catch (error) {
+        console.error('Error saving quotes:', error);
+        alert('An error occurred while saving quotes. Check console for details.');
+      }
+    }
+  </script>
+
+  <script src="/js/rfq-print.js"></script>
+</body>
+</html>

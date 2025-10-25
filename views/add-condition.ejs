@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Add Condition</title>
+  <link href="/src/table.css" rel="stylesheet"/>
+<link rel="stylesheet" href="/fa/css/all.min.css">
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png"/>
+</head>
+<body class="bg-blue-50 font-sans">
+  <%- include('partials/sidebar') %>
+  <div class="lg:ml-64 p-7 lg:p-10">
+    <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
+      <h2 class="text-2xl font-bold text-blue-700 mb-6">Add Condition</h2>
+
+      <!-- Error/Success Messages -->
+      <% if (error && error.length > 0) { %>
+        <div class="bg-red-100 text-red-700 p-4 rounded-lg mb-6">
+          <%= error %>
+        </div>
+      <% } %>
+      <% if (success && success.length > 0) { %>
+        <div class="bg-green-100 text-green-700 p-4 rounded-lg mb-6">
+          <%= success %>
+        </div>
+      <% } %>
+
+      <!-- Content goes here -->
+      <form id="addConditionForm" action="/add-condition" method="POST">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div>
+            <label class="block text-gray-600 mb-2">Condition Code</label>
+            <input type="text" name="condition_code" class="w-full p-3 border rounded-lg bg-blue-50" required />
+          </div>
+          <div>
+            <label class="block text-gray-600 mb-2">Condition Description</label>
+            <input type="text" name="condition_desc" class="w-full p-3 border rounded-lg bg-blue-50" required />
+          </div>
+        </div>
+        <div class="flex justify-end">
+          <button class="bg-blue-700 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-blue-800" type="submit">
+            Add Condition
+          </button>
+        </div>
+      </form>
+      
+    </div>
+  </div>
+</body>
+</html>
+
+  <script>
+    // Handle form submission with AJAX
+    document.getElementById('addConditionForm').addEventListener('submit', async (event) => {
+      event.preventDefault(); // Prevent default form submission
+
+      const form = event.target;
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData); // Convert FormData to JSON object
+
+      try {
+        const response = await fetch('/add-condition', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          // Show success modal
+          showSuccessModal(result.message || 'Condition added successfully');
+          // Redirect to /conditions after a short delay to allow modal display
+          setTimeout(() => {
+            window.location.href = '/conditions';
+          }, 2000); // 2-second delay
+          form.reset(); // Clear the form
+        } else {
+          // Show error modal
+          showErrorModal(result.message || 'Failed to add condition');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        // Show error modal
+        showErrorModal('An unexpected error occurred. Please try again.');
+      }
+    });
+  </script>
+</body>
+</html>

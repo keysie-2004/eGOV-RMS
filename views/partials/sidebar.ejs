@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hareneth Dashboard</title>
+  <link rel="stylesheet" href="/src/output.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+</head>
+
+
+<!-- Modern Sidebar - Clean Version -->
+<div class="w-64 bg-gradient-to-b from-blue-50 to-white h-screen p-5 fixed hidden lg:flex flex-col border-r border-gray-200 shadow-sm overflow-y-auto" id="sidebar">
+  <!-- Logo Section -->
+  <div class="flex items-center mb-8 pl-2">
+    <img alt="Logo" class="w-10 h-10 mr-3" src="/img/Calapan_City_Logo.png"/>
+    <span class="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">Hareneth</span>
+  </div>
+  
+  <!-- Navigation -->
+  <nav class="flex-1 space-y-1">
+    <!-- Dashboard -->
+    <a class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-blue-100 hover:text-blue-700 group" href="/dashboard" id="dashboardLink">
+      <i class="fas fa-tachometer-alt w-5 text-gray-500 group-hover:text-blue-600 mr-3 text-center"></i>
+      Dashboard
+    </a>
+
+    <!-- Requests Dropdown -->
+    <div class="relative">
+      <button class="flex items-center w-full px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-blue-100 hover:text-blue-700 group" onclick="toggleRequestsDropdown()" id="requestsButton">
+        <div class="flex items-center">
+          <i class="fas fa-file-alt w-5 text-gray-500 group-hover:text-blue-600 mr-3 text-center"></i>
+          Requests
+        </div>
+      </button>
+      <div id="requestsDropdown" class="pl-8 mt-1 space-y-1 hidden overflow-hidden transition-all duration-300">
+        <a class="flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/add-requests" id="addRequestsLink">
+          <i class="fas fa-plus-circle w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+          Add Requests
+        </a>
+        <a class="flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/requests" id="viewRequestsLink">
+          <i class="fas fa-list-ul w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+          View Requests
+        </a>
+        <a class="flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/rfq" id="approvedRequestsLink">
+          <i class="fas fa-check-circle w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+          Approved Requests
+        </a>
+        <a class="flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/approvals" id="statusRequestsLink">
+          <i class="fas fa-info-circle w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+          Status Requests
+        </a>
+      </div>
+    </div>
+
+    <% if (user && user.user_type === 'superadmin') { %>
+      <!-- Bidding Dropdown (Only for superadmin) -->
+      <div class="relative">
+        <button class="flex items-center w-full px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-blue-100 hover:text-blue-700 group" onclick="toggleBiddingDropdown()" id="biddingButton">
+          <div class="flex items-center">
+            <i class="fas fa-gavel w-5 text-gray-500 group-hover:text-blue-600 mr-3 text-center"></i>
+            Bidding
+          </div>
+        </button>
+        <div id="biddingDropdown" class="pl-8 mt-1 space-y-1 hidden overflow-hidden transition-all duration-300">
+          <a class="flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/admin/biddings" id="biddingsLink">
+            <i class="fas fa-list-ul w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+            Biddings
+          </a>
+          <a class="flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/admin/received" id="toReceivedLink">
+            <i class="fas fa-list w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+            To Receive
+          </a>
+        </div>
+      </div>
+    <% } %>
+
+<!-- Budget Management Dropdown -->
+<div class="relative">
+  <button class="flex items-center w-full px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-blue-100 hover:text-blue-700 group" onclick="toggleBudgetDropdown()" id="budgetButton">
+    <div class="flex items-center">
+      <i class="fas fa-wallet w-5 text-gray-500 group-hover:text-blue-600 mr-3 text-center"></i>
+      Budget Management
+    </div>
+  </button>
+  <div id="budgetDropdown" class="pl-8 mt-1 space-y-1 hidden overflow-hidden transition-all duration-300">
+    <% if (user && user.user_type === 'superadmin') { %>
+      <a class="flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/budget/admin" id="adminBudgetLink">
+        <i class="fas fa-cogs w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+        Admin Budget
+      </a>
+    <% } %>
+    <a class="flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/budget/view" id="viewBudgetLink">
+      <i class="fas fa-eye w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+      View Budget
+    </a>
+  </div>
+</div>
+
+    <!-- Inventory Dropdown -->
+    <div class="relative">
+      <button class="flex items-center w-full px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-blue-100 hover:text-blue-700 group" onclick="toggleInventoryDropdown()" id="inventoryButton">
+        <div class="flex items-center">
+          <i class="fas fa-boxes w-5 text-gray-500 group-hover:text-blue-600 mr-3 text-center"></i>
+          Inventory
+        </div>
+      </button>
+      <div id="inventoryDropdown" class="pl-8 mt-1 space-y-1 hidden overflow-hidden transition-all duration-300">
+        <% if (user && (user.user_type === 'superadmin' || user.user_type === 'ics')) { %>
+          <!-- Full inventory options for superadmin -->
+          <a class="flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/inspection" id="inspectionLink">
+            <i class="fas fa-clipboard-check w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+            Inspection
+          </a>
+          <a class="flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/incoming-reports" id="incomingReportsLink">
+            <i class="fas fa-arrow-down w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+            Incoming 
+          </a>
+          <a class="flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/outgoing-reports" id="outgoingReportsLink">
+            <i class="fas fa-arrow-up w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+            Outgoing 
+          </a>
+        <% } %>
+        <!-- Inventory List (shown to all users) -->
+        <a class="flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/ics" id="ics2024Link">
+          <i class="fas fa-clipboard w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+          Inventory List
+        </a>
+      </div>
+    </div>
+
+    <!-- Predictive Analysis Dropdown -->
+    <div class="relative">
+      <button class="flex items-center w-full px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-blue-100 hover:text-blue-700 group" onclick="togglePredictiveDropdown()" id="predictiveButton">
+        <div class="flex items-center">
+          <i class="fas fa-chart-line w-5 text-gray-500 group-hover:text-blue-600 mr-3 text-center"></i>
+          Predictive
+        </div>
+      </button>
+      <div id="predictiveDropdown" class="pl-8 mt-1 space-y-1 hidden overflow-hidden transition-all duration-300">
+        <a class="flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/predictive/department" id="predictiveDepartmentLink">
+          <i class="fas fa-building w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+          By Department
+        </a>
+      </div>
+    </div>
+
+    <% if (user && user.user_type === 'superadmin') { %>
+      <!-- Codes Dropdown (Only for superadmin) -->
+      <div class="relative">
+        <button class="flex items-center w-full px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-blue-100 hover:text-blue-700 group" onclick="toggleCodesDropdown()" id="codesButton">
+          <div class="flex items-center">
+            <i class="fas fa-code w-5 text-gray-500 group-hover:text-blue-600 mr-3 text-center"></i>
+            Codes
+          </div>
+        </button>
+        <div id="codesDropdown" class="pl-8 mt-1 space-y-1 hidden overflow-hidden transition-all duration-300">
+          <!-- EPP Codes -->
+          <div class="relative">
+            <button class="flex items-center w-full px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" onclick="toggleEppCodesDropdown()" id="eppCodesButton">
+              <div class="flex items-center">
+                <i class="fas fa-code w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+                EPP Codes
+              </div>
+            </button>
+            <div id="eppCodesDropdown" class="pl-8 mt-1 space-y-1 hidden overflow-hidden transition-all duration-300">
+              <a class="flex items-center px-3 py-1.5 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/add-epp-code" id="addEppCodeLink">
+                <i class="fas fa-plus w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+                Add EPP Code
+              </a>
+              <a class="flex items-center px-3 py-1.5 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/epp-codes" id="eppCodesListLink">
+                <i class="fas fa-list w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+                EPP Code List
+              </a>
+            </div>
+          </div>
+          
+          <!-- Conditions -->
+          <div class="relative">
+            <button class="flex items-center w-full px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" onclick="toggleConditionsDropdown()" id="conditionsButton">
+              <div class="flex items-center">
+                <i class="fas fa-list w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+                Conditions
+              </div>
+            </button>
+            <div id="conditionsDropdown" class="pl-8 mt-1 space-y-1 hidden overflow-hidden transition-all duration-300">
+              <a class="flex items-center px-3 py-1.5 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/add-condition" id="addConditionLink">
+                <i class="fas fa-plus w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+                Add Condition
+              </a>
+              <a class="flex items-center px-3 py-1.5 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/conditions" id="conditionsListLink">
+                <i class="fas fa-list w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+                Condition List
+              </a>
+            </div>
+          </div>
+          
+          <!-- Charging -->
+          <div class="relative">
+            <button class="flex items-center w-full px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" onclick="toggleChargingDropdown()" id="chargingButton">
+              <div class="flex items-center">
+                <i class="fas fa-list w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+                Charging
+              </div>
+            </button>
+            <div id="chargingDropdown" class="pl-8 mt-1 space-y-1 hidden overflow-hidden transition-all duration-300">
+              <a class="flex items-center px-3 py-1.5 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/add-charging" id="addChargingLink">
+                <i class="fas fa-plus w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+                Add Charging
+              </a>
+              <a class="flex items-center px-3 py-1.5 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/charging" id="chargingListLink">
+                <i class="fas fa-list w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+                Charging List
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+<!-- Inside the User Management Dropdown section (only for superadmin) -->
+<% if (user && user.user_type === 'superadmin') { %>
+  <!-- User Management Dropdown (Only for superadmin) -->
+  <div class="relative">
+    <button class="flex items-center w-full px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-blue-100 hover:text-blue-700 group" onclick="toggleUserDropdown()" id="userButton">
+      <div class="flex items-center">
+        <i class="fas fa-user-cog w-5 text-gray-500 group-hover:text-blue-600 mr-3 text-center"></i>
+        User Management
+      </div>
+    </button>
+    <div id="userDropdown" class="pl-8 mt-1 space-y-1 hidden overflow-hidden transition-all duration-300">
+      <!-- Admin -->
+      <div class="relative">
+        <button class="flex items-center w-full px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" onclick="toggleUserManagementDropdown()" id="userManagementButton">
+          <div class="flex items-center">
+            <i class="fas fa-users w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+            Admin
+          </div>
+        </button>
+        <div id="userManagementDropdown" class="pl-8 mt-1 space-y-1 hidden overflow-hidden transition-all duration-300">
+          <a class="flex items-center px-3 py-1.5 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/add-user" id="addUserLink">
+            <i class="fas fa-user-plus w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+            Add Admin
+          </a>
+          <a class="flex items-center px-3 py-1.5 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/users" id="usersListLink">
+            <i class="fas fa-users w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+            Admin List
+          </a>
+        </div>
+      </div>
+      
+      <!-- Departments -->
+      <div class="relative">
+        <button class="flex items-center w-full px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" onclick="toggleDepartmentsDropdown()" id="departmentsButton">
+          <div class="flex items-center">
+            <i class="fas fa-building w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+            Departments
+          </div>
+        </button>
+        <div id="departmentsDropdown" class="pl-8 mt-1 space-y-1 hidden overflow-hidden transition-all duration-300">
+          <a class="flex items-center px-3 py-1.5 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/add-department" id="addDepartmentLink">
+            <i class="fas fa-plus w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+            Add Department
+          </a>
+          <a class="flex items-center px-3 py-1.5 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/departments" id="departmentsListLink">
+            <i class="fas fa-list w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+            Department List
+          </a>
+        </div>
+      </div>
+      
+      <!-- Employees -->
+      <div class="relative">
+        <button class="flex items-center w-full px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" onclick="toggleEmployeesDropdown()" id="employeesButton">
+          <div class="flex items-center">
+            <i class="fas fa-user-tie w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+            Employees
+          </div>
+        </button>
+        <div id="employeesDropdown" class="pl-8 mt-1 space-y-1 hidden overflow-hidden transition-all duration-300">
+          <a class="flex items-center px-3 py-1.5 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/add-employee" id="addEmployeeLink">
+            <i class="fas fa-plus w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+            Add Employee
+          </a>
+          <a class="flex items-center px-3 py-1.5 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/employees" id="employeesListLink">
+            <i class="fas fa-list w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+            Employee List
+          </a>
+          <a class="flex items-center px-3 py-1.5 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/archived-employees" id="archivedEmployeesLink">
+            <i class="fas fa-archive w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+            Archived Employees
+          </a>
+        </div>
+      </div>
+      
+      <!-- Suppliers -->
+      <div class="relative">
+        <button class="flex items-center w-full px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" onclick="toggleSuppliersDropdown()" id="suppliersButton">
+          <div class="flex items-center">
+            <i class="fas fa-truck w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+            Suppliers
+          </div>
+        </button>
+        <div id="suppliersDropdown" class="pl-8 mt-1 space-y-1 hidden overflow-hidden transition-all duration-300">
+          <a class="flex items-center px-3 py-1.5 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/admin/supplierList" id="addSupplierLink">
+            <i class="fas fa-plus w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+            Add Supplier
+          </a>
+          <a class="flex items-center px-3 py-1.5 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/admin/supplierDetails" id="suppliersListLink">
+            <i class="fas fa-list w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+            Supplier List
+          </a>
+        </div>
+      </div>
+      
+      <!-- Signatures -->
+      <a class="flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/bac-members" id="signaturesLink">
+        <i class="fas fa-signature w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+        Signatures
+      </a>
+    </div>
+  </div>
+<% } %>
+
+      <!-- Reports (Only for superadmin) -->
+      <a class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-blue-100 hover:text-blue-700 group" href="/reports" id="reportsLink">
+        <i class="fas fa-chart-pie w-5 text-gray-500 group-hover:text-blue-600 mr-3 text-center"></i>
+        Reports
+      </a>
+    <% } %>
+
+        <!-- Notifications Section -->
+    <a class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-blue-100 hover:text-blue-700 group relative" href="/notifications" id="notificationsLink">
+      <i class="fas fa-bell w-5 text-gray-500 group-hover:text-blue-600 mr-3 text-center"></i>
+      Notifications
+      <span id="notificationBadge" class="absolute left-6 top-0 bg-red-500 text-white text-xs font-medium rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
+    </a>
+
+    <!-- Chat Dropdown -->
+    <div class="relative">
+      <button class="flex items-center w-full px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-blue-100 hover:text-blue-700 group" onclick="toggleChatDropdown()" id="chatButton">
+        <div class="flex items-center">
+          <i class="fas fa-comments w-5 text-gray-500 group-hover:text-blue-600 mr-3 text-center"></i>
+          Chat
+        </div>
+      </button>
+      <div id="chatDropdown" class="pl-8 mt-1 space-y-1 hidden overflow-hidden transition-all duration-300">
+        <a class="flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/chat/general" id="generalChatLink">
+          <i class="fas fa-comment-dots w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+          General Chat
+        </a>
+        <a class="flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/chat/private" id="supportChatLink">
+          <i class="fas fa-lock w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+          Private Chat
+        </a>
+        <a class="flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/chat/support" id="supportChatLink">
+          <i class="fas fa-headset w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+          Support Chat
+        </a>
+      </div>
+    </div>
+
+    <!-- AI Assistant Section -->
+    <div class="mt-auto border-t border-gray-200 pt-4">
+      <!-- Chatbot Toggle Button -->
+      <button id="chatbotToggle" class="flex items-center w-full px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-blue-100 hover:text-blue-700 group">
+        <i class="fas fa-robot w-5 text-gray-500 group-hover:text-blue-600 mr-3 text-center"></i>
+        AI Assistant
+      </button>
+    </div>
+
+    <!-- Log Out -->
+    <a class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 hover:bg-red-100 hover:text-red-700 group" href="/logout" id="logoutLink">
+      <i class="fas fa-sign-out-alt w-5 text-gray-500 group-hover:text-red-600 mr-3 text-center"></i>
+      Log Out
+    </a>
+  </nav>
+
+  <!-- Profile Section -->
+  <div class="mt-auto pt-4 border-t border-gray-200">
+    <a href="/profile/<%= user ? user.employee_id : '#' %>" class="block">
+      <div id="profileSection" class="flex items-center px-2 py-2 rounded-lg hover:bg-blue-50 transition-colors duration-200 cursor-pointer">
+        <div id="profileAvatar" class="flex-shrink-0 w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+          <% if (user && user.profile_picture) { %>
+            <img src="<%= user.profile_picture %>" alt="Profile" class="w-full h-full object-cover">
+          <% } else if (user && user.employee_name) { %>
+            <span class="text-gray-600 font-medium text-sm">
+              <%= user.employee_name.split(' ').map(n => n[0]).join('').toUpperCase() %>
+            </span>
+          <% } else { %>
+            <i class="fas fa-user text-gray-400"></i>
+          <% } %>
+        </div>
+        <div class="ml-3 overflow-hidden">
+          <p id="profileName" class="text-sm font-medium text-gray-800 truncate">
+            <%= user ? user.employee_name : 'Guest User' %>
+          </p>
+          <p id="profileRole" class="text-xs text-gray-500 truncate">
+            <%= user ? user.position || 'No position set' : '' %>
+            <% if (user && user.bac_position) { %>
+              / <%= user.bac_position %>
+            <% } %>
+          </p>
+        </div>
+        <i class="fas fa-ellipsis-h ml-auto text-gray-400 hover:text-blue-600"></i>
+      </div>
+    </a>
+  </div>
+</div>
+
+<!-- Mobile Menu Button - Improved Design -->
+<div class="lg:hidden fixed top-4 left-4 z-50">
+  <button id="mobileMenuButton" class="p-3 rounded-full bg-white shadow-lg text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-blue-50 transition-all duration-200">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+    </svg>
+  </button>
+</div>
+
+<!-- Mobile Overlay -->
+<div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
+
+<!-- Modern Chatbot UI - Fixed Position -->
+<div id="chatbotContainer" class="hidden fixed bottom-4 right-4 w-full max-w-md h-[600px] bg-white rounded-xl shadow-2xl border border-gray-200 flex flex-col z-50 overflow-hidden transform transition-all duration-300 ease-in-out">
+  <!-- Chatbot Header -->
+  <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-4 rounded-t-xl flex justify-between items-center">
+    <div class="flex items-center">
+      <div class="w-8 h-8 rounded-full bg-blue-400 flex items-center justify-center mr-3">
+        <i class="fas fa-robot text-white"></i>
+      </div>
+      <div>
+        <span class="font-semibold">Hareneth AI Assistant</span>
+        <div class="text-xs text-blue-100">Powered by Cohere</div>
+      </div>
+    </div>
+    <div class="flex items-center space-x-2">
+      <button id="clearChat" class="text-white hover:text-blue-200 p-1 rounded-full hover:bg-blue-700 transition-colors" title="Clear Conversation">
+        <i class="fas fa-trash-alt text-sm"></i>
+      </button>
+      <button id="closeChatbot" class="text-white hover:text-blue-200 p-1 rounded-full hover:bg-blue-700 transition-colors">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+  
+  <!-- Chat Messages Area -->
+  <div id="chatMessages" class="flex-1 p-4 overflow-y-auto bg-gray-50 space-y-4">
+    <!-- Welcome message -->
+    <div class="chat-message bot-message">
+      <div class="flex items-start">
+        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3 flex-shrink-0">
+          <i class="fas fa-robot text-blue-600"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 markdown-content">
+            <p class="text-gray-800">Hello! I'm your Hareneth AI Assistant. I can help you with:</p>
+            <div class="mt-3 text-xs text-gray-500">
+              <p>Type your question or select a suggested query below.</p>
+            </div>
+          </div>
+          <!-- Suggested queries -->
+          <div class="mt-2 grid grid-cols-2 gap-2">
+            <button class="suggested-query text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full transition-colors">
+              Generate Predicted Budget
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Chat Input Area -->
+  <div class="p-4 border-t border-gray-200 bg-white">
+    <div class="relative flex items-center">
+      <button id="attachButton" class="absolute left-3 text-gray-400 hover:text-blue-600 transition-colors">
+        <i class="fas fa-paperclip"></i>
+      </button>
+      <input 
+        type="text" 
+        id="chatInput" 
+        placeholder="Ask about inventory, requests, or reports..." 
+        class="w-full border border-gray-300 rounded-full pl-10 pr-12 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+        autocomplete="off"
+      >
+      <button 
+        id="sendMessage" 
+        class="absolute right-3 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled
+      >
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+    <div class="text-xs text-gray-500 mt-2 text-center">
+      AI responses may not always be accurate.
+    </div>
+  </div>
+</div>
+
+<script>
+  // Toggle sidebar on mobile with overlay
+  document.getElementById('mobileMenuButton').addEventListener('click', function () {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('mobileOverlay');
+    
+    sidebar.classList.toggle('hidden');
+    overlay.classList.toggle('hidden');
+    document.body.classList.toggle('overflow-hidden');
+
+    if (!sidebar.classList.contains('hidden')) {
+      sidebar.classList.add('animate-slide-in');
+      sidebar.classList.remove('animate-slide-out');
+    } else {
+      sidebar.classList.add('animate-slide-out');
+      sidebar.classList.remove('animate-slide-in');
+    }
+  });
+
+  // Close sidebar when clicking overlay
+  document.getElementById('mobileOverlay').addEventListener('click', function () {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('mobileOverlay');
+    sidebar.classList.add('hidden');
+    overlay.classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+  });
+
+  // Highlight active menu item
+  function highlightActiveMenu() {
+    const currentPath = window.location.pathname;
+    const links = document.querySelectorAll('#sidebar a');
+    links.forEach(link => {
+      const linkPath = new URL(link.href).pathname;
+
+      if (linkPath === currentPath) {
+        // Highlight the active link
+        link.classList.add('bg-blue-100', 'text-blue-700', 'font-semibold');
+        link.classList.remove('text-gray-600', 'hover:text-blue-700');
+
+        // Open parent dropdowns if they exist
+        let parent = link.closest('.hidden');
+        while (parent) {
+          if (parent.id && parent.id.includes('Dropdown')) {
+            parent.classList.remove('hidden');
+          }
+          parent = parent.parentElement?.closest('.hidden');
+        }
+      } else {
+        link.classList.remove('bg-blue-100', 'text-blue-700', 'font-semibold');
+        link.classList.add('text-gray-600', 'hover:text-blue-700');
+      }
+    });
+  }
+
+  // Call the function to highlight the active menu item
+  highlightActiveMenu();
+
+  // Improved dropdown toggle function with animation support
+  function toggleDropdown(dropdownId) {
+    const dropdown = document.getElementById(dropdownId);
+    if (!dropdown) return; // Guard clause for non-existent dropdown
+
+    if (dropdown.classList.contains('hidden')) {
+      // Opening dropdown
+      dropdown.classList.remove('hidden');
+      dropdown.style.maxHeight = '0';
+      void dropdown.offsetHeight; // Force reflow
+      dropdown.style.maxHeight = `${dropdown.scrollHeight}px`;
+      setTimeout(() => {
+        dropdown.style.maxHeight = '';
+      }, 300);
+    } else {
+      // Closing dropdown
+      dropdown.style.maxHeight = `${dropdown.scrollHeight}px`;
+      void dropdown.offsetHeight; // Force reflow
+      dropdown.style.maxHeight = '0';
+      setTimeout(() => {
+        dropdown.classList.add('hidden');
+        dropdown.style.maxHeight = '';
+      }, 300);
+    }
+  }
+
+  function toggleBiddingDropdown() {
+    toggleDropdown('biddingDropdown');
+  }
+
+    function toggleBudgetDropdown() {
+    toggleDropdown('budgetDropdown');
+  }
+
+  function toggleRequestsDropdown() {
+    toggleDropdown('requestsDropdown');
+  }
+
+  function toggleInventoryDropdown() {
+    toggleDropdown('inventoryDropdown');
+  }
+
+  function togglePredictiveDropdown() {
+    toggleDropdown('predictiveDropdown');
+  }
+
+  function toggleCodesDropdown() {
+    toggleDropdown('codesDropdown');
+  }
+
+  function toggleEppCodesDropdown() {
+    toggleDropdown('eppCodesDropdown');
+  }
+
+  function toggleConditionsDropdown() {
+    toggleDropdown('conditionsDropdown');
+  }
+
+  function toggleChargingDropdown() {
+    toggleDropdown('chargingDropdown');
+  }
+
+  function toggleUserDropdown() {
+    toggleDropdown('userDropdown');
+  }
+
+  function toggleUserManagementDropdown() {
+    toggleDropdown('userManagementDropdown');
+  }
+
+  function toggleDepartmentsDropdown() {
+    toggleDropdown('departmentsDropdown');
+  }
+
+  function toggleEmployeesDropdown() {
+    toggleDropdown('employeesDropdown');
+  }
+
+  function toggleSuppliersDropdown() {
+  toggleDropdown('suppliersDropdown');
+}
+
+  function toggleChatDropdown() {
+    toggleDropdown('chatDropdown');
+  }
+
+  // Prevent dropdowns from closing when a link is clicked
+  document.querySelectorAll('#sidebar a').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.stopPropagation();
+
+      // Navigate to the link if it's not logout or external
+      if (!link.href.includes('/logout') && !link.href.includes('http')) {
+        e.preventDefault();
+        window.location.href = link.href; // Simulate navigation
+      }
+
+      // Close sidebar on mobile when a link is clicked
+      if (window.innerWidth < 1024) {
+        document.getElementById('sidebar').classList.add('hidden');
+        document.getElementById('mobileOverlay').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+      }
+    });
+  });
+
+  // Fetch unread notification count
+  async function loadNotificationCount() {
+    try {
+      const response = await fetch('/notifications/api/unread-count', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token') || getCookie('token')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        const badge = document.getElementById('notificationBadge');
+        if (badge) {
+          badge.textContent = data.count || 0;
+          badge.classList.toggle('hidden', data.count === 0); // Hide if count is 0
+        }
+      } else {
+        console.error('Failed to load notification count:', data.message);
+      }
+    } catch (error) {
+      console.error('Error fetching notification count:', error);
+      const badge = document.getElementById('notificationBadge');
+      if (badge) {
+        badge.textContent = '0';
+        badge.classList.add('hidden');
+      }
+    }
+  }
+
+  // Get cookie function (used if token is in cookies)
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
+
+  // Prevent dropdowns from closing when a link is clicked
+  document.querySelectorAll('#sidebar a').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.stopPropagation();
+
+      // Navigate to the link if it's not logout or external
+      if (!link.href.includes('/logout') && !link.href.includes('http')) {
+        e.preventDefault();
+        window.location.href = link.href; // Simulate navigation
+      }
+
+      // Close sidebar on mobile when a link is clicked
+      if (window.innerWidth < 1024) {
+        document.getElementById('sidebar').classList.add('hidden');
+        document.getElementById('mobileOverlay').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+      }
+    });
+  });
+
+  // Close dropdowns when clicking outside (for desktop)
+  document.addEventListener('click', (e) => {
+    if (window.innerWidth >= 1024) {
+      const sidebar = document.getElementById('sidebar');
+      if (!sidebar.contains(e.target)) {
+        document.querySelectorAll('[id$="Dropdown"]').forEach(dropdown => {
+          if (!dropdown.classList.contains('hidden')) {
+            toggleDropdown(dropdown.id);
+          }
+        });
+      }
+    }
+  });
+
+  // Profile API
+  async function loadUserProfile() {
+    try {
+      const elements = {
+        name: document.getElementById('profileName'),
+        role: document.getElementById('profileRole'),
+        avatar: document.getElementById('profileAvatar'),
+        section: document.getElementById('profileSection')
+      };
+
+      // Set loading state
+      if (elements.name) elements.name.textContent = 'Loading...';
+      if (elements.avatar) {
+        elements.avatar.innerHTML = `
+          <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+            <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+            </svg>
+          </div>
+        `;
+      }
+
+      const response = await fetch('/api/profile', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.message || 'Profile load failed');
+      }
+
+      // Update UI
+      if (elements.name) elements.name.textContent = data.employee_name || 'User';
+      if (elements.role) elements.role.textContent = data.user_type || 'Employee';
+      if (elements.avatar) {
+        elements.avatar.innerHTML = `
+          <img src="${data.avatarUrl || 'https://ui-avatars.com/api/?name=User&background=6b7280&color=fff&size=128'}" 
+               alt="${data.employee_name || 'User'}" 
+               class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
+               onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(data.employee_name || 'User')}&background=random&color=fff&size=128'">
+        `;
+      }
+    } catch (error) {
+      console.error('Profile load error:', error);
+      showFallbackProfile(error.message);
+    }
+  }
+
+  function showFallbackProfile(message = '') {
+    const elements = {
+      name: document.getElementById('profileName'),
+      role: document.getElementById('profileRole'),
+      avatar: document.getElementById('profileAvatar')
+    };
+
+    if (elements.name) {
+      elements.name.textContent = message ? `Error: ${message}` : 'User';
+    }
+    if (elements.role) elements.role.textContent = 'Employee';
+    if (elements.avatar) {
+      elements.avatar.innerHTML = `
+        <img src="https://ui-avatars.com/api/?name=User&background=6b7280&color=fff&size=128" 
+             alt="User" 
+             class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm">
+      `;
+    }
+  }
+
+  // Enhanced markdown parser function
+  function parseMarkdown(text) {
+    if (!text) return '';
+
+    let html = text
+      // Headers
+      .replace(/^# (.*$)/gm, '<h1 class="text-xl font-bold mb-2 mt-4">$1</h1>')
+      .replace(/^## (.*$)/gm, '<h2 class="text-lg font-semibold mb-2 mt-3">$1</h2>')
+      .replace(/^### (.*$)/gm, '<h3 class="text-md font-medium mb-1 mt-2">$1</h3>')
+      // Bold and italic
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/\_\_(.*?)\_\_/g, '<strong>$1</strong>')
+      .replace(/\_(.*?)\_/g, '<em>$1</em>')
+      // Lists
+      .replace(/^\s*\*\s(.*$)/gm, '<li class="ml-4 list-disc">$1</li>')
+      .replace(/^\s*-\s(.*$)/gm, '<li class="ml-4 list-disc">$1</li>')
+      .replace(/^\s*\+\s(.*$)/gm, '<li class="ml-4 list-disc">$1</li>')
+      // Links
+      .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-blue-600 hover:underline" target="_blank">$1</a>')
+      // Code blocks
+      .replace(/```([\s\S]*?)```/g, '<pre class="bg-gray-100 p-2 rounded-md overflow-x-auto my-2"><code>$1</code></pre>')
+      .replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-1 rounded text-sm">$1</code>')
+      // Blockquotes
+      .replace(/^\>\s(.*$)/gm, '<blockquote class="border-l-4 border-gray-300 pl-3 text-gray-600 my-2">$1</blockquote>')
+      // Horizontal rules
+      .replace(/^\-\-\-$/gm, '<hr class="my-3 border-gray-200">')
+      // Tables
+      .replace(/(\|.+\|.+\|(\r?\n|\r)?\|?\s*\|?.+\|(\r?\n|\r)?)((?:\|.+\|(\r?\n|\r)?)+)/gm, function(match) {
+        const rows = match.trim().split('\n');
+        let tableHtml = '<div class="overflow-x-auto"><table class="min-w-full border border-gray-200 my-3"><thead><tr>';
+        
+        // Header row
+        const headers = rows[0].split('|').filter(h => h.trim() !== '');
+        headers.forEach(header => {
+          tableHtml += `<th class="px-4 py-2 bg-gray-100 border-b border-gray-200 text-left">${header.trim()}</th>`;
+        });
+        tableHtml += '</tr></thead><tbody>';
+        
+        // Data rows
+        for (let i = 2; i < rows.length; i++) {
+          if (rows[i].trim() === '') continue;
+          const cells = rows[i].split('|').filter(c => c.trim() !== '');
+          tableHtml += '<tr>';
+          cells.forEach(cell => {
+            tableHtml += `<td class="px-4 py-2 border-b border-gray-200">${cell.trim()}</td>`;
+          });
+          tableHtml += '</tr>';
+        }
+        
+        tableHtml += '</tbody></table></div>';
+        return tableHtml;
+      })
+      // Paragraphs
+      .replace(/^(?!<[a-z])(.*$)/gm, function(m) {
+        return m.trim() ? '<p class="mb-2">' + m + '</p>' : '';
+      });
+    
+    // Wrap lists in ul tags
+    html = html.replace(/(<li.*?>.*?<\/li>)+/g, function(match) {
+      return '<ul class="list-disc pl-5 space-y-1 my-2">' + match + '</ul>';
+    });
+    
+    return html;
+  }
+
+  // Function to add message to chat with markdown support
+  function addMessageToChat(message, sender) {
+    const chatMessages = document.getElementById('chatMessages');
+    if (!chatMessages) return;
+
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${sender}-message mb-4 animate-message-in`;
+    
+    if (sender === 'user') {
+      messageDiv.innerHTML = `
+        <div class="flex items-start justify-end">
+          <div class="flex flex-col items-end">
+            <div class="bg-blue-600 text-white p-3 rounded-lg shadow-sm max-w-[85%]">
+              <p>${message}</p>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      const parsedMessage = parseMarkdown(message);
+      messageDiv.innerHTML = `
+        <div class="flex items-start">
+          <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3 flex-shrink-0">
+            <i class="fas fa-robot text-blue-600"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-200 max-w-[85%] markdown-content">
+              ${parsedMessage}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    chatMessages.appendChild(messageDiv);
+    
+    // Smooth scroll to bottom
+    setTimeout(() => {
+      chatMessages.scrollTo({
+        top: chatMessages.scrollHeight,
+        behavior: 'smooth'
+      });
+    }, 50);
+  }
+
+  // Typing animation with smooth appearance
+  function showTypingIndicator() {
+    const chatMessages = document.getElementById('chatMessages');
+    if (!chatMessages) return;
+
+    const typingIndicator = document.createElement('div');
+    typingIndicator.id = 'typingIndicator';
+    typingIndicator.className = 'chat-message bot-message mb-4 opacity-0 animate-fade-in';
+    typingIndicator.innerHTML = `
+      <div class="flex items-start">
+        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3 flex-shrink-0">
+          <i class="fas fa-robot text-blue-600"></i>
+        </div>
+        <div>
+          <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-200 w-24">
+            <div class="flex space-x-1">
+              <div class="w-2 h-2 rounded-full bg-gray-400 animate-bounce"></div>
+              <div class="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style="animation-delay: 0.2s"></div>
+              <div class="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style="animation-delay: 0.4s"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    chatMessages.appendChild(typingIndicator);
+    chatMessages.scrollTo({
+      top: chatMessages.scrollHeight,
+      behavior: 'smooth'
+    });
+  }
+
+  // Remove typing indicator with fade out
+  function hideTypingIndicator() {
+    const indicator = document.getElementById('typingIndicator');
+    if (indicator) {
+      indicator.classList.add('animate-fade-out');
+      setTimeout(() => {
+        indicator.remove();
+      }, 300);
+    }
+  }
+
+  // Enhanced send message function with markdown support
+  async function sendUserMessage() {
+    const chatInput = document.getElementById('chatInput');
+    const sendMessage = document.getElementById('sendMessage');
+    if (!chatInput || !sendMessage) return;
+
+    const message = chatInput.value.trim();
+    if (message === '') return;
+
+    addMessageToChat(message, 'user');
+    chatInput.value = '';
+    sendMessage.disabled = true;
+
+    showTypingIndicator();
+
+    try {
+      const response = await generateAIResponse(message);
+      hideTypingIndicator();
+      
+      // Split response into chunks for smooth streaming effect
+      const words = response.split(' ');
+      let currentChunk = '';
+      let chunkCount = 0;
+      
+      // Create a temporary div for the message
+      const tempDiv = document.createElement('div');
+      tempDiv.className = 'chat-message bot-message mb-4 opacity-0 animate-fade-in';
+      tempDiv.innerHTML = `
+        <div class="flex items-start">
+          <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3 flex-shrink-0">
+            <i class="fas fa-robot text-blue-600"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-200 max-w-[85%] markdown-content">
+              ${parseMarkdown(currentChunk)}
+            </div>
+          </div>
+        </div>
+      `;
+      document.getElementById('chatMessages').appendChild(tempDiv);
+      
+      // Stream words with slight delay for smooth appearance
+      const streamInterval = setInterval(() => {
+        if (words.length === 0) {
+          clearInterval(streamInterval);
+          return;
+        }
+        
+        currentChunk += (currentChunk ? ' ' : '') + words.shift();
+        chunkCount++;
+        
+        // Update content every few chunks to reduce DOM operations
+        if (chunkCount % 5 === 0 || words.length === 0) {
+          tempDiv.querySelector('.markdown-content').innerHTML = parseMarkdown(currentChunk);
+          
+          // Scroll to bottom
+          document.getElementById('chatMessages').scrollTo({
+            top: document.getElementById('chatMessages').scrollHeight,
+            behavior: 'smooth'
+          });
+        }
+      }, 50);
+      
+    } catch (error) {
+      hideTypingIndicator();
+      addMessageToChat("Sorry, I'm having trouble connecting to the AI service.", 'bot');
+      console.error('Chatbot error:', error);
+    }
+  }
+
+  // Initialize chatbot event listeners
+  document.addEventListener('DOMContentLoaded', function() {
+    loadUserProfile();
+    loadNotificationCount();
+
+    const chatbotToggle = document.getElementById('chatbotToggle');
+    const chatbotContainer = document.getElementById('chatbotContainer');
+    const closeChatbot = document.getElementById('closeChatbot');
+    const chatInput = document.getElementById('chatInput');
+    const sendMessage = document.getElementById('sendMessage');
+    const chatMessages = document.getElementById('chatMessages');
+    const clearChat = document.getElementById('clearChat');
+
+    if (chatbotToggle && chatbotContainer) {
+      // Toggle chatbot visibility with animation
+      chatbotToggle.addEventListener('click', function() {
+        chatbotContainer.classList.toggle('hidden');
+        if (!chatbotContainer.classList.contains('hidden')) {
+          chatbotContainer.classList.add('animate-scale-in');
+          setTimeout(() => {
+            chatbotContainer.classList.remove('animate-scale-in');
+          }, 300);
+        }
+      });
+    }
+
+    if (closeChatbot && chatbotContainer) {
+      closeChatbot.addEventListener('click', function() {
+        chatbotContainer.classList.add('animate-scale-out');
+        setTimeout(() => {
+          chatbotContainer.classList.add('hidden');
+          chatbotContainer.classList.remove('animate-scale-out');
+        }, 300);
+      });
+    }
+
+    if (chatInput && sendMessage) {
+      // Input validation
+      chatInput.addEventListener('input', function() {
+        sendMessage.disabled = this.value.trim() === '';
+      });
+
+      // Send message on Enter
+      chatInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !sendMessage.disabled) {
+          sendUserMessage();
+        }
+      });
+
+      sendMessage.addEventListener('click', sendUserMessage);
+    }
+
+    if (clearChat && chatMessages) {
+      // Clear chat history with confirmation
+      clearChat.addEventListener('click', function() {
+        if (chatMessages.children.length > 1) {
+          if (confirm('Clear all chat history?')) {
+            chatMessages.innerHTML = `
+              <div class="chat-message bot-message animate-fade-in">
+                <div class="flex items-start">
+                  <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3 flex-shrink-0">
+                    <i class="fas fa-robot text-blue-600"></i>
+                  </div>
+                  <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 markdown-content">
+                    <p class="text-gray-800">Conversation cleared. How can I assist you now?</p>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+        }
+      });
+    }
+
+    // Suggested queries functionality
+    document.querySelectorAll('.suggested-query').forEach(button => {
+      button.addEventListener('click', function() {
+        if (chatInput && sendMessage) {
+          chatInput.value = this.textContent;
+          chatInput.focus();
+          sendMessage.disabled = false;
+        }
+      });
+    });
+  });
+
+  // AI backend route
+  const COHERE_API_URL = '/api/cohere-chat';
+
+  async function generateAIResponse(message) {
+    try {
+      const response = await fetch(COHERE_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ message })
+      });
+
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+      const data = await response.json();
+      return data.response || "I couldn't generate a response. Please try again.";
+    } catch (error) {
+      console.error('Error getting AI response:', error);
+      return getFallbackResponse(message);
+    }
+  }
+
+  function getFallbackResponse(message) {
+    const lower = message.toLowerCase();
+    if (lower.includes('inventory') || lower.includes('stock')) {
+      return "For inventory help, please check the Inventory section in the sidebar.";
+    }
+    if (lower.includes('request') || lower.includes('rfq')) {
+      return "You can manage requests through the Requests section.";
+    }
+    if (lower.includes('report')) {
+      return "Reports are available in the Reports section.";
+    }
+    return "I'm here to help with the Hareneth system. Could you ask your question differently?";
+  }
+</script>

@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Abstract of Quotations</title>
+  <link href="/src/table.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png"/> <!-- Favicon link -->
+</head>
+
+<body class="bg-blue-50 font-sans">
+  <!-- Include Sidebar -->
+  <%- include('partials/sidebar') %>
+
+  <!-- Main Content -->
+  <div class="lg:ml-64 p-7 lg:p-10">
+    <div class="w-full">
+      <!-- Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">Procurement Management</h1>
+        <div class="flex items-center mt-2">
+          <i class="fas fa-home text-primary-600 mr-2"></i>
+          <span class="text-gray-500">Dashboard</span>
+          <i class="fas fa-chevron-right text-gray-400 mx-2 text-xs"></i>
+          <span class="text-primary-600 font-medium">Abstract of Quotations</span>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
+        <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+          <h2 class="text-2xl font-bold text-blue-700 flex items-center">
+            <i class="fas fa-file-invoice-dollar mr-3 text-blue-500"></i>Abstract of Quotations
+          </h2>
+          <div class="text-sm text-gray-500 bg-blue-50 px-3 py-1 rounded-full">
+            <i class="fas fa-clock mr-1"></i> Form Status: <%= abstract ? 'Saved' : 'Pending' %>
+          </div>
+        </div>
+
+        <!-- Project Description -->
+        <div class="mb-8 bg-gray-50 p-5 rounded-lg border-l-4 border-blue-500">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+              <p class="text-gray-500 text-sm mb-1">Project Description</p>
+              <p class="text-gray-800 font-medium"><%= purchaseRequest.purpose %></p>
+            </div>
+            <div>
+              <p class="text-gray-500 text-sm mb-1">Department</p>
+              <p class="text-gray-800 font-medium"><%= purchaseRequest.department %></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Date Field -->
+        <div class="mb-6">
+          <label class="block text-gray-600 font-medium mb-2">Date</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+              <i class="fas fa-calendar-alt"></i>
+            </span>
+            <input type="date" name="date" id="abstractDate" 
+                   class="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-blue-50" 
+                   value="<%= abstract ? abstract.displayDate : '' %>" required>
+            <input type="hidden" name="pr_id" id="pr_id" value="<%= purchaseRequest.pr_id %>">
+          </div>
+        </div>
+
+        <!-- Items Table -->
+        <div class="mb-8 overflow-x-auto rounded-lg border border-gray-200">
+          <table class="w-full border-collapse min-w-full">
+            <thead>
+              <!-- New header row for store names -->
+              <tr class="bg-blue-600 text-white">
+                <th class="p-3 text-left font-semibold" colspan="3"></th>
+                <% companyNames.forEach(company => { %>
+                  <th class="p-3 text-center font-semibold"><%= company %></th>
+                <% }); %>
+                <th class="p-3 text-left font-semibold"></th>
+              </tr>
+              <!-- Original header row -->
+              <tr class="bg-blue-700 text-white">
+                <th class="p-3 text-left font-semibold">Qty</th>
+                <th class="p-3 text-left font-semibold">Unit</th>
+                <th class="p-3 text-left font-semibold">Item Description</th>
+                <% companyNames.forEach(company => { %>
+                  <th class="p-3 text-left font-semibold">Price</th>
+                <% }); %>
+                <th class="p-3 text-left font-semibold">Lowest Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (items && items.length > 0) { %>
+                <% items.forEach((item, index) => { %>
+                  <tr class="<%= index % 2 === 0 ? 'bg-white' : 'bg-gray-50' %> hover:bg-blue-50 transition-all">
+                    <td class="p-3 border-t border-gray-200"><%= item.quantity %></td>
+                    <td class="p-3 border-t border-gray-200"><%= item.unit %></td>
+                    <td class="p-3 border-t border-gray-200"><%= item.item_description %></td>
+                    <% companyNames.forEach(company => { %>
+                      <% 
+                        const supplierQuote = supplierQuotes.find(sq => sq.item_id === item.item_id && sq.company_name === company);
+                      %>
+                      <td class="p-3 border-t border-gray-200"><%= supplierQuote ? supplierQuote.unit_cost : 'N/A' %></td>
+                    <% }); %>
+                    <% 
+                      const prices = supplierQuotes
+                        .filter(sq => sq.item_id === item.item_id)
+                        .map(sq => sq.unit_cost);
+                      const lowestPrice = prices.length > 0 ? Math.min(...prices) : 'N/A';
+                    %>
+                    <td class="p-3 border-t border-gray-200 font-medium"><%= lowestPrice !== Infinity ? lowestPrice : 'N/A' %></td>
+                  </tr>
+                <% }); %>
+              <% } else { %>
+                <tr>
+                  <td colspan="<%= companyNames.length + 4 %>" class="text-center p-3">No items found</td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- BAC Members Section -->
+        <div class="mb-8">
+          <h3 class="text-xl font-bold text-blue-700 mb-4 flex items-center">
+            <i class="fas fa-users mr-2"></i> BAC Members
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <% if (groupedBacMembers.chairperson) { %>
+              <div class="bg-white p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all">
+                <div class="flex items-center">
+                  <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3">
+                    <i class="fas fa-user"></i>
+                  </div>
+                  <div>
+                    <p class="font-semibold text-gray-800"><%= groupedBacMembers.chairperson.employee_name %></p>
+                    <p class="text-gray-500 text-sm"><%= groupedBacMembers.chairperson.position %></p>
+                    <p class="text-sm text-blue-600 font-medium mt-1">BAC Chairperson</p>
+                  </div>
+                </div>
+              </div>
+            <% } %>
+
+            <% if (groupedBacMembers.viceChairperson) { %>
+              <div class="bg-white p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all">
+                <div class="flex items-center">
+                  <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3">
+                    <i class="fas fa-user"></i>
+                  </div>
+                  <div>
+                    <p class="font-semibold text-gray-800"><%= groupedBacMembers.viceChairperson.employee_name %></p>
+                    <p class="text-gray-500 text-sm"><%= groupedBacMembers.viceChairperson.position %></p>
+                    <p class="text-sm text-blue-600 font-medium mt-1">BAC Vice-Chairperson</p>
+                  </div>
+                </div>
+              </div>
+            <% } %>
+
+            <% groupedBacMembers.members.forEach((member) => { %>
+              <div class="bg-white p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all">
+                <div class="flex items-center">
+                  <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3">
+                    <i class="fas fa-user"></i>
+                  </div>
+                  <div>
+                    <p class="font-semibold text-gray-800"><%= member.employee_name %></p>
+                    <p class="text-gray-500 text-sm"><%= member.position %></p>
+                    <p class="text-sm text-blue-600 font-medium mt-1">BAC Member</p>
+                  </div>
+                </div>
+              </div>
+            <% }); %>
+
+            <% if (groupedBacMembers.approvedBy) { %>
+              <div class="bg-white p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all">
+                <div class="flex items-center">
+                  <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3">
+                    <i class="fas fa-user"></i>
+                  </div>
+                  <div>
+                    <p class="font-semibold text-gray-800"><%= groupedBacMembers.approvedBy.employee_name %></p>
+                    <p class="text-gray-500 text-sm"><%= groupedBacMembers.approvedBy.position %></p>
+                    <p class="text-sm text-blue-600 font-medium mt-1">City Mayor</p>
+                  </div>
+                </div>
+              </div>
+            <% } %>
+          </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex flex-wrap justify-end gap-4">
+          <button type="button" id="saveButton" class="flex items-center bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all shadow-sm">
+            <i class="fas fa-save mr-2"></i> Save
+          </button>
+          <button type="button" id="printButton" class="flex items-center bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-all shadow-sm">
+            <i class="fas fa-print mr-2"></i> Print
+          </button>
+<a href="/acceptance/<%= purchaseRequest.token %>" class="purple-button">
+  <i class="fas fa-arrow-right mr-2"></i> Next
+</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Print Section (updated to match the provided layout with legal paper size) -->
+  <div id="printSection" class="hidden bg-white p-4">
+    <div class="max-w-full mx-auto">
+      <div class="text-center mb-4">
+        <h1 class="font-bold text-lg mb-1">ABSTRACT OF QUOTATION IN PRICES</h1>
+        <h2 class="font-bold text-lg mb-1">BIDS & AWARDS COMMITTEE</h2>
+        <h3 class="font-bold text-lg">CITY GOVERNMENT OF CALAPAN</h3>
+      </div>
+      
+      <div class="mt-4 text-xs mb-4">
+        <div class="flex justify-between items-start mb-2">
+          <div class="w-3/4">
+            <p class="mb-1">For furnishing and delivery of supplies and materials to be used by</p>
+            <p class="font-bold uppercase border-b border-black pb-1"><%= purchaseRequest.department %></p>
+          </div>
+          <div class="w-1/4 text-right">
+            <p>Date: <span class="border-b border-black inline-block w-24 text-center" id="printDate"></span></p>
+          </div>
+        </div>
+        <div class="mb-2">
+          <p class="mb-1">Project Description:</p>
+          <p class="border-b border-black pb-1"><%= purchaseRequest.purpose %></p>
+        </div>
+      </div>
+      
+      <!-- Table with specific layout to match image and fit legal paper -->
+      <table class="w-full mt-2 abstract-table text-xs border-collapse border border-black">
+        <thead>
+          <!-- New header row for store names -->
+          <tr class="border border-black">
+            <th class="border border-black p-1 w-12 text-center" rowspan="2">QTY.</th>
+            <th class="border border-black p-1 w-16 text-center" rowspan="2">UNIT<br>OF ISSUE</th>
+            <th class="border border-black p-1 w-48 text-center" rowspan="2">ITEM & DESCRIPTION</th>
+            <th class="border border-black p-1 text-center" colspan="<%= Math.max(3, companyNames.length) %>">
+              <div class="text-center font-bold">Name of stores who offered and quoted their</div>
+              <div class="text-center font-bold">prices for each item.</div>
+            </th>
+          </tr>
+          <!-- Second header row for store names -->
+          <tr class="border border-black">
+            <% for (let i = 0; i < Math.max(3, companyNames.length); i++) { %>
+              <th class="border border-black p-1 text-center w-32">
+                <% if (companyNames[i]) { %>
+                  <%= companyNames[i] %>
+                <% } %>
+              </th>
+            <% } %>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (items && items.length > 0) { %>
+            <% items.forEach((item, index) => { %>
+              <tr class="border-b border-black">
+                <td class="border-l border-r border-black p-1 text-center"><%= item.quantity %></td>
+                <td class="border-l border-r border-black p-1 text-center"><%= item.unit %></td>
+                <td class="border-l border-r border-black p-1"><%= item.item_description %></td>
+                <% for (let i = 0; i < Math.max(3, companyNames.length); i++) { %>
+                  <% 
+                    const company = companyNames[i];
+                    const supplierQuote = company ? 
+                      supplierQuotes.find(sq => sq.item_id === item.item_id && sq.company_name === company) : null;
+                  %>
+                  <td class="border-l border-r border-black p-1 text-center">
+                    <% if (supplierQuote) { %>
+                      <%= supplierQuote.unit_cost %>
+                    <% } %>
+                  </td>
+                <% } %>
+              </tr>
+            <% }); %>
+          <% } %>
+
+          <!-- Add empty rows to fill the table (adjusted for legal paper) -->
+          <% const emptyRowsNeeded = Math.max(35 - (items ? items.length : 0), 0); %>
+          <% for (let i = 0; i < emptyRowsNeeded; i++) { %>
+            <tr class="border-b border-black" style="height: 1.2em;">
+              <td class="border-l border-r border-black p-1"></td>
+              <td class="border-l border-r border-black p-1"></td>
+              <td class="border-l border-r border-black p-1"></td>
+              <% for (let j = 0; j < Math.max(3, companyNames.length); j++) { %>
+                <td class="border-l border-r border-black p-1"></td>
+              <% } %>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+      
+      <div class="mt-4 text-xs">
+        <p class="text-justify leading-tight">
+          WE HEREBY CERTIFY that we opened the above quotations, that there were no more other store / dealer and that the above were the only dealers who quoted their prices and that the abstract is true and correct. We further certify that the Shopping was conducted by the Bids & Awards Committee whose signature appeared on each shopping forms.
+        </p>
+      </div>
+      
+      <!-- BAC Members Signature Layout - Updated to match the screenshot -->
+      <div class="mt-6 text-xs">
+        <div class="flex justify-between">
+          <!-- First row - 3 BAC members -->
+          <% let normalMembers = groupedBacMembers.members || []; %>
+          <% if (normalMembers.length > 0) { %>
+            <div class="text-center" style="width: 30%;">
+              <div class="h-12"></div> <!-- Space for signature -->
+              <div class="font-bold"><%= normalMembers[0] ? normalMembers[0].employee_name.toUpperCase() : '' %></div>
+              <div><%= normalMembers[0] ? normalMembers[0].position : '' %></div>
+              <div class="font-bold">BAC Member</div>
+            </div>
+          <% } %>
+          
+          <% if (normalMembers.length > 1) { %>
+            <div class="text-center" style="width: 30%;">
+              <div class="h-12"></div> <!-- Space for signature -->
+              <div class="font-bold"><%= normalMembers[1] ? normalMembers[1].employee_name.toUpperCase() : '' %></div>
+              <div><%= normalMembers[1] ? normalMembers[1].position : '' %></div>
+              <div class="font-bold">BAC Member</div>
+            </div>
+          <% } %>
+          
+          <% if (normalMembers.length > 2) { %>
+            <div class="text-center" style="width: 30%;">
+              <div class="h-12"></div> <!-- Space for signature -->
+              <div class="font-bold"><%= normalMembers[2] ? normalMembers[2].employee_name.toUpperCase() : '' %></div>
+              <div><%= normalMembers[2] ? normalMembers[2].position : '' %></div>
+              <div class="font-bold">BAC Member</div>
+            </div>
+          <% } %>
+        </div>
+        
+        <!-- Second row - Vice Chair, Chair, and Mayor aligned together -->
+        <div class="flex justify-between mt-8">
+          <!-- Vice Chairperson -->
+          <% if (groupedBacMembers.viceChairperson) { %>
+            <div class="text-center" style="width: 30%;">
+              <div class="h-12"></div> <!-- Space for signature -->
+              <div class="font-bold">DR. <%= groupedBacMembers.viceChairperson.employee_name.toUpperCase() %></div>
+              <div><%= groupedBacMembers.viceChairperson.position %></div>
+              <div class="font-bold">BAC Vice-Chairperson</div>
+            </div>
+          <% } %>
+          
+          <!-- Chairperson -->
+          <% if (groupedBacMembers.chairperson) { %>
+            <div class="text-center" style="width: 30%;">
+              <div class="h-12"></div> <!-- Space for signature -->
+              <div class="font-bold">ENGR. <%= groupedBacMembers.chairperson.employee_name.toUpperCase() %></div>
+              <div><%= groupedBacMembers.chairperson.position %></div>
+              <div class="font-bold">BAC Chairperson</div>
+            </div>
+          <% } %>
+          
+          <!-- City Mayor -->
+          <% if (groupedBacMembers.approvedBy) { %>
+            <div class="text-center" style="width: 30%;">
+              <div class="h-12"></div> <!-- Space for signature -->
+              <div class="font-bold"><%= groupedBacMembers.approvedBy.employee_name.toUpperCase() %></div>
+              <div><%= groupedBacMembers.approvedBy.position %></div>
+              <div class="font-bold">City Mayor</div>
+            </div>
+          <% } %>
+        </div>
+      </div>
+      
+      <div class="mt-6 text-xs text-left">
+        <p>Abstract 2021 v. 2</p>
+      </div>
+    </div>
+  </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Save button functionality
+    document.getElementById('saveButton').addEventListener('click', saveAbstract);
+    
+    // Print button functionality
+    document.getElementById('printButton').addEventListener('click', preparePrint);
+});
+
+// Save function
+async function saveAbstract() {
+    try {
+        const formData = {
+            pr_id: document.getElementById('pr_id').value,
+            date: document.getElementById('abstractDate').value
+        };
+
+        if (!formData.pr_id || !formData.date) {
+            alert('Please fill in all required fields');
+            return;
+        }
+
+        const response = await fetch('/save-abstract', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(result.message || 'Server returned an error');
+        }
+
+        if (result.success) {
+            alert(result.message);
+            window.location.reload();
+        } else {
+            throw new Error(result.message || 'Failed to save abstract');
+        }
+    } catch (error) {
+        console.error('Save error:', error);
+        alert('Error saving abstract: ' + error.message);
+    }
+}
+
+// Print function (updated for legal paper size and improved layout)
+function preparePrint() {
+    console.log("Print button clicked");
+    
+    // Update the date in print section
+    const dateInput = document.getElementById('abstractDate').value;
+    if (dateInput) {
+        try {
+            const printDate = new Date(dateInput);
+            document.getElementById('printDate').textContent = printDate.toLocaleDateString();
+        } catch (e) {
+            console.error('Date format error:', e);
+            document.getElementById('printDate').textContent = '';
+        }
+    }
+    
+    // Show the print section
+    const printSection = document.getElementById('printSection');
+    printSection.classList.remove('hidden');
+    
+    // Add print-specific styles for legal paper
+    const printStyle = document.createElement('style');
+    printStyle.innerHTML = `
+        @page {
+            size: legal;
+            margin: 0.5in;
+        }
+        body {
+            background-color: white !important;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: Arial, sans-serif;
+        }
+        #printSection {
+            position: relative;
+            left: 0;
+            top: 0;
+            width: 100%;
+            margin: 0;
+            padding: 0.25in;
+            background-color: white;
+            font-size: 11px;
+        }
+        /* Hide everything except the print section */
+        body > *:not(#printSection) {
+            display: none !important;
+            visibility: hidden !important;
+        }
+        .no-print, 
+        .lg\\:ml-64, 
+        .sidebar, 
+        [class*="sidebar"], 
+        [id*="sidebar"],
+        nav,
+        button,
+        #abstractForm,
+        .main-content > *:not(#printSection) {
+            display: none !important;
+            visibility: hidden !important;
+            width: 0 !important;
+            height: 0 !important;
+            position: absolute !important;
+            overflow: hidden !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        /* Table styling for legal paper */
+        .abstract-table {
+            width: 100%;
+            border-collapse: collapse;
+            page-break-inside: auto;
+            margin-top: 0.2in;
+        }
+        .abstract-table tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+            height: 18px !important;
+        }
+        .abstract-table {
+            border: 1px solid black;
+        }
+        .abstract-table thead th {
+            border: 1px solid black;
+            padding: 3px;
+            font-size: 9px;
+            text-align: center;
+            vertical-align: middle;
+            font-weight: bold;
+        }
+        .abstract-table td {
+            border: 1px solid black;
+            padding: 2px;
+            font-size: 11px;
+            height: 18px !important;
+            vertical-align: top;
+        }
+        /* Title styles for legal paper */
+        #printSection h1, #printSection h2, #printSection h3 {
+            font-size: 16px;
+            margin: 1px 0;
+            line-height: 1.2;
+        }
+        /* Adjust spacing for legal paper */
+        #printSection .mt-4 {
+            margin-top: 0.15in;
+        }
+        #printSection .mt-6 {
+            margin-top: 0.2in;
+        }
+        #printSection .mt-8 {
+            margin-top: 0.25in;
+        }
+        /* Signature section adjustments */
+        .h-12 {
+            height: 0.4in;
+        }
+        /* Text size adjustments */
+        #printSection .text-xs {
+            font-size: 11px;
+            line-height: 1.3;
+        }
+    `;
+    document.head.appendChild(printStyle);
+    
+    // Print the document
+    window.print();
+    
+    // Clean up after printing
+    setTimeout(() => {
+        printSection.classList.add('hidden');
+        if (printStyle && printStyle.parentNode) {
+            document.head.removeChild(printStyle);
+        }
+    }, 500);
+}
+</script>
+</body>
+</html>

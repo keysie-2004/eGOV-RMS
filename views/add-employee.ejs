@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Add Employee</title>
+  <link href="/src/table.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png"/> <!-- Favicon link -->
+</head>
+
+<body class="bg-blue-50 font-sans">
+  <!-- Include Sidebar -->
+  <%- include('partials/sidebar') %>
+
+  <!-- Main Content -->
+  <div class="lg:ml-64 p-7 lg:p-10">
+    <div class="w-full">
+      <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
+        <h2 class="text-2xl font-bold text-blue-700 mb-6">Add Employee</h2>
+
+        <% if (error) { %>
+          <p class="text-red-500 mb-4"><%= error %></p>
+        <% } %>
+
+        <% if (success) { %>
+          <p class="text-green-500 mb-4"><%= success %></p>
+        <% } %>
+
+        <form action="/add-employee" method="POST">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div>
+              <label class="block text-gray-600 mb-2">First Name</label>
+              <input type="text" name="first_name" class="w-full p-3 border rounded-lg bg-blue-50" required />
+            </div>
+            <div>
+              <label class="block text-gray-600 mb-2">Middle Name</label>
+              <input type="text" name="middle_name" class="w-full p-3 border rounded-lg bg-blue-50" />
+            </div>
+            <div>
+              <label class="block text-gray-600 mb-2">Last Name</label>
+              <input type="text" name="last_name" class="w-full p-3 border rounded-lg bg-blue-50" required />
+            </div>
+            <div>
+              <label class="block text-gray-600 mb-2">Department</label>
+              <select name="department_id" class="w-full p-3 border rounded-lg bg-blue-50" required>
+                <option value="">Select Department</option>
+                <% departments.forEach(department => { %>
+                  <option value="<%= department.department_id %>"><%= department.department_name %></option>
+                <% }); %>
+              </select>
+            </div>
+            <div>
+              <label class="block text-gray-600 mb-2">Position</label>
+              <input type="text" name="position" class="w-full p-3 border rounded-lg bg-blue-50" required />
+            </div>
+            <div>
+              <label class="block text-gray-600 mb-2">Birth Date</label>
+              <input type="date" name="b_date" class="w-full p-3 border rounded-lg bg-blue-50" required />
+            </div>
+            <div>
+              <label class="block text-gray-600 mb-2">TIN Number</label>
+              <input type="text" name="tin_no" class="w-full p-3 border rounded-lg bg-blue-50" required />
+            </div>
+          </div>
+          <div class="flex justify-end">
+            <button class="bg-blue-700 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-blue-800" type="submit">
+              Add Employee
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

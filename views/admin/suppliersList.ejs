@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supplier Management</title>
+  <link href="/src/table.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap4.min.css" rel="stylesheet">
+    <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png"/>
+</head>
+<body class="bg-blue-50 font-sans min-h-screen">
+    <!-- Include Admin Sidebar -->
+    <%- include('../partials/sidebar') %>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64 p-7 lg:p-10">
+        <div class="bg-white rounded-lg shadow-sm p-6 lg:p-10">
+            <!-- Page Header -->
+            <div class="mb-6">
+                <h1 class="text-2xl font-bold text-blue-700">Supplier Management</h1>
+                <p class="text-sm text-gray-600 mt-1">Manage and monitor supplier accounts</p>
+            </div>
+
+            <!-- Status Tabs -->
+                <div class="flex flex-wrap gap-2 mb-6">
+                    <a href="/admin/suppliers?status=all" class="status-tab <%= currentStatus === 'all' ? 'active' : 'inactive' %>">
+                        All Suppliers
+                    </a>
+                    <a href="/admin/suppliers?status=pending" class="status-tab <%= currentStatus === 'pending' ? 'active' : 'inactive' %>">
+                        Pending
+                    </a>
+                    <a href="/admin/suppliers?status=approved" class="status-tab <%= currentStatus === 'approved' ? 'active' : 'inactive' %>">
+                        Approved
+                    </a>
+                    <a href="/admin/suppliers?status=banned" class="status-tab <%= currentStatus === 'banned' ? 'active' : 'inactive' %>">
+                        Banned
+                    </a>
+                </div>
+
+            <!-- Search Bar -->
+            <div class="mb-6">
+                <div class="relative w-full sm:w-64">
+                    <input type="text" id="supplierSearch" placeholder="Search suppliers..." 
+                           class="w-full p-3 pl-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-100">
+                    <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Suppliers Table -->
+            <div class="overflow-x-auto">
+                <table id="suppliersTable" class="w-full border-collapse">
+                    <thead>
+                        <tr class="bg-blue-700 text-white">
+                            <th class="p-3 text-left text-xs font-medium uppercase tracking-wider">ID</th>
+                            <th class="p-3 text-left text-xs font-medium uppercase tracking-wider">Company</th>
+                            <th class="p-3 text-left text-xs font-medium uppercase tracking-wider">Contact</th>
+                            <th class="p-3 text-left text-xs font-medium uppercase tracking-wider">Email</th>
+                            <th class="p-3 text-left text-xs font-medium uppercase tracking-wider">Rating</th>
+                            <th class="p-3 text-left text-xs font-medium uppercase tracking-wider">Status</th>
+                            <th class="p-3 text-left text-xs font-medium uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <!-- Data will be loaded via AJAX -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Edit Modal -->
+    <div class="fixed z-50 inset-0 bg-black bg-opacity-50 hidden" id="statusModal">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-blue-700" id="modalTitle">Edit Supplier Status</h3>
+                        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600 mb-4" id="modalMessage">Select the new status for this supplier:</p>
+                        <div class="space-y-3">
+                            <label class="flex items-center">
+                                <input type="radio" name="statusOption" value="pending" class="h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300" checked>
+                                <span class="ml-3 text-sm font-medium text-gray-700">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        <i class="fas fa-clock mr-1"></i> Pending
+                                    </span>
+                                </span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="statusOption" value="approved" class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300">
+                                <span class="ml-3 text-sm font-medium text-gray-700">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-medium bg-green-100 text-green-800">
+                                        <i class="fas fa-check mr-1"></i> Approved
+                                    </span>
+                                </span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="statusOption" value="banned" class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300">
+                                <span class="ml-3 text-sm font-medium text-gray-700">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-medium bg-red-100 text-red-800">
+                                        <i class="fas fa-ban mr-1"></i> Banned
+                                    </span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button type="button" onclick="closeModal()" 
+                                class="px-4 py-2 text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="button" id="confirmAction" 
+                                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-save mr-2"></i> Update Status
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+    $(document).ready(function() {
+        const table = $('#suppliersTable').DataTable({
+            processing: true,
+            serverSide: true,
+            responsive: true,
+            ajax: {
+                url: '/admin/suppliers/data',
+                type: 'GET',
+                data: function(d) {
+                    d.status = '<%= currentStatus %>';
+                    d.search = $('#supplierSearch').val();
+                }
+            },
+            columns: [
+                { 
+                    data: 'supplier_id',
+                    width: '80px'
+                },
+                { 
+                    data: 'company_name',
+                    render: function(data, type, row) {
+                        return `<a href="/admin/suppliers/${row.supplier_id}" class="text-blue-600 hover:text-blue-800 font-medium">${data}</a>`;
+                    }
+                },
+                { data: 'contact_person' },
+                { 
+                    data: 'email',
+                    render: function(data) {
+                        return `<a href="mailto:${data}" class="text-gray-600 hover:text-gray-800">${data}</a>`;
+                    }
+                },
+                { 
+                    data: 'rating',
+                    render: function(data) {
+                        if (!data) return '<span class="text-gray-400">Not rated</span>';
+                        const rating = parseFloat(data).toFixed(1);
+                        return `<span class="text-yellow-600 font-medium">${rating} <i class="fas fa-star"></i></span>`;
+                    },
+                    width: '100px'
+                },
+                { 
+                    data: 'is_approved',
+                    render: function(data, type, row) {
+                        if (row.is_banned) {
+                            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        <i class="fas fa-ban mr-1"></i> Banned
+                                    </span>`;
+                        } else if (data) {
+                            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        <i class="fas fa-check mr-1"></i> Approved
+                                    </span>`;
+                        } else {
+                            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        <i class="fas fa-clock mr-1"></i> Pending
+                                    </span>`;
+                        }
+                    },
+                    width: '120px'
+                },
+                {
+                    data: 'supplier_id',
+                    render: function(data, type, row) {
+                        return `
+                            <div class="flex flex-wrap gap-2">
+                                <button class="edit-status inline-flex items-center px-3 py-1 text-xs font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 transition-colors duration-200" 
+                                        data-id="${data}" data-company="${row.company_name}" 
+                                        data-current-status="${row.is_banned ? 'banned' : (row.is_approved ? 'approved' : 'pending')}">
+                                    <i class="fas fa-edit mr-1"></i> Edit Status
+                                </button>
+                                <a href="/admin/suppliers/${data}" 
+                                   class="inline-flex items-center px-3 py-1 text-xs font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors duration-200">
+                                    <i class="fas fa-eye mr-1"></i> View
+                                </a>
+                            </div>
+                        `;
+                    },
+                    orderable: false,
+                    searchable: false,
+                    width: '200px'
+                }
+            ],
+            order: [[0, 'desc']],
+            pageLength: 25,
+            lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+            language: {
+                processing: '<div class="flex items-center justify-center"><i class="fas fa-spinner fa-spin mr-2"></i> Loading...</div>',
+                emptyTable: 'No suppliers found',
+                zeroRecords: 'No matching suppliers found'
+            }
+        });
+
+        // Handle search input with debounce
+        let searchTimeout;
+        $('#supplierSearch').on('input', function() {
+            clearTimeout(searchTimeout);
+            const searchValue = this.value;
+            searchTimeout = setTimeout(function() {
+                table.search(searchValue).draw();
+            }, 300);
+        });
+
+        // Modal functions
+        window.openModal = function() {
+            document.getElementById('statusModal').classList.remove('hidden');
+        }
+
+        window.closeModal = function() {
+            document.getElementById('statusModal').classList.add('hidden');
+            // Reset to pending as default
+            document.querySelector('input[name="statusOption"][value="pending"]').checked = true;
+        }
+
+        // Handle status edit button
+        let currentSupplierId = null;
+        let currentCompanyName = null;
+
+        $(document).on('click', '.edit-status', function() {
+            currentSupplierId = $(this).data('id');
+            currentCompanyName = $(this).data('company');
+            const currentStatus = $(this).data('current-status');
+            
+            // Set the modal message
+            $('#modalMessage').text(`Update status for ${currentCompanyName}:`);
+            
+            // Set current status as selected, or default to pending
+            const statusToSelect = currentStatus || 'pending';
+            document.querySelector(`input[name="statusOption"][value="${statusToSelect}"]`).checked = true;
+            
+            openModal();
+        });
+
+        // Handle confirm action
+        $('#confirmAction').click(function() {
+            if (!currentSupplierId) return;
+            
+            const selectedStatus = document.querySelector('input[name="statusOption"]:checked').value;
+            
+            // Show loading state
+            $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Updating...');
+            
+            $.ajax({
+                url: `/admin/suppliers/${currentSupplierId}/status`,
+                method: 'POST',
+                data: { 
+                    action: selectedStatus,
+                    status: selectedStatus 
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Status Updated',
+                            text: `${currentCompanyName} status has been updated to ${selectedStatus}`,
+                            timer: 3000,
+                            showConfirmButton: false,
+                            toast: true,
+                            position: 'top-end'
+                        });
+                        table.ajax.reload(null, false); // Keep current page
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Update Failed',
+                            text: response.message || 'Failed to update supplier status'
+                        });
+                    }
+                    closeModal();
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: xhr.responseJSON?.message || 'Error updating supplier status'
+                    });
+                    closeModal();
+                },
+                complete: function() {
+                    // Reset button state
+                    $('#confirmAction').prop('disabled', false).html('<i class="fas fa-save mr-2"></i> Update Status');
+                }
+            });
+        });
+
+        // Close modal on escape key
+        $(document).keydown(function(e) {
+            if (e.keyCode === 27) { // Escape key
+                closeModal();
+            }
+        });
+    });
+    </script>
+</body>
+</html>

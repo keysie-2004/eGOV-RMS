@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supplier Login</title>
+  <link href="/src/login.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png">
+</head>
+<body class="bg-blue-50 font-sans">
+  <div class="flex items-center justify-center min-h-screen">
+    <div class="flex shadow-lg rounded overflow-hidden w-full max-w-4xl">
+      <div class="w-full lg:w-1/2 bg-white p-10">
+        <h2 class="text-2xl font-bold text-blue-700 mb-2">Supplier Login</h2>
+        <p class="mb-4 text-gray-600">Login to your supplier account</p>
+
+        <form id="loginForm" action="/supplier/login" method="POST">
+          <div class="mb-4">
+            <input type="email" name="email" class="w-full p-3 border rounded-lg bg-blue-50" placeholder="Email" required>
+          </div>
+          <div class="mb-4">
+            <input type="password" name="password" class="w-full p-3 border rounded-lg bg-blue-50" placeholder="Password" required>
+          </div>
+          <div class="mb-4 text-right">
+            <a href="/supplier/forgot-password" class="text-gray-600 hover:text-blue-700">Forgot your password?</a>
+          </div>
+          <button type="submit" class="w-full py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition duration-300">
+            LOG IN
+          </button>
+        </form>
+
+        <div class="mt-4 text-center">
+          <span>Don't have an account? <a href="/supplier/register" class="text-blue-700 hover:underline">Register</a></span>
+        </div>
+      </div>
+
+      <div class="w-full lg:w-1/2 bg-blue-700 text-white flex flex-col items-center justify-center p-10">
+        <img src="/img/Calapan_City_Logo.png" alt="Calapan City Logo" class="mb-4" width="200" height="200">
+        <h2 class="text-2xl font-bold mb-2">Welcome Suppliers!</h2>
+        <p class="text-center mb-4">Join our procurement system to participate in biddings and grow your business.</p>
+        <button class="px-4 py-2 border border-white rounded-lg hover:bg-white hover:text-blue-700 transition duration-300" onclick="window.location.href='/supplier/register'">
+          REGISTER
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="errorModal" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
+      <p id="errorMessage" class="text-red-500 text-lg font-bold">
+        <% if (locals.error && error.length > 0) { %>
+          <%= error[0] %>
+        <% } %>
+      </p>
+      <button onclick="closeModal()" class="mt-4 px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition duration-300">
+        Close
+      </button>
+    </div>
+  </div>
+
+  <div id="successModal" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
+      <p id="successMessage" class="text-green-500 text-lg font-bold">Login successful! Redirecting...</p>
+      <div class="mt-4">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-700 mx-auto"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showError(message) {
+      console.log('Showing error:', message);
+      document.getElementById("errorMessage").innerText = message;
+      document.getElementById("errorModal").classList.remove("hidden");
+    }
+
+    function showSuccess(message = "Login successful! Redirecting...") {
+      console.log('Showing success:', message);
+      document.getElementById("successMessage").innerText = message;
+      document.getElementById("successModal").classList.remove("hidden");
+    }
+
+    function closeModal() {
+      document.getElementById("errorModal").classList.add("hidden");
+      document.getElementById("successModal").classList.add("hidden");
+    }
+
+    <% if (locals.error && error.length > 0) { %>
+      showError('<%= error[0] %>');
+    <% } %>
+
+    document.getElementById("loginForm").addEventListener("submit", async function(event) {
+      event.preventDefault();
+      console.log('Form submitted');
+      const formData = new FormData(this);
+      const loginData = Object.fromEntries(formData);
+      try {
+        const response = await fetch("/supplier/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(loginData)
+        });
+        console.log('Response status:', response.status);
+        const result = await response.json();
+        console.log('Response result:', result);
+        if (result.success) {
+          showSuccess();
+          setTimeout(() => {
+            console.log('Redirecting to dashboard...');
+            window.location.href = "/supplier/dashboard";
+          }, 1500);
+        } else {
+          showError(result.message || 'Login failed');
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        showError('An error occurred. Please try again.');
+      }
+    });
+  </script>
+</body>
+</html>

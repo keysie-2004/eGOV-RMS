@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Incoming Reports Management</title>
+  <link href="/src/table.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png"/>
+  <style>
+  </style>
+</head>
+<body class="bg-blue-50 font-sans">
+  <%- include('partials/sidebar') %>
+
+  <div class="lg:ml-64 p-7 lg:p-10">
+    <div class="w-full">
+      <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
+        <!-- Success and Error Messages -->
+        <% if (success && success.length) { %>
+          <div class="mb-4 p-4 bg-green-100 text-green-700 rounded-lg">
+            <%= success %>
+          </div>
+        <% } %>
+        <% if (error && error.length) { %>
+          <div class="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+            <%= error %>
+          </div>
+        <% } %>
+        <% if (syncResult) { %>
+          <div class="mb-4 p-4 bg-blue-100 text-blue-700 rounded-lg">
+            <%= syncResult.message %> (Inserted: <%= syncResult.inserted %>, Skipped: <%= syncResult.skipped %>)
+          </div>
+        <% } %>
+
+        <div class="flex justify-between items-center mb-6 header-content">
+          <h2 class="text-2xl font-bold text-blue-700">Incoming Reports Management</h2>
+          <div class="button-container">
+            <button id="showActive" class="button-same-size no-border bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+              <i class="fas fa-eye mr-2"></i>
+              <span>Show Active</span>
+            </button>
+            <button id="showArchived" class="button-same-size no-border bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+              <i class="fas fa-archive mr-2"></i>
+              <span>Show Archived</span>
+            </button>
+            <div class="form-wrapper">
+              <form action="/sync-ics" method="POST">
+                <button type="submit" class="button-same-size no-border bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                  <i class="fas fa-database mr-2"></i>
+                  <span>Sync ICS</span>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="mb-6 relative">
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i class="fas fa-search text-gray-400"></i>
+            </div>
+            <input type="text" id="search" class="w-full pl-10 p-3 border rounded-lg bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300" placeholder="Search...">
+          </div>
+        </div>
+
+        <!-- Reports Table -->
+        <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+          <table class="min-w-full bg-white">
+            <thead>
+              <tr class="bg-blue-600 text-white">
+                <th class="py-3 px-4 text-left">PR ID</th>
+                <th class="py-3 px-4 text-left">Department</th>
+                <th class="py-3 px-4 text-left">Particulars</th>
+                <th class="py-3 px-4 text-left">Amount</th>
+                <th class="py-3 px-4 text-left">Supplier</th>
+                <th class="py-3 px-4 text-left">Transaction</th>
+                <th class="py-3 px-4 text-left">Date</th>
+                <th class="py-3 px-4 text-left">Last Updated By</th>
+                <th class="py-3 px-4 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="reportsTableBody">
+              <% reports.forEach(report => { %>
+                <tr class="hover:bg-gray-50 transition-colors <%= report.status === 'archived' ? 'bg-gray-100' : '' %>" 
+                    data-id="<%= report.incoming_id %>" 
+                    data-status="<%= report.status || 'active' %>">
+                  <td class="py-4 px-4"><%= report.pr_id %></td>
+                  <td class="py-4 px-4"><%= report.department %></td>
+                  <td class="py-4 px-4">
+                    <form action="/update" method="POST" class="update-form">
+                      <input type="hidden" name="incoming_id" value="<%= report.incoming_id %>">
+                      <input type="text" name="particulars" value="<%= report.particulars || '' %>" 
+                        class="w-full p-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-300 no-border">
+                  </td>
+                  <td class="py-4 px-4">
+                    ₱<%= parseFloat(report.amount || 0).toLocaleString('en-PH', {minimumFractionDigits: 2}) %>
+                  </td>
+                  <td class="py-4 px-4"><%= report.supplier %></td>
+                  <td class="py-4 px-4">
+                      <input type="text" name="transaction" value="<%= report.transaction || '' %>" 
+                        class="w-full p-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-300 no-border">
+                  </td>
+                  <td class="py-4 px-4">
+                      <input type="date" name="date" value="<%= report.formatted_date || '' %>" 
+                        class="w-full p-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-300 no-border">
+                  </td>                  
+                  <td class="py-4 px-4"><%= report.updated_by || 'N/A' %></td>
+                  <td class="py-4 px-4">
+                    <div class="flex justify-center space-x-2">
+                      <% if (report.status !== 'archived') { %>
+                        <button type="submit" class="update-btn bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors no-border" title="Save changes">
+                          <i class="fas fa-save"></i>
+                        </button>
+                        </form>
+                        <form action="/archive/<%= report.incoming_id %>" method="POST" class="inline">
+                          <button type="submit" class="archive-btn bg-yellow-500 text-white px-3 py-1.5 rounded-lg hover:bg-yellow-600 transition-colors no-border" title="Archive">
+                            <i class="fas fa-archive"></i>
+                          </button>
+                        </form>
+                        <% if (!report.is_synced) { %>
+                          <form action="/sync-ics/<%= report.incoming_id %>" method="POST" class="inline">
+                            <button type="submit" class="sync-ics-btn bg-purple-600 text-white px-3 py-1.5 rounded-lg hover:bg-purple-700 transition-colors no-border" title="Sync to ICS">
+                              <i class="fas fa-database"></i>
+                            </button>
+                          </form>
+                        <% } %>
+                      <% } else { %>
+                        <form action="/unarchive/<%= report.incoming_id %>" method="POST" class="inline">
+                          <button type="submit" class="unarchive-btn bg-green-500 text-white px-3 py-1.5 rounded-lg hover:bg-green-600 transition-colors no-border" title="Unarchive">
+                            <i class="fas fa-undo"></i>
+                          </button>
+                        </form>
+                      <% } %>
+                    </div>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      </div>      
+    </div>
+  </div>
+</body>
+</html>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Update hidden form fields before submission
+    document.querySelectorAll('.update-btn').forEach(button => {
+      button.addEventListener('click', function(e) {
+        const form = this.closest('form');
+        const row = this.closest('tr');
+
+        // Update hidden fields with current values
+        form.querySelector('input[name="particulars"]').value = 
+          row.querySelector('input[name="particulars"]').value;
+        form.querySelector('input[name="transaction"]').value = 
+          row.querySelector('input[name="transaction"]').value;
+        form.querySelector('input[name="date"]').value = 
+          row.querySelector('input[name="date"]').value;
+      });
+    });
+
+    // Handle global ICS sync button loading state
+    document.querySelector('form[action="/sync-ics"]').addEventListener('submit', function(e) {
+      const button = this.querySelector('button');
+      button.disabled = true;
+      button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Syncing...';
+    });
+
+    // Handle individual ICS sync button loading state
+    document.querySelectorAll('.sync-ics-btn').forEach(button => {
+      button.addEventListener('click', function(e) {
+        const form = this.closest('form');
+        form.addEventListener('submit', function() {
+          button.disabled = true;
+          button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        });
+      });
+    });
+
+    let currentFilter = 'active'; // Default filter is 'active'
+
+    function filterReports(status) {
+      document.querySelectorAll('#reportsTableBody tr').forEach(row => {
+        const isArchived = row.dataset.status === 'archived';
+        if (status === 'active') {
+          row.style.display = isArchived ? 'none' : '';
+        } else if (status === 'archived') {
+          row.style.display = isArchived ? '' : 'none';
+        }
+      });
+    }
+
+    // Initialize to only show active reports
+    filterReports(currentFilter);
+    document.getElementById('showActive').classList.add('bg-blue-600', 'text-white');
+
+    // Filter button: Show Active
+    document.getElementById('showActive').addEventListener('click', function() {
+      currentFilter = 'active';
+      filterReports(currentFilter);
+      this.classList.add('bg-blue-600', 'text-white');
+      document.getElementById('showArchived').classList.remove('bg-gray-600', 'text-white');
+      document.getElementById('search').dispatchEvent(new Event('input')); // Rerun search on new view
+    });
+
+    // Filter button: Show Archived
+    document.getElementById('showArchived').addEventListener('click', function() {
+      currentFilter = 'archived';
+      filterReports(currentFilter);
+      this.classList.add('bg-gray-600', 'text-white');
+      document.getElementById('showActive').classList.remove('bg-blue-600', 'text-white');
+      document.getElementById('search').dispatchEvent(new Event('input')); // Rerun search on new view
+    });
+
+    // Search input handling (only for visible rows in current filter)
+    document.getElementById('search').addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+
+      document.querySelectorAll('#reportsTableBody tr').forEach(row => {
+        if (row.style.display === 'none') return;
+        
+        const rowText = row.textContent.toLowerCase();
+        const isMatch = rowText.includes(searchTerm);
+        row.style.display = isMatch ? '' : 'none';
+      });
+    });
+
+    // Refresh functionality
+    document.getElementById('refreshReports').addEventListener('click', function() {
+      window.location.reload();
+    });
+  });
+</script>
+</body>
+</html>

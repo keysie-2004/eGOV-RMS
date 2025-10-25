@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supplier Registration</title>
+  <link href="/src/login.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png">
+  <style>
+    .form-step {
+      display: none;
+    }
+    .form-step.active {
+      display: block;
+    }
+  </style>
+</head>
+<body class="bg-blue-50 font-sans">
+  <!-- Registration Container -->
+  <div class="flex items-center justify-center min-h-screen">
+    <div class="flex shadow-lg rounded overflow-hidden w-full max-w-4xl">
+      <!-- Left Side: Registration Form -->
+      <div class="w-full lg:w-1/2 bg-white p-10">
+        <h2 class="text-2xl font-bold text-blue-700 mb-2">Supplier Registration</h2>
+        <p class="mb-4 text-gray-600">Create your supplier account</p>
+
+        <!-- Progress Steps -->
+        <div class="flex justify-between mb-6">
+          <div class="step flex flex-col items-center">
+            <div class="w-8 h-8 rounded-full bg-blue-700 text-white flex items-center justify-center mb-1">1</div>
+            <span class="text-xs">Company Info</span>
+          </div>
+          <div class="step flex flex-col items-center">
+            <div class="w-8 h-8 rounded-full bg-gray-300 text-gray-700 flex items-center justify-center mb-1">2</div>
+            <span class="text-xs">Contact Info</span>
+          </div>
+          <div class="step flex flex-col items-center">
+            <div class="w-8 h-8 rounded-full bg-gray-300 text-gray-700 flex items-center justify-center mb-1">3</div>
+            <span class="text-xs">Account Info</span>
+          </div>
+        </div>
+
+        <!-- Registration Form -->
+        <form id="registrationForm" action="/supplier/register" method="POST" enctype="multipart/form-data">
+          <!-- Step 1: Company Information -->
+          <div class="form-step active" id="step1">
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2">Company Name *</label>
+              <input type="text" name="company_name" class="w-full p-3 border rounded-lg bg-blue-50" required>
+            </div>
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2">Tax Identification Number *</label>
+              <input type="text" name="tax_id" class="w-full p-3 border rounded-lg bg-blue-50" required>
+            </div>
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2">Business Permit Number *</label>
+              <input type="text" name="business_permit" class="w-full p-3 border rounded-lg bg-blue-50" required>
+            </div>
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2">Business Permit File (PDF/Image) *</label>
+              <input type="file" name="permit_file" class="w-full p-3 border rounded-lg bg-blue-50" accept=".pdf,.jpg,.jpeg,.png" required>
+            </div>
+            <div class="flex justify-end">
+              <button type="button" onclick="nextStep(1, 2)" class="px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition duration-300">
+                Next <i class="fas fa-arrow-right ml-2"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 2: Contact Information -->
+          <div class="form-step" id="step2">
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2">Contact Person *</label>
+              <input type="text" name="contact_person" class="w-full p-3 border rounded-lg bg-blue-50" required>
+            </div>
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2">Email *</label>
+              <input type="email" name="email" class="w-full p-3 border rounded-lg bg-blue-50" required>
+            </div>
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2">Phone Number *</label>
+              <input type="tel" name="phone" class="w-full p-3 border rounded-lg bg-blue-50" required>
+            </div>
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2">Business Address *</label>
+              <textarea name="address" class="w-full p-3 border rounded-lg bg-blue-50" rows="3" required></textarea>
+            </div>
+            <div class="flex justify-between">
+              <button type="button" onclick="prevStep(2, 1)" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition duration-300">
+                <i class="fas fa-arrow-left mr-2"></i> Back
+              </button>
+              <button type="button" onclick="nextStep(2, 3)" class="px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition duration-300">
+                Next <i class="fas fa-arrow-right ml-2"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Step 3: Account Information -->
+          <div class="form-step" id="step3">
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2">Password *</label>
+              <input type="password" name="password" id="password" class="w-full p-3 border rounded-lg bg-blue-50" required>
+            </div>
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2">Confirm Password *</label>
+              <input type="password" name="confirm_password" id="confirm_password" class="w-full p-3 border rounded-lg bg-blue-50" required>
+            </div>
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2">Profile Picture (Optional)</label>
+              <input type="file" name="profile_image" class="w-full p-3 border rounded-lg bg-blue-50" accept=".jpg,.jpeg,.png">
+            </div>
+            <div class="mb-4 flex items-start">
+              <input type="checkbox" name="terms" id="terms" class="mt-1 mr-2" required>
+              <label for="terms" class="text-gray-700">I agree to the <a href="#" class="text-blue-700 hover:underline">Terms and Conditions</a> and <a href="#" class="text-blue-700 hover:underline">Privacy Policy</a> *</label>
+            </div>
+            <div class="flex justify-between">
+              <button type="button" onclick="prevStep(3, 2)" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition duration-300">
+                <i class="fas fa-arrow-left mr-2"></i> Back
+              </button>
+              <button type="submit" class="px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition duration-300">
+                Register <i class="fas fa-check ml-2"></i>
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <!-- Login Link -->
+        <div class="mt-4 text-center">
+          <span>Already have an account? <a href="/supplier/login" class="text-blue-700 hover:underline">Login</a></span>
+        </div>
+      </div>
+
+      <!-- Right Side: Welcome Message -->
+      <div class="w-full lg:w-1/2 bg-blue-700 text-white flex flex-col items-center justify-center p-10">
+        <img src="/img/Calapan_City_Logo.png" alt="Calapan City Logo" class="mb-4" width="200" height="200">
+        <h2 class="text-2xl font-bold mb-2">Join Our Supplier Network</h2>
+        <p class="text-center mb-4">Participate in government procurement opportunities and grow your business with Calapan City</p>
+        <div class="text-left w-full">
+          <h3 class="font-bold mb-2">Benefits:</h3>
+          <ul class="list-disc pl-5 space-y-2">
+            <li>Access to government procurement opportunities</li>
+            <li>Transparent bidding process</li>
+            <li>Fair evaluation system</li>
+            <li>Timely payments</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Modal -->
+  <div id="errorModal" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
+      <p id="errorMessage" class="text-red-500 text-lg font-bold"></p>
+      <button onclick="closeModal()" class="mt-4 px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition duration-300">
+        Close
+      </button>
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div id="successModal" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
+      <p id="successMessage" class="text-green-500 text-lg font-bold"></p>
+      <button onclick="window.location.href='/supplier/login'" class="mt-4 px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition duration-300">
+        Go to Login
+      </button>
+    </div>
+  </div>
+
+  <!-- JavaScript for Form Handling -->
+  <script>
+    // Function to show the error modal with a message
+    function showError(message) {
+      document.getElementById("errorMessage").innerText = message;
+      document.getElementById("errorModal").classList.remove("hidden");
+    }
+
+    // Function to show the success modal with a message
+    function showSuccess(message) {
+      document.getElementById("successMessage").innerText = message;
+      document.getElementById("successModal").classList.remove("hidden");
+    }
+
+    // Function to close the modals
+    function closeModal() {
+      document.getElementById("errorModal").classList.add("hidden");
+      document.getElementById("successModal").classList.add("hidden");
+    }
+
+    // Form step navigation
+    function nextStep(current, next) {
+      // Validate current step before proceeding
+      let valid = true;
+      const currentStep = document.getElementById(`step${current}`);
+      const inputs = currentStep.querySelectorAll('input[required], textarea[required]');
+      
+      inputs.forEach(input => {
+        if (!input.value.trim()) {
+          input.classList.add('border-red-500');
+          valid = false;
+        } else {
+          input.classList.remove('border-red-500');
+        }
+      });
+
+      // Special validation for password match in step 3
+      if (current === 2) {
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+        
+        if (password !== confirmPassword) {
+          showError('Passwords do not match');
+          valid = false;
+        }
+      }
+
+      if (!valid) {
+        showError('Please fill in all required fields');
+        return;
+      }
+
+      // Proceed to next step
+      document.getElementById(`step${current}`).classList.remove('active');
+      document.getElementById(`step${next}`).classList.add('active');
+      
+      // Update progress steps
+      document.querySelectorAll('.step').forEach((step, index) => {
+        const number = step.querySelector('div');
+        if (index < next - 1) {
+          number.classList.remove('bg-gray-300', 'text-gray-700');
+          number.classList.add('bg-blue-700', 'text-white');
+        } else {
+          number.classList.remove('bg-blue-700', 'text-white');
+          number.classList.add('bg-gray-300', 'text-gray-700');
+        }
+      });
+    }
+
+    function prevStep(current, prev) {
+      document.getElementById(`step${current}`).classList.remove('active');
+      document.getElementById(`step${prev}`).classList.add('active');
+      
+      // Update progress steps
+      document.querySelectorAll('.step').forEach((step, index) => {
+        const number = step.querySelector('div');
+        if (index < prev - 1) {
+          number.classList.remove('bg-gray-300', 'text-gray-700');
+          number.classList.add('bg-blue-700', 'text-white');
+        } else {
+          number.classList.remove('bg-blue-700', 'text-white');
+          number.classList.add('bg-gray-300', 'text-gray-700');
+        }
+      });
+    }
+
+    // Handle form submission
+    document.getElementById("registrationForm").addEventListener("submit", async function(event) {
+      event.preventDefault(); // Prevent the default form submission
+
+      // Validate terms checkbox
+      if (!document.getElementById('terms').checked) {
+        showError('You must agree to the terms and conditions');
+        return;
+      }
+
+      // Validate password match
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirm_password').value;
+      
+      if (password !== confirmPassword) {
+        showError('Passwords do not match');
+        return;
+      }
+
+      const formData = new FormData(this); // Get form data
+      
+      try {
+        const response = await fetch("/supplier/register", {
+          method: "POST",
+          body: formData // Send as FormData for file uploads
+        });
+
+        const result = await response.json(); // Parse the response
+
+        if (result.success) {
+          // Show success message
+          showSuccess('Registration successful! Your account is pending approval. You will receive an email once approved.');
+        } else {
+          // Display the error message in the modal
+          showError(result.message);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        showError('An error occurred during registration');
+      }
+    });
+  </script>
+</body>
+</html>

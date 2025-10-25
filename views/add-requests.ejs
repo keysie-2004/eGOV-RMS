@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Request Form</title>
+  <link href="/src/table.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png"/> 
+</head>
+
+<body class="bg-blue-50 font-sans">
+  <!-- Include Sidebar -->
+  <%- include('partials/sidebar') %>
+
+  <!-- Include Modals -->
+  <%- include('partials/modal') %>
+
+  <!-- Main Content -->
+  <div class="lg:ml-64 p-7 lg:p-10">
+    <div class="w-full">
+      <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
+        <h2 class="text-2xl font-bold text-blue-700 mb-6">Request Form</h2>
+        <form id="requestForm">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Left Column -->
+            <div class="space-y-6">
+              <!-- LGU -->
+              <div>
+                <label class="block text-gray-600 mb-2" for="lgu">LGU</label>
+                <input type="text" id="lgu" name="lgu" class="w-full p-3 border rounded-lg bg-blue-50" value="CITY OF CALAPAN" readonly />
+              </div>
+
+              <!-- Department (pre-filled with user's department) -->
+              <div>
+                <label class="block text-gray-600 mb-2" for="department">Department</label>
+                <input type="text" id="department" name="department" class="w-full p-3 border rounded-lg bg-blue-50" value="<%= user.department %>" readonly />
+              </div>
+
+              <!-- FPP -->
+              <div>
+                <label class="block text-gray-600 mb-2" for="fpp">FPP</label>
+                <select id="fpp" name="fpp" class="w-full p-3 border rounded-lg bg-blue-50" required>
+                  <option value="">Select FPP</option>
+                  <% eppCodes.forEach(code => { %>
+                    <option value="<%= code.epp_code %>"><%= code.epp_name %></option>
+                  <% }) %>
+                </select>
+              </div>
+
+              <!-- Purpose -->
+              <div>
+                <label class="block text-gray-600 mb-2" for="purpose">Purpose</label>
+                <input type="text" id="purpose" name="purpose" class="w-full p-3 border rounded-lg bg-blue-50"   />
+              </div>
+
+              <!-- Cash Availability -->
+              <div>
+                <label class="block text-gray-600 mb-2" for="cash_availability">Cash Availability</label>
+                <input type="text" id="cash_availability" name="cash_availability" 
+                       class="w-full p-3 border rounded-lg bg-blue-50" 
+                       value="<%= cashAvailability || '' %>" readonly />
+              </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="space-y-6">
+              <!-- Fund -->
+              <div>
+                <label class="block text-gray-600 mb-2" for="fund">Fund</label>
+                <input type="text" id="fund" name="fund" class="w-full p-3 border rounded-lg bg-blue-50"   />
+              </div>
+
+              <!-- Section -->
+              <div>
+                <label class="block text-gray-600 mb-2" for="section">Section</label>
+                <input type="text" id="section" name="section" class="w-full p-3 border rounded-lg bg-blue-50" />
+              </div>
+
+              <!-- Date Requested -->
+              <div>
+                <label class="block text-gray-600 mb-2" for="date_requested">Date Requested</label>
+                <input type="date" id="date_requested" name="date_requested" class="w-full p-3 border rounded-lg bg-blue-50"   />
+              </div>
+
+              <!-- Requested By (pre-filled with user's name) -->
+              <div>
+                <label class="block text-gray-600 mb-2" for="requested_by">Requested By</label>
+                <input type="text" id="requested_by" name="requested_by" class="w-full p-3 border rounded-lg bg-blue-50" value="<%= user.employee_name %>" readonly />
+              </div>
+
+              <!-- Approved By -->
+              <div>
+                <label class="block text-gray-600 mb-2" for="approved_by">Approved By</label>
+                <input type="text" id="approved_by" name="approved_by" 
+                       class="w-full p-3 border rounded-lg bg-blue-50" 
+                       value="<%= approvedBy || '' %>" readonly />
+              </div>
+            </div>
+          </div>
+
+          <!-- Items Section -->
+          <div id="itemsSection" class="mb-6">
+            <div class="flex items-center mb-4">
+              <h3 class="text-xl font-bold text-blue-700 mr-3">Items</h3>
+              <div class="w-50"> <!-- Changed from w-32 to w-50 -->
+                <select id="itemCount" name="itemCount" class="w-full p-2 border rounded-lg bg-blue-50"  >
+                  <option value="">Select items</option>
+                  <% for(let i = 1; i <= 10; i++) { %>
+                    <option value="<%= i %>"><%= i %></option>
+                  <% } %>
+                </select>
+              </div>
+            </div>
+            
+            <div id="itemsContainer">
+              <!-- Item fields will be dynamically added here -->
+            </div>
+            
+            <!-- Add Item Button at the bottom of items section -->
+            <div class="flex justify-start mt-4">
+              <button type="button" id="addItemButton" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                <i class="fas fa-plus mr-2"></i>Add Item
+              </button>
+            </div>
+          </div>
+
+          <!-- Submit Button at bottom right -->
+          <div class="flex justify-end mt-6">
+            <button type="submit" class="bg-blue-700 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-blue-800">
+              Submit
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Function to add a new item field
+    function addItemField() {
+      const itemsContainer = document.getElementById('itemsContainer');
+      const itemIndex = itemsContainer.children.length;
+
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 item-row';
+      itemDiv.innerHTML = `
+        <div>
+          <label class="block text-gray-600 mb-2">Item No</label>
+          <input type="number" name="items[${itemIndex}][item_no]" class="w-full p-3 border rounded-lg bg-blue-50 item-no" value="${itemIndex + 1}" readonly />
+        </div>
+        <div>
+          <label class="block text-gray-600 mb-2">Unit</label>
+          <input type="text" name="items[${itemIndex}][unit]" class="w-full p-3 border rounded-lg bg-blue-50"   />
+        </div>
+        <div>
+          <label class="block text-gray-600 mb-2">Item Description</label>
+          <input type="text" name="items[${itemIndex}][item_description]" class="w-full p-3 border rounded-lg bg-blue-50"   />
+        </div>
+        <div>
+          <label class="block text-gray-600 mb-2">Quantity</label>
+          <input type="number" name="items[${itemIndex}][quantity]" class="w-full p-3 border rounded-lg bg-blue-50"   />
+        </div>
+        <div>
+          <label class="block text-gray-600 mb-2">Unit Cost</label>
+          <input type="number" step="0.01" name="items[${itemIndex}][unit_cost]" class="w-full p-3 border rounded-lg bg-blue-50"   />
+        </div>
+        <div>
+          <label class="block text-gray-600 mb-2">Total Cost</label>
+          <input type="number" step="0.01" name="items[${itemIndex}][total_cost]" class="w-full p-3 border rounded-lg bg-blue-50" readonly />
+        </div>
+        <div>
+          <button type="button" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 remove-item">
+            Remove
+          </button>
+        </div>
+      `;
+
+      itemsContainer.appendChild(itemDiv);
+
+      // Add event listeners to calculate total cost
+      const quantityInput = itemDiv.querySelector('input[name$="[quantity]"]');
+      const unitCostInput = itemDiv.querySelector('input[name$="[unit_cost]"]');
+      const totalCostInput = itemDiv.querySelector('input[name$="[total_cost]"]');
+
+      quantityInput.addEventListener('input', calculateTotalCost);
+      unitCostInput.addEventListener('input', calculateTotalCost);
+
+      function calculateTotalCost() {
+        const quantity = parseFloat(quantityInput.value) || 0;
+        const unitCost = parseFloat(unitCostInput.value) || 0;
+        totalCostInput.value = (quantity * unitCost).toFixed(2);
+      }
+    }
+
+    // Function to remove an item field
+    function removeItemField(button) {
+      const itemDiv = button.closest('.item-row');
+      if (itemDiv) {
+        itemDiv.remove();
+        updateItemNumbers();
+      }
+    }
+
+    // Function to update item numbers sequentially
+    function updateItemNumbers() {
+      const itemsContainer = document.getElementById('itemsContainer');
+      const itemRows = itemsContainer.querySelectorAll('.item-row');
+      
+      itemRows.forEach((row, index) => {
+        const itemNoInput = row.querySelector('.item-no');
+        if (itemNoInput) {
+          itemNoInput.value = index + 1;
+          // Update the name attribute to maintain correct array indexing
+          const newName = itemNoInput.name.replace(/items\[\d+\]/, `items[${index}]`);
+          itemNoInput.name = newName;
+          
+          // Update all other fields in this item
+          row.querySelectorAll('input[name^="items"]').forEach(input => {
+            input.name = input.name.replace(/items\[\d+\]/, `items[${index}]`);
+          });
+        }
+      });
+    }
+
+    // Function to generate the specified number of item fields
+    function generateItemFields(count) {
+      const itemsContainer = document.getElementById('itemsContainer');
+      itemsContainer.innerHTML = ''; // Clear existing items
+      
+      for (let i = 0; i < count; i++) {
+        addItemField();
+      }
+    }
+
+    // Event delegation for remove buttons
+    document.getElementById('itemsContainer').addEventListener('click', function(e) {
+      if (e.target.classList.contains('remove-item')) {
+        removeItemField(e.target);
+      }
+    });
+
+    // Event listener for the item count dropdown
+    document.getElementById('itemCount').addEventListener('change', function() {
+      const count = parseInt(this.value);
+      if (count > 0) {
+        generateItemFields(count);
+      }
+    });
+
+    // Event listener for the add item button
+    document.getElementById('addItemButton').addEventListener('click', function() {
+      addItemField();
+    });
+
+    // Handle form submission
+    document.getElementById('requestForm').addEventListener('submit', async (event) => {
+      event.preventDefault(); // Prevent the default form submission
+
+      const form = event.target;
+      const formData = new FormData(form); // Collect form data
+
+      // Convert FormData to JSON
+      const data = {};
+      formData.forEach((value, key) => {
+        if (key.startsWith('items')) {
+          // Handle nested items array
+          const [_, index, field] = key.match(/items\[(\d+)\]\[(\w+)\]/);
+          if (!data.items) data.items = [];
+          if (!data.items[index]) data.items[index] = {};
+          data.items[index][field] = value;
+        } else {
+          data[key] = value;
+        }
+      });
+
+      // Calculate the total cost of all items
+      data.total = data.items.reduce((sum, item) => sum + parseFloat(item.total_cost || 0), 0);
+
+      try {
+        const token = localStorage.getItem('token'); // Get the token from localStorage or cookies
+
+        const response = await fetch('/requests', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` // Include the token in the Authorization header
+          },
+          body: JSON.stringify(data), // Send form data as JSON
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          // Show success modal
+          showSuccessModal('Request submitted successfully.');
+          form.reset(); // Clear the form
+          document.getElementById('itemsContainer').innerHTML = ''; // Clear items
+          document.getElementById('itemCount').value = ''; // Reset dropdown
+        } else {
+          // Show error modal
+          showErrorModal(result.message || 'Failed to submit request.');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        // Show error modal
+        showErrorModal('An unexpected error occurred. Please try again.');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bidding Details - Admin</title>
+    <link rel="stylesheet" href="/src/table.css">    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <!-- Include Admin Sidebar -->
+    <%- include('../partials/adminSidebar') %>
+
+    <!-- Main Content -->
+    <div class="md:ml-64 p-4 md:p-8">
+        <div class="w-full">
+            <div class="bg-white p-6 rounded-lg shadow-sm">
+                <!-- Bidding Header with Superadmin badge -->
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                    <div>
+                        <h1 class="text-2xl font-bold text-blue-700">Bidding #<%= bidding.bidding_id %></h1>
+                        <div class="flex items-center mt-1">
+                            <p class="text-gray-600 mr-2">PR #<%= bidding.pr_id %> - <%= bidding.purpose %></p>
+                            <% if (userType === 'superadmin') { %>
+                                <span class="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
+                                    <i class="fas fa-shield-alt mr-1"></i>Superadmin
+                                </span>
+                            <% } %>
+                        </div>
+                    </div>
+                    <div class="mt-4 md:mt-0">
+                        <span class="px-3 py-1 text-sm rounded-full 
+                            <%= bidding.status === 'open' ? 'bg-blue-100 text-blue-800' : 
+                               bidding.status === 'closed' ? 'bg-gray-100 text-gray-800' : 'bg-green-100 text-green-800' %>">
+                            <%= bidding.status.charAt(0).toUpperCase() + bidding.status.slice(1) %>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Bidding Info Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <!-- ... (same as before) ... -->
+                </div>
+
+                <!-- Items Section -->
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold text-gray-700 mb-4">Requested Items</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <!-- ... (same as before) ... -->
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Bids Section with Enhanced Superadmin Features -->
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold text-gray-700">Supplier Bids</h2>
+                        <div class="flex items-center">
+                            <p class="text-sm text-gray-500 mr-3"><%= bids.length %> bids received</p>
+                            <% if (userType === 'superadmin') { %>
+                                <button onclick="exportBids('<%= bidding.bidding_id %>')" 
+                                        class="px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm hover:bg-gray-300">
+                                    <i class="fas fa-file-export mr-1"></i>Export
+                                </button>
+                            <% } %>
+                        </div>
+                    </div>
+                    
+                    <% if (bids.length > 0) { %>
+                        <div class="space-y-4">
+                            <% bids.forEach(bid => { %>
+                                <div class="border border-gray-200 rounded-lg p-6 <%= bid.status === 'approved' ? 'bg-green-50 border-green-200' : '' %>"
+                                     id="bid-<%= bid.bid_id %>">
+                                    <!-- Bid Header -->
+                                    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+                                        <div>
+                                            <h3 class="text-lg font-semibold">
+                                                <%= bid.company_name %>
+                                                <% if (bid.rating) { %>
+                                                    <span class="ml-2 text-yellow-500">
+                                                        <% for (let i = 0; i < 5; i++) { %>
+                                                            <i class="fas <%= i < Math.round(bid.rating) ? 'fa-star' : 'fa-star-o' %>"></i>
+                                                        <% } %>
+                                                        (<%= bid.rating_count || 0 %>)
+                                                    </span>
+                                                <% } %>
+                                            </h3>
+                                            <p class="text-sm text-gray-500">Contact: <%= bid.contact_person %></p>
+                                            <% if (userType === 'superadmin') { %>
+                                                <p class="text-xs text-gray-400 mt-1">Bid ID: <%= bid.bid_id %></p>
+                                            <% } %>
+                                        </div>
+                                        <div class="mt-2 md:mt-0 text-right">
+                                            <p class="text-2xl font-bold">₱<%= parseFloat(bid.total_amount).toLocaleString('en-PH') %></p>
+                                            <span class="px-2 py-1 text-xs rounded-full 
+                                                <%= bid.status === 'approved' ? 'bg-green-100 text-green-800' : 
+                                                   bid.status === 'declined' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800' %>">
+                                                <%= bid.status || 'pending' %>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Bid Items Comparison Table -->
+                                    <div class="mb-4">
+                                        <h4 class="font-medium text-gray-700 mb-2">Bid Items Comparison</h4>
+                                        <div class="overflow-x-auto">
+                                            <table class="min-w-full divide-y divide-gray-200">
+                                                <thead class="bg-gray-50">
+                                                    <tr>
+                                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item #</th>
+                                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Est. Price</th>
+                                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supplier Price</th>
+                                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Difference</th>
+                                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Savings</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="bg-white divide-y divide-gray-200">
+                                                    <% items.forEach((item, index) => { 
+                                                        const bidItem = bid.items.find(bi => bi.item_id == item.item_id) || {};
+                                                        const estPrice = parseFloat(item.unit_cost);
+                                                        const supplierPrice = parseFloat(bidItem.unit_price) || 0;
+                                                        const difference = supplierPrice - estPrice;
+                                                        const savings = -difference;
+                                                    %>
+                                                        <tr class="<%= difference < 0 ? 'bid-item-highlight' : '' %>">
+                                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= item.item_no %></td>
+                                                            <td class="px-6 py-4 text-sm text-gray-500"><%= item.item_description %></td>
+                                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">₱<%= estPrice.toLocaleString('en-PH') %></td>
+                                                            <td class="px-6 py-4 whitespace-nowrap text-sm <%= difference < 0 ? 'text-green-600 font-medium' : 'text-gray-500' %>">
+                                                                ₱<%= supplierPrice.toLocaleString('en-PH') %>
+                                                            </td>
+                                                            <td class="px-6 py-4 whitespace-nowrap text-sm <%= difference < 0 ? 'text-green-600' : difference > 0 ? 'text-red-600' : 'text-gray-500' %>">
+                                                                <%= difference < 0 ? '-' : '+' %>₱<%= Math.abs(difference).toLocaleString('en-PH') %>
+                                                            </td>
+                                                            <td class="px-6 py-4 whitespace-nowrap text-sm <%= savings > 0 ? 'text-green-600 font-medium' : 'text-gray-500' %>">
+                                                                <%= savings > 0 ? '₱' + savings.toLocaleString('en-PH') : '-' %>
+                                                            </td>
+                                                        </tr>
+                                                    <% }) %>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Superadmin Actions -->
+                                    <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                                        <% if (bidding.status === 'open') { %>
+                                            <button onclick="awardBid('<%= bidding.bidding_id %>', '<%= bid.bid_id %>')" 
+                                                    class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                                                <i class="fas fa-trophy mr-2"></i>Award Bid
+                                            </button>
+                                        <% } else if (bid.status === 'approved') { %>
+                                            <span class="px-4 py-2 bg-green-100 text-green-800 rounded-md">
+                                                <i class="fas fa-check-circle mr-2"></i>Awarded
+                                            </span>
+                                        <% } %>
+                                        
+                                        <% if (userType === 'superadmin') { %>
+                                            <button onclick="viewBidDetails('<%= bid.bid_id %>')" 
+                                                    class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                                                <i class="fas fa-search mr-2"></i>Inspect
+                                            </button>
+                                            <button onclick="showSupplierHistory('<%= bid.supplier_id %>')" 
+                                                    class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">
+                                                <i class="fas fa-history mr-2"></i>History
+                                            </button>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        </div>
+                    <% } else { %>
+                        <!-- ... (same as before) ... -->
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Superadmin Modals -->
+    <% if (userType === 'superadmin') { %>
+        <!-- Bid Inspection Modal -->
+        <div id="bidInspectionModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div class="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Bid Inspection</h3>
+                    <button onclick="closeModal('bidInspectionModal')" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="bidInspectionContent" class="space-y-4">
+                    <!-- Content will be loaded via AJAX -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Supplier History Modal -->
+        <div id="supplierHistoryModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div class="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Supplier Bidding History</h3>
+                    <button onclick="closeModal('supplierHistoryModal')" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="supplierHistoryContent" class="space-y-4">
+                    <!-- Content will be loaded via AJAX -->
+                </div>
+            </div>
+        </div>
+    <% } %>
+
+    <script>
+        // Award bid function
+        function awardBid(biddingId, bidId) {
+            if (confirm('Are you sure you want to award this bid? This action cannot be undone.')) {
+                fetch(`/admin/biddings/${biddingId}/award/${bidId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Bid awarded successfully!');
+                        window.location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while awarding the bid');
+                });
+            }
+        }
+
+        // Superadmin specific functions
+        function viewBidDetails(bidId) {
+            fetch(`/admin/bids/${bidId}/details`)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('bidInspectionContent').innerHTML = html;
+                    document.getElementById('bidInspectionModal').classList.remove('hidden');
+                })
+                .catch(error => {
+                    console.error('Error loading bid details:', error);
+                    alert('Failed to load bid details');
+                });
+        }
+
+        function showSupplierHistory(supplierId) {
+            fetch(`/admin/suppliers/${supplierId}/history`)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('supplierHistoryContent').innerHTML = html;
+                    document.getElementById('supplierHistoryModal').classList.remove('hidden');
+                })
+                .catch(error => {
+                    console.error('Error loading supplier history:', error);
+                    alert('Failed to load supplier history');
+                });
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function exportBids(biddingId) {
+            window.open(`/admin/biddings/${biddingId}/export`, '_blank');
+        }
+    </script>
+</body>
+</html>

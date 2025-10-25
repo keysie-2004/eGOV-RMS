@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Add Employee</title>
+  <link href="/src/table.css" rel="stylesheet"/>
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png"/>
+</head>
+
+<body class="bg-blue-50 font-sans">
+  <!-- Include Sidebar -->
+  <%- include('partials/sidebar') %>
+
+  <!-- Include Modals -->
+  <%- include('partials/modal') %>
+
+  <!-- Main Content -->
+  <div class="lg:ml-64 p-7 lg:p-10">
+    <div class="w-full">
+      <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
+        <h2 class="text-2xl font-bold text-blue-700 mb-6">Add Employee</h2>
+
+        <form id="addUserForm" action="/add-user" method="POST" autocomplete="off">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div>
+              <label class="block text-gray-600 mb-2">Employee Name</label>
+              <input 
+                type="text" 
+                name="employee_name" 
+                class="w-full p-3 border rounded-lg bg-blue-50" 
+                autocomplete="off"
+                placeholder="Enter employee name"
+                required 
+              />
+            </div>
+            <div>
+              <label class="block text-gray-600 mb-2">Email</label>
+              <input 
+                type="email" 
+                name="email" 
+                class="w-full p-3 border rounded-lg bg-blue-50" 
+                autocomplete="new-email"
+                placeholder="Enter email address"
+                required 
+              />
+            </div>
+            <div>
+              <label class="block text-gray-600 mb-2">Position</label>
+              <input 
+                type="text" 
+                name="position" 
+                class="w-full p-3 border rounded-lg bg-blue-50" 
+                autocomplete="off"
+                placeholder="Enter position"
+                required 
+              />
+            </div>
+            <div>
+              <label class="block text-gray-600 mb-2">User Type</label>
+              <select name="user_type" class="w-full p-3 border rounded-lg bg-blue-50" required>
+                <option value="">Select User Type</option>
+                <option value="superadmin">Superadmin</option>
+                <option value="ics">ICS</option>
+                <option value="par">PAR</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-gray-600 mb-2">Password</label>
+              <input 
+                type="password" 
+                name="password" 
+                class="w-full p-3 border rounded-lg bg-blue-50" 
+                autocomplete="new-password"
+                placeholder="Enter password"
+                required 
+              />
+            </div>
+            <div>
+              <label class="block text-gray-600 mb-2">Department</label>
+              <select name="department_id" class="w-full p-3 border rounded-lg bg-blue-50" required>
+                <option value="">Select Department</option>
+                <% departments.forEach(department => { %>
+                  <option value="<%= department.department_id %>"><%= department.department_name %></option>
+                <% }); %>
+              </select>
+            </div>
+            <div>
+              <label class="block text-gray-600 mb-2">Status</label>
+              <select name="status" class="w-full p-3 border rounded-lg bg-blue-50" required>
+                <option value="">Select Status</option>
+                <option value="0">Pending</option>
+                <option value="1">Approved</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex justify-end">
+            <button class="bg-blue-700 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-blue-800 transition-colors" type="submit">
+              <i class="fas fa-plus mr-2"></i>Add Employee
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.querySelector('#addUserForm');
+      
+      // Reset form on page load
+      form.reset();
+      const inputs = form.querySelectorAll('input, select');
+      inputs.forEach(input => {
+        if (input.type !== 'submit') {
+          input.value = '';
+        }
+      });
+      const selects = form.querySelectorAll('select');
+      selects.forEach(select => {
+        select.selectedIndex = 0;
+      });
+
+      // Handle form submission with AJAX
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData);
+
+        try {
+          const response = await fetch('/add-user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            showSuccessModal(result.message || 'Employee added successfully');
+            setTimeout(() => {
+              window.location.href = '/users';
+            }, 2000); // Redirect after 2 seconds
+            form.reset();
+          } else {
+            showErrorModal(result.message || 'Failed to add employee');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          showErrorModal('An unexpected error occurred. Please try again.');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

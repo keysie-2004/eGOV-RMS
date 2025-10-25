@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Acceptance</title>
+  <link href="/src/table.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png"/>
+  </head>
+
+<body class="bg-blue-50 font-sans">
+  <!-- Include Sidebar -->
+  <%- include('partials/sidebar') %>
+
+  <!-- Main Content -->
+  <div class="lg:ml-64 p-7 lg:p-10">
+    <div class="w-full">
+      <!-- Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">Procurement Management</h1>
+        <div class="flex items-center mt-2">
+          <i class="fas fa-home text-blue-600 mr-2"></i>
+          <span class="text-gray-500">Dashboard</span>
+          <i class="fas fa-chevron-right text-gray-400 mx-2 text-xs"></i>
+          <span class="text-blue-600 font-medium">Certificate of Acceptance</span>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
+        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-6 pb-4 border-b border-gray-100 gap-4">
+          <h2 class="text-2xl font-bold text-blue-700 flex items-center">
+            <i class="fas fa-file-certificate mr-3 text-blue-500"></i>Certificate of Acceptance
+          </h2>
+          <div class="text-sm text-gray-500 bg-blue-50 px-3 py-2 rounded-full">
+            <i class="fas fa-clock mr-1"></i> Form Status: <%= abstract.acceptanceData ? 'Saved' : 'Pending' %>
+          </div>
+        </div>
+
+        <!-- Project Description -->
+        <div class="mb-6 bg-blue-50 p-5 rounded-lg border-l-4 border-blue-500">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+              <p class="text-gray-600 mb-2 font-medium">Project Description</p>
+              <p class="text-gray-800 font-semibold"><%= abstract.project_description %></p>
+            </div>
+            <div>
+              <p class="text-gray-600 mb-2 font-medium">Department</p>
+              <p class="text-gray-800 font-semibold"><%= abstract.department %></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Items Table -->
+        <div class="mb-6 overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+          <table class="w-full border-collapse min-w-full">
+            <thead>
+              <tr class="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+                <th class="p-3 text-left font-semibold border-r border-blue-500">Qty</th>
+                <th class="p-3 text-left font-semibold border-r border-blue-500">Unit</th>
+                <th class="p-3 text-left font-semibold border-r border-blue-500">Item Description</th>
+                <th class="p-3 text-left font-semibold border-r border-blue-500">Supplier Name</th>
+                <th class="p-3 text-left font-semibold border-r border-blue-500">Unit Price</th>
+                <th class="p-3 text-left font-semibold">Total Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% abstract.items.forEach((item, index) => { %>
+                <tr class="<%= index % 2 === 0 ? 'bg-white' : 'bg-blue-50' %> hover:bg-blue-50 transition-all">
+                  <td class="p-3 border-t border-r border-gray-200 font-medium"><%= item.quantity %></td>
+                  <td class="p-3 border-t border-r border-gray-200"><%= item.unit %></td>
+                  <td class="p-3 border-t border-r border-gray-200"><%= item.item_description %></td>
+                  <td class="p-3 border-t border-r border-gray-200 font-medium text-blue-700"><%= item.supplier_name %></td>
+                  <td class="p-3 border-t border-r border-gray-200 text-right font-medium"><%= item.unit_price %></td>
+                  <td class="p-3 border-t border-gray-200 text-right font-bold text-blue-700"><%= item.total_price %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Total -->
+        <div class="bg-blue-50 p-4 rounded-lg mb-6 border border-blue-200">
+          <div class="text-right">
+            <span class="text-gray-600 mr-4 text-lg">Total Amount:</span>
+            <span class="text-2xl font-bold text-blue-700"><%= abstract.total %></span>
+          </div>
+        </div>
+
+        <!-- PHILGEPS Reg. No. and Date Form -->
+        <form id="acceptanceForm" enctype="multipart/form-data" onsubmit="saveAcceptance(event)">
+          <h3 class="text-2xl font-bold text-blue-700 mb-6">Acceptance Details</h3>
+          
+          <!-- Hidden input for pr_id -->
+          <input type="hidden" name="pr_id" value="<%= abstract.pr_id %>">
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div>
+              <label class="block text-gray-600 mb-2">PHILGEPS Registration Number</label>
+              <input type="text" name="philgeps_reg_no" 
+                     class="w-full p-3 border rounded-lg bg-blue-50" 
+                     value="<%= abstract.acceptanceData ? abstract.acceptanceData.philgeps_reg_no : '' %>" 
+                     placeholder="Enter PHILGEPS registration number"
+                     required>
+            </div>
+            <div>
+              <label class="block text-gray-600 mb-2">Date</label>
+              <input type="date" name="date" 
+                     class="w-full p-3 border rounded-lg bg-blue-50" 
+                     value="<%= abstract.acceptanceData ? abstract.acceptanceData.date : '' %>" 
+                     required>
+            </div>
+          </div>
+
+          <!-- BAC Members Section -->
+          <div class="mb-6">
+            <h3 class="text-xl font-bold text-blue-700 mb-6 flex items-center">
+              <i class="fas fa-users mr-2"></i> BAC Members
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <% abstract.bacMembers.forEach((member) => { %>
+                <div class="bg-blue-50 p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all">
+                  <div class="flex items-center">
+                    <div class="h-12 w-12 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-blue-600 mr-3 flex-shrink-0">
+                      <i class="fas fa-user"></i>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                      <p class="font-semibold text-gray-800 truncate"><%= member.employee_name %></p>
+                      <p class="text-gray-500 text-sm truncate"><%= member.position %></p>
+                      <p class="text-sm text-blue-600 font-medium mt-1"><%= member.bac_position %></p>
+                    </div>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          </div>
+
+<!-- Submit Button at bottom right -->
+<div class="flex flex-wrap justify-end gap-3 mt-6">
+  <button type="submit" class="inline-flex items-center justify-center bg-blue-700 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-blue-800">
+    <i class="fas <%= abstract.acceptanceData ? 'fa-sync-alt' : 'fa-save' %> mr-2"></i>
+    <%= abstract.acceptanceData ? 'Update Acceptance' : 'Save Acceptance' %>
+  </button>
+  <% if (abstract.acceptanceData) { %>
+    <button type="button" onclick="printForm()" class="inline-flex items-center justify-center bg-green-600 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-green-700">
+      <i class="fas fa-print mr-2"></i> Print
+    </button>
+    <a href="/purchase-order/<%= abstract.token %>" class="inline-flex items-center justify-center bg-purple-700 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-purple-800">
+      <i class="fas fa-arrow-right mr-2"></i> Next
+    </a>
+  <% } %>
+</div>
+</form>
+
+<!-- Navigation Buttons -->
+<div class="flex flex-wrap justify-end gap-3 pt-6 border-t border-gray-200 mt-6">
+  <a href="/abstract" class="inline-flex items-center justify-center bg-gray-600 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-gray-700">
+    <i class="fas fa-arrow-left mr-2"></i> Previous
+  </a>
+</div>
+      </div>
+    </div>
+  </div>
+
+<!-- Printable Content (Hidden) - Exact Format Matching Document -->
+<div id="printableContent" class="hidden">
+  <div class="certificate-document">
+    <!-- Header -->
+    <div class="certificate-title">CERTIFICATE OF ACCEPTANCE OF PRICES IN THE REQUEST FOR QUOTATION</div>
+    <div class="certificate-subtitle">BIDS & AWARDS COMMITTEE</div>
+    <div class="certificate-subtitle">CITY GOVERNMENT OF CALAPAN</div>
+    
+    <!-- Body Text -->
+    <div class="certificate-body">
+      We the undersigned members of the Committee on Award, after careful deliberation on several prices quoted 
+      in the shopping/bidding for the <u><%= abstract.project_description %></u> as can be seen in the herein attached 
+      abstract of prices, hereby unanimously decide to accept the bids itemized there under for being the lowest calculated 
+      responsive bid to the government and awarding the same to the respective bidders.
+    </div>
+    
+    <div class="certificate-body" style="font-weight: bold;">
+      The Items Awarded to: <u><%= abstract.lowest_bidder || '________________________________' %></u>
+    </div>
+    
+    <!-- PHILGEPS Registration -->
+    <div class="philgeps-line">
+      PHILGEPS Reg. No.: <u><%= abstract.acceptanceData ? abstract.acceptanceData.philgeps_reg_no : '________________________________' %></u>
+    </div>
+    
+    <!-- Items Table - Exact format with proper spacing -->
+    <table class="certificate-table">
+      <thead>
+        <tr style="height: 22px;">
+          <th style="width: 8%;">QTY.</th>
+          <th style="width: 12%;">UNIT OF<br>ISSUE</th>
+          <th style="width: 40%;">ITEM & DESCRIPTION</th>
+          <th style="width: 20%;">UNIT PRICE</th>
+          <th style="width: 20%;">TOTAL PRICE</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Dynamic Items -->
+        <% abstract.items.forEach((item) => { %>
+          <tr style="height: 18px;">
+            <td style="text-align: center;"><%= item.quantity %></td>
+            <td style="text-align: center;"><%= item.unit %></td>
+            <td><%= item.item_description %></td>
+            <td style="text-align: right;"><%= item.unit_price %></td>
+            <td style="text-align: right;"><%= item.total_price %></td>
+          </tr>
+        <% }) %>
+        
+        <!-- Empty rows to match document format (approximately 15-20 total rows) -->
+        <% const emptyRowsNeeded = Math.max(0, 20 - abstract.items.length); %>
+        <% for(let i = 0; i < emptyRowsNeeded; i++) { %>
+          <tr style="height: 18px;">
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+    
+    <!-- Total Amount -->
+    <div class="total-amount">
+      <%= abstract.total || '0.00' %>
+    </div>
+    
+    <!-- Witness Statement -->
+    <div class="witness-line">
+      IN WITNESS WHEREOF, we hereby affix our signatures this 
+      <u><%= abstract.acceptanceData ? new Date(abstract.acceptanceData.date).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'}) : '________________________________' %></u> 
+      in the City of Calapan.
+    </div>
+    
+    <!-- BAC Members Signatures (3 columns, 2 rows) -->
+    <div class="signature-section">
+      <% 
+        const regularMembers = abstract.bacMembers.filter(member => member.bac_position !== 'City Mayor' && member.bac_position !== 'Approved by');
+        const cityMayor = abstract.bacMembers.find(member => member.bac_position === 'City Mayor' || member.bac_position === 'Approved by');
+        
+        // Display regular members (6 members in 2 rows of 3)
+        regularMembers.forEach((member, index) => {
+      %>
+        <div class="signature-block">
+          <div class="signature-line"></div>
+          <div class="signature-name"><%= member.employee_name %></div>
+          <div class="signature-title"><%= member.position %></div>
+          <div class="signature-title">BAC Member</div>
+        </div>
+      <% }) %>
+    </div>
+    
+    <!-- City Mayor - Approved by (centered at bottom) -->
+    <% if (cityMayor) { %>
+      <div class="approval-section">
+        <div style="font-size: 9px; margin-bottom: 5px;">Approved by:</div>
+        <div class="approval-line"></div>
+        <div class="signature-name"><%= cityMayor.employee_name %></div>
+        <div class="signature-title">City Mayor</div>
+      </div>
+    <% } %>
+    
+    <!-- Award Date at bottom -->
+    <div style="position: absolute; bottom: 10px; left: 15px; font-size: 7px;">
+      Award 2021 = 0
+    </div>
+  </div>
+</div>
+
+  <!-- JavaScript -->
+<script>
+  async function saveAcceptance(event) {
+    event.preventDefault();
+    const form = document.getElementById('acceptanceForm');
+    const formData = new URLSearchParams();
+    
+    // Manually extract and append fields (ensures clean serialization)
+    formData.append('pr_id', form.querySelector('input[name="pr_id"]').value);
+    formData.append('philgeps_reg_no', form.querySelector('input[name="philgeps_reg_no"]').value);
+    formData.append('date', form.querySelector('input[name="date"]').value);
+    
+    // Show saving indicator
+    const submitBtn = event.submitter;
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Saving...';
+    submitBtn.disabled = true;
+
+    try {
+      const response = await fetch('/save-acceptance', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      if (result.success) {
+        // Show success notification
+        showNotification('Success', result.message, 'success');
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      } else {
+        // Show error notification
+        showNotification('Error', result.message || 'Failed to save acceptance data', 'error');
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+      }
+    } catch (error) {
+      console.error('Fetch error:', error); // For debugging
+      // Show error notification
+      showNotification('Error', 'An unexpected error occurred', 'error');
+      submitBtn.innerHTML = originalText;
+      submitBtn.disabled = false;
+    }
+  }
+  
+    function showNotification(title, message, type) {
+      // Create notification element
+      const notification = document.createElement('div');
+      notification.className = `fixed top-4 right-4 flex items-center p-4 rounded-lg shadow-lg text-white ${
+        type === 'success' ? 'bg-green-500' : 'bg-red-500'
+      } z-50 animate-fade-in`;
+      
+      notification.innerHTML = `
+        <div class="mr-3">
+          <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} text-xl"></i>
+        </div>
+        <div>
+          <h4 class="font-bold">${title}</h4>
+          <p>${message}</p>
+        </div>
+        <button class="ml-4 text-white hover:text-gray-200" onclick="this.parentElement.remove()">
+          <i class="fas fa-times"></i>
+        </button>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      // Remove after 5 seconds
+      setTimeout(() => {
+        notification.remove();
+      }, 5000);
+    }
+
+    function printForm() {
+      const printWindow = window.open('', '_blank');
+      const content = document.getElementById('printableContent').innerHTML;
+      
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Certificate of Acceptance</title>
+          <style>
+            @media print {
+              body { 
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                line-height: 1.2;
+              }
+              @page {
+                size: letter;
+                margin: 0.5in;
+              }
+              .certificate-document {
+                border: none !important;
+                padding: 15px 25px 15px 15px !important;
+                font-family: Arial, sans-serif;
+                background: white;
+                max-width: none;
+                min-height: auto;
+              }
+            }
+            body { 
+              font-family: Arial, sans-serif;
+              margin: 0;
+              padding: 20px;
+              line-height: 1.2;
+            }
+            .certificate-document {
+              font-family: Arial, sans-serif;
+              background: white;
+              padding: 15px 25px 15px 15px;
+              margin: 0 auto;
+              max-width: 8.5in;
+              box-sizing: border-box;
+            }
+            .certificate-title {
+              font-size: 12px;
+              font-weight: bold;
+              text-align: center;
+              line-height: 1.1;
+              margin: 5px 0 2px 0;
+            }
+            .certificate-subtitle {
+              font-size: 11px;
+              font-weight: bold;
+              text-align: center;
+              line-height: 1.1;
+              margin: 1px 0;
+            }
+            .certificate-body {
+              font-size: 9px;
+              line-height: 1.3;
+              text-align: justify;
+              margin: 8px 0;
+            }
+            .certificate-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin: 5px 0;
+              font-size: 8px;
+            }
+            .certificate-table th,
+            .certificate-table td {
+              border: 1px solid black;
+              padding: 2px;
+              vertical-align: top;
+            }
+            .certificate-table th {
+              background-color: white;
+              font-weight: bold;
+              text-align: center;
+            }
+            .signature-section {
+              margin-top: 8px;
+              display: flex;
+              flex-wrap: wrap;
+              justify-content: space-between;
+            }
+            .signature-block {
+              width: 30%;
+              margin-bottom: 8px;
+              text-align: center;
+            }
+            .signature-line {
+              border-bottom: 1px solid black;
+              height: 15px;
+              margin-bottom: 2px;
+              width: 85%;
+              margin-left: auto;
+              margin-right: auto;
+            }
+            .signature-name {
+              font-size: 8px;
+              font-weight: bold;
+              margin: 1px 0;
+            }
+            .signature-title {
+              font-size: 7px;
+              margin: 0;
+            }
+            .approval-section {
+              text-align: center;
+              margin-top: 10px;
+            }
+            .approval-line {
+              border-bottom: 1px solid black;
+              height: 15px;
+              margin-bottom: 2px;
+              width: 50%;
+              margin-left: auto;
+              margin-right: auto;
+            }
+            .philgeps-line {
+              font-size: 9px;
+              margin: 5px 0;
+            }
+            .witness-line {
+              font-size: 9px;
+              margin: 5px 0;
+            }
+            .total-amount {
+              text-align: right;
+              font-size: 9px;
+              margin: 2px 0;
+              font-weight: bold;
+            }
+          </style>
+        </head>
+        <body>
+          ${content}
+          <script>
+            window.addEventListener('load', function() {
+              setTimeout(function() {
+                window.print();
+                setTimeout(function() { 
+                  window.close(); 
+                }, 500);
+              }, 500);
+            });
+          <\/script>
+        </body>
+        </html>
+      `);
+      
+      printWindow.document.close();
+      
+      // Show notification
+      showNotification('Print', 'Print dialog opened', 'success');
+    }
+
+    // Add animations to style
+    document.head.insertAdjacentHTML('beforeend', `
+      <style>
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.3s ease-out forwards;
+        }
+      </style>
+    `);
+  </script>
+</body>
+</html>

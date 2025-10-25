@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications - Hareneth</title>
+  <link href="/src/requests.css" rel="stylesheet"/>
+
+</head>
+<body class="bg-gray-100 font-sans">
+  <!-- Include Sidebar -->
+  <%- include('partials/sidebar') %>
+
+<!-- Main Content -->
+  <div class="lg:ml-64 p-7 lg:p-10">
+    <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
+      <!-- Header -->
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-blue-700">Notifications</h1>
+        <button id="markAllRead" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+          Mark All as Read
+        </button>
+      </div>
+
+      <!-- Notifications List -->
+      <div id="notificationsList" class="space-y-4">
+        <% if (notifications && notifications.length > 0) { %>
+          <% notifications.forEach(notification => { %>
+            <div class="notification-item bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex justify-between items-start <%= notification.status === 'pending' ? 'bg-blue-50' : '' %>" data-id="<%= notification.notification_id %>">
+              <div class="flex-1">
+                <p class="text-sm font-medium text-gray-700"><%= notification.message %></p>
+                <p class="text-xs text-gray-500 mt-1">
+                  PR ID: <%= notification.pr_id || 'N/A' %> | 
+                  Type: <%= notification.type %> | 
+                  <%= new Date(notification.created_at).toLocaleString() %>
+                </p>
+              </div>
+              <% if (notification.status === 'pending') { %>
+                <button class="mark-read-btn bg-blue-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-blue-700 transition-colors duration-200 text-sm font-medium" data-id="<%= notification.notification_id %>">
+                  Mark as Read
+                </button>
+              <% } else { %>
+                <span class="text-gray-500 text-sm">Read</span>
+              <% } %>
+            </div><br>
+          <% }) %>
+        <% } else { %>
+          <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 text-center">
+            <p class="text-gray-500">No notifications found.</p>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+
+  <script>
+    // Fetch and update notification count (reused from sidebar.ejs)
+    async function loadNotificationCount() {
+      try {
+        const response = await fetch('/notifications/api/unread-count', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token') || getCookie('token')}`
+          }
+        });
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        const data = await response.json();
+        if (data.success) {
+          const badge = document.getElementById('notificationBadge');
+          if (badge) {
+            badge.textContent = data.count || 0;
+            badge.classList.toggle('hidden', data.count === 0);
+          }
+          // Enable/disable "Mark All as Read" button
+          const markAllReadBtn = document.getElementById('markAllRead');
+          if (markAllReadBtn) {
+            markAllReadBtn.disabled = data.count === 0;
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching notification count:', error);
+        const badge = document.getElementById('notificationBadge');
+        if (badge) {
+          badge.textContent = '0';
+          badge.classList.add('hidden');
+        }
+      }
+    }
+
+    // Get cookie function
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    // Mark a single notification as read
+    async function markAsRead(notificationId) {
+      console.log('Attempting to mark notification as read:', notificationId);
+      
+      try {
+        const token = localStorage.getItem('token') || getCookie('token');
+        console.log('Using token:', token ? 'Token found' : 'No token');
+        
+        const response = await fetch(`/notifications/api/${notificationId}/mark-read`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('HTTP error response:', errorText);
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Response data:', data);
+        
+        if (data.success) {
+          const notificationItem = document.querySelector(`.notification-item[data-id="${notificationId}"]`);
+          console.log('Found notification item:', notificationItem);
+          
+          if (notificationItem) {
+            notificationItem.classList.remove('bg-blue-50');
+            const button = notificationItem.querySelector('.mark-read-btn');
+            console.log('Found button:', button);
+            
+            if (button) {
+              const readSpan = document.createElement('span');
+              readSpan.className = 'text-gray-500 text-sm';
+              readSpan.textContent = 'Read';
+              button.replaceWith(readSpan);
+            }
+          }
+          await loadNotificationCount(); // Update badge
+        } else {
+          console.error('Server returned success: false', data);
+          alert('Failed to mark notification as read. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error marking notification as read:', error);
+        alert('Failed to mark notification as read. Please try again.');
+      }
+    }
+
+    // Mark all notifications as read
+    async function markAllAsRead() {
+      console.log('Attempting to mark all notifications as read');
+      
+      try {
+        const token = localStorage.getItem('token') || getCookie('token');
+        
+        const response = await fetch('/notifications/api/mark-all-read', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('HTTP error response:', errorText);
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Mark all response data:', data);
+        
+        if (data.success) {
+          const notificationItems = document.querySelectorAll('.notification-item');
+          notificationItems.forEach(item => {
+            item.classList.remove('bg-blue-50');
+            const button = item.querySelector('.mark-read-btn');
+            if (button) {
+              const readSpan = document.createElement('span');
+              readSpan.className = 'text-gray-500 text-sm';
+              readSpan.textContent = 'Read';
+              button.replaceWith(readSpan);
+            }
+          });
+          await loadNotificationCount(); // Update badge
+        } else {
+          console.error('Server returned success: false', data);
+          alert('Failed to mark all notifications as read. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error marking all notifications as read:', error);
+        alert('Failed to mark all notifications as read. Please try again.');
+      }
+    }
+
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM loaded, initializing notification handlers');
+      
+      loadNotificationCount();
+
+      // Mark single notification as read
+      document.querySelectorAll('.mark-read-btn').forEach(button => {
+        console.log('Adding click listener to button:', button.getAttribute('data-id'));
+        
+        button.addEventListener('click', (e) => {
+          e.preventDefault();
+          const notificationId = button.getAttribute('data-id');
+          console.log('Button clicked, notification ID:', notificationId);
+          markAsRead(notificationId);
+        });
+      });
+
+      // Mark all notifications as read
+      const markAllReadBtn = document.getElementById('markAllRead');
+      if (markAllReadBtn) {
+        markAllReadBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          console.log('Mark all as read clicked');
+          markAllAsRead();
+        });
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Approve Suppliers - Hareneth</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" rel="stylesheet"/>
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png"/>
+  <style>
+    .document-link {
+      transition: all 0.3s ease;
+    }
+    .document-link:hover {
+      color: #3b82f6;
+      transform: translateX(2px);
+    }
+    .status-pending { background-color: #fef3c7; color: #92400e; }
+    .status-approved { background-color: #d1fae5; color: #065f46; }
+    .status-banned { background-color: #fee2e2; color: #b91c1c; }
+  </style>
+</head>
+
+<body class="bg-blue-50 font-sans">
+  <!-- Include Sidebar -->
+  <%- include('../partials/sidebar') %>
+
+  <!-- Main Content -->
+  <div class="lg:ml-64 p-4 lg:p-8">
+    <div class="w-full">
+      <div class="bg-white p-6 lg:p-8 rounded-lg shadow-sm">
+        <div class="flex justify-between items-center mb-6">
+          <h1 class="text-2xl font-bold text-blue-700">Supplier Approval</h1>
+          <div class="flex gap-2">
+            <select id="filterStatus" class="border rounded-lg p-2 bg-blue-50">
+              <option value="">All Status</option>
+              <option value="pending">Pending Approval</option>
+              <option value="approved">Approved</option>
+              <option value="banned">Banned</option>
+            </select>
+            <input type="text" id="search" placeholder="Search..." class="border rounded-lg p-2">
+          </div>
+        </div>
+
+        <!-- Supplier Table -->
+        <div class="overflow-x-auto">
+          <table id="supplierTable" class="min-w-full bg-white border border-gray-200">
+            <thead>
+              <tr class="bg-blue-100 text-gray-700">
+                <th class="py-3 px-4 border-b text-left">ID</th>
+                <th class="py-3 px-4 border-b text-left">Company</th>
+                <th class="py-3 px-4 border-b text-left">Contact</th>
+                <th class="py-3 px-4 border-b text-left">Email</th>
+                <th class="py-3 px-4 border-b text-left">Documents</th>
+                <th class="py-3 px-4 border-b text-left">Rating</th>
+                <th class="py-3 px-4 border-b text-left">Registered</th>
+                <th class="py-3 px-4 border-b text-left">Status</th>
+                <th class="py-3 px-4 border-b text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="text-gray-600">
+              <!-- Data will be loaded via DataTables -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Document Preview Modal -->
+  <div id="documentModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-medium" id="documentModalTitle">Document Preview</h3>
+        <button onclick="closeDocumentModal()" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="h-96">
+        <iframe id="documentFrame" class="w-full h-full border rounded" frameborder="0"></iframe>
+      </div>
+      <div class="mt-4 flex justify-end">
+        <button onclick="closeDocumentModal()" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- jQuery and DataTables -->
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+  <script>
+    $(document).ready(function () {
+      // Initialize DataTable
+      const table = $('#supplierTable').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+          url: '/admin/suppliers/data',
+          type: 'GET',
+          data: function (d) {
+            d.search = $('#search').val();
+            d.status = $('#filterStatus').val();
+          }
+        },
+        columns: [
+          { data: 'supplier_id' },
+          { 
+            data: 'company_name',
+            render: function(data, type, row) {
+              return `
+                <div class="flex items-center">
+                  ${row.profile_image ? 
+                    `<img src="/uploads/suppliers/${row.profile_image}" alt="Profile" class="h-10 w-10 rounded-full object-cover mr-3">` : 
+                    `<div class="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium mr-3">
+                      ${data.charAt(0).toUpperCase()}
+                    </div>`
+                  }
+                  <span>${data}</span>
+                </div>
+              `;
+            }
+          },
+          { 
+            data: 'contact_person',
+            render: function(data, type, row) {
+              return `
+                <div>
+                  <p class="font-medium">${data}</p>
+                  <p class="text-sm text-gray-500">${row.phone}</p>
+                </div>
+              `;
+            }
+          },
+          { data: 'email' },
+          {
+            data: null,
+            render: function(data, type, row) {
+              let docs = [];
+              if (row.business_permit) {
+                docs.push(`
+                  <a href="#" onclick="previewDocument('/uploads/suppliers/${row.business_permit}', 'Business Permit')" 
+                    class="document-link text-blue-600 flex items-center gap-1 text-sm">
+                    <i class="fas fa-file-alt"></i> Permit
+                  </a>
+                `);
+              }
+              if (row.tax_clearance) {
+                docs.push(`
+                  <a href="#" onclick="previewDocument('/uploads/suppliers/${row.tax_clearance}', 'Tax Clearance')" 
+                    class="document-link text-blue-600 flex items-center gap-1 text-sm">
+                    <i class="fas fa-file-invoice-dollar"></i> Tax
+                  </a>
+                `);
+              }
+              return docs.join('') || '<span class="text-gray-400">No documents</span>';
+            }
+          },
+          {
+            data: 'rating',
+            render: function(data) {
+              let stars = '';
+              for (let i = 1; i <= 5; i++) {
+                stars += `<i class="fas fa-star ${i <= Math.floor(data) ? 'text-yellow-400' : 'text-gray-300'}"></i>`;
+              }
+              return `<div class="flex items-center">${stars} <span class="ml-1">${data ? data.toFixed(1) : '0.0'}</span></div>`;
+            }
+          },
+          {
+            data: 'created_at',
+            render: function(data) {
+              return new Date(data).toLocaleDateString();
+            }
+          },
+          {
+            data: null,
+            render: function(data, type, row) {
+              let statusClass = 'status-pending';
+              let statusText = 'Pending';
+              
+              if (row.is_banned) {
+                statusClass = 'status-banned';
+                statusText = 'Banned';
+              } else if (row.is_approved) {
+                statusClass = 'status-approved';
+                statusText = 'Approved';
+              }
+              
+              return `
+                <select class="status w-full p-2 rounded ${statusClass}" data-id="${row.supplier_id}">
+                  <option value="pending" ${!row.is_approved && !row.is_banned ? 'selected' : ''}>Pending</option>
+                  <option value="approved" ${row.is_approved ? 'selected' : ''}>Approved</option>
+                  <option value="banned" ${row.is_banned ? 'selected' : ''}>Banned</option>
+                </select>
+              `;
+            }
+          },
+          {
+            data: null,
+            render: function(data, type, row) {
+              return `
+                <div class="flex gap-2">
+                  <button class="view-btn bg-blue-600 text-white p-2 rounded hover:bg-blue-700" 
+                    data-id="${row.supplier_id}" title="View Details">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="update-btn bg-green-600 text-white p-2 rounded hover:bg-green-700" 
+                    data-id="${row.supplier_id}" title="Save Changes">
+                    <i class="fas fa-save"></i>
+                  </button>
+                </div>
+              `;
+            }
+          }
+        ]
+      });
+
+      // Search input event
+      $('#search').on('input', function() {
+        table.ajax.reload();
+      });
+
+      // Status filter event
+      $('#filterStatus').on('change', function() {
+        table.ajax.reload();
+      });
+
+      // Handle update button clicks
+      $(document).on('click', '.update-btn', function() {
+        const id = $(this).data('id');
+        const status = $(`.status[data-id="${id}"]`).val();
+
+        $.ajax({
+          url: `/admin/suppliers/${id}/status`,
+          method: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({ status: status }),
+          success: function(response) {
+            if (response.success) {
+              showToast('Supplier status updated successfully', 'success');
+              table.ajax.reload();
+            } else {
+              showToast(response.message || 'Error updating supplier', 'error');
+            }
+          },
+          error: function() {
+            showToast('An error occurred while updating supplier', 'error');
+          }
+        });
+      });
+
+      // Handle view button clicks
+      $(document).on('click', '.view-btn', function() {
+        const id = $(this).data('id');
+        window.location.href = `/admin/suppliers/${id}`;
+      });
+    });
+
+    function previewDocument(url, title) {
+      document.getElementById('documentModalTitle').textContent = title;
+      document.getElementById('documentFrame').src = url;
+      document.getElementById('documentModal').classList.remove('hidden');
+    }
+
+    function closeDocumentModal() {
+      document.getElementById('documentModal').classList.add('hidden');
+      document.getElementById('documentFrame').src = '';
+    }
+
+    function showToast(message, type) {
+      // Implement your toast notification here
+      alert(`${type.toUpperCase()}: ${message}`);
+    }
+  </script>
+</body>
+</html>

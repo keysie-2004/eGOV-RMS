@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ICS Report</title>
+  <link href="/src/table.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png">
+  <style>
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+        font-size: 10pt;
+      }
+      .max-w-4xl {
+        width: 100%;
+        max-width: none;
+      }
+      .bg-white {
+        background-color: transparent;
+      }
+      .shadow-md {
+        box-shadow: none;
+      }
+      .p-6 {
+        padding: 0;
+      }
+      .mt-8, .mb-4 {
+        margin: 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 8pt;
+      }
+      th, td {
+        border: 1px solid #000;
+        padding: 4px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background-color: #f3f4f6;
+        font-weight: bold;
+      }
+      .header {
+        display: block;
+        text-align: center;
+        margin-bottom: 10px;
+      }
+      .header img {
+        width: 80px;
+        height: auto;
+        margin-bottom: 5px;
+      }
+      .header-text {
+        font-size: 12pt;
+        font-weight: bold;
+        color: #1E40AF;
+      }
+      .subheader-text {
+        font-size: 10pt;
+        color: #374151;
+      }
+      .date-text {
+        font-size: 9pt;
+        color: #6B7280;
+      }
+      form, button {
+        display: none;
+      }
+      @page {
+        size: legal; /* Long paper size (8.5 x 14 inches) */
+        margin: 0.5in;
+      }
+      .number-cell {
+        text-align: right;
+        font-family: 'Courier New', monospace;
+      }
+      .date-cell {
+        white-space: nowrap;
+      }
+      .narrow-cell {
+        width: 50px;
+      }
+      .medium-cell {
+        width: 100px;
+      }
+      .wide-cell {
+        width: 150px;
+      }
+    }
+    .number-cell {
+      text-align: right;
+      font-family: 'Courier New', monospace;
+    }
+    .date-cell {
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body class="bg-blue-50 font-sans">
+  <!-- Include Sidebar -->
+  <%- include('partials/sidebar') %>
+
+  <!-- Main Content -->
+  <div class="lg:ml-64 p-7 lg:p-10">
+    <div class="w-full">
+      <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
+        <h1 class="text-2xl font-bold text-blue-700 mb-6">Generate ICS Report</h1>
+
+        <!-- Form for selecting the report type -->
+        <form action="/filter-reports" method="GET" class="space-y-4">
+          <input type="hidden" name="reportType" value="ics">
+          <div>
+            <label for="department" class="block text-sm font-medium text-gray-700">Department</label>
+            <input type="text" name="department" id="department" value="<%= typeof department !== 'undefined' ? department : '' %>" class="block w-full p-3 border rounded-lg bg-blue-50 mt-1 mb-4" placeholder="Enter department">
+          </div>
+          <div>
+            <label for="dateStart" class="block text-sm font-medium text-gray-700">Start Date</label>
+            <input type="date" name="dateStart" id="dateStart" value="<%= typeof dateStart !== 'undefined' ? dateStart : '' %>" class="block w-full p-3 border rounded-lg bg-blue-50 mt-1 mb-4">
+          </div>
+          <div>
+            <label for="dateEnd" class="block text-sm font-medium text-gray-700">End Date</label>
+            <input type="date" name="dateEnd" id="dateEnd" value="<%= typeof dateEnd !== 'undefined' ? dateEnd : '' %>" class="block w-full p-3 border rounded-lg bg-blue-50 mt-1 mb-4">
+          </div>
+          <div>
+            <label for="minValue" class="block text-sm font-medium text-gray-700">Minimum Unit Value</label>
+            <input type="number" name="minValue" id="minValue" value="<%= typeof minValue !== 'undefined' ? minValue : '' %>" class="block w-full p-3 border rounded-lg bg-blue-50 mt-1 mb-4" placeholder="Enter minimum value" step="0.01">
+          </div>
+          <div>
+            <label for="maxValue" class="block text-sm font-medium text-gray-700">Maximum Unit Value</label>
+            <input type="number" name="maxValue" id="maxValue" value="<%= typeof maxValue !== 'undefined' ? maxValue : '' %>" class="block w-full p-3 border rounded-lg bg-blue-50 mt-1 mb-4" placeholder="Enter maximum value" step="0.01">
+          </div>
+          <button type="submit" class="bg-blue-700 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-blue-800">
+            Generate Report
+          </button>
+        </form>
+
+        <!-- Display the filtered report data -->
+        <% if (data.length > 0) { %>
+          <div class="mt-8">
+            <div class="header">
+              <img src="/img/Calapan_City_Logo.png" alt="Calapan City Logo">
+              <div class="header-text">CITY GOVERNMENT OF CALAPAN</div>
+              <div class="subheader-text">CITY GENERAL SERVICES DEPARTMENT</div>
+              <div class="header-text">ICS REPORT</div>
+              <div class="date-text">Generated on: <%= new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %></div>
+            </div>
+            <div class="mb-4">
+              <p class="text-sm text-gray-600">Found <%= data.length %> record(s)</p>
+            </div>
+            <div class="flex space-x-4 mb-4">
+              <button onclick="printReport()" class="bg-green-500 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-green-600">
+                <i class="fas fa-print mr-2"></i>Print Report
+              </button>
+              <button onclick="exportToExcel()" class="bg-yellow-500 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-yellow-600">
+                <i class="fas fa-file-excel mr-2"></i>Export to Excel
+              </button>
+              <button onclick="exportToPDF()" class="bg-red-500 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-red-600">
+                <i class="fas fa-file-pdf mr-2"></i>Export to PDF
+              </button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="min-w-full bg-white border border-gray-300">
+                <thead>
+                  <tr class="bg-blue-100">
+                    <th class="py-2 px-4 border-b text-left narrow-cell">ID</th>
+                    <th class="py-2 px-4 border-b text-left narrow-cell">POS No</th>
+                    <th class="py-2 px-4 border-b text-left narrow-cell">PR ID</th>
+                    <th class="py-2 px-4 border-b text-left narrow-cell">PPE Code</th>
+                    <th class="py-2 px-4 border-b text-left medium-cell">Charging</th>
+                    <th class="py-2 px-4 border-b text-left medium-cell">Department</th>
+                    <th class="py-2 px-4 border-b text-left narrow-cell">Property No</th>
+                    <th class="py-2 px-4 border-b text-left medium-cell">Note</th>
+                    <th class="py-2 px-4 border-b text-left wide-cell">Description</th>
+                    <th class="py-2 px-4 border-b text-left date-cell narrow-cell">Date Acq</th>
+                    <th class="py-2 px-4 border-b text-right number-cell narrow-cell">Qty</th>
+                    <th class="py-2 px-4 border-b text-left narrow-cell">Unit</th>
+                    <th class="py-2 px-4 border-b text-right number-cell narrow-cell">Unit Value</th>
+                    <th class="py-2 px-4 border-b text-right number-cell narrow-cell">Bal Card</th>
+                    <th class="py-2 px-4 border-b text-right number-cell narrow-cell">On Hand</th>
+                    <th class="py-2 px-4 border-b text-left medium-cell">Com Name</th>
+                    <th class="py-2 px-4 border-b text-left narrow-cell">Cond Code</th>
+                    <th class="py-2 px-4 border-b text-left narrow-cell">Sticker</th>
+                    <th class="py-2 px-4 border-b text-left medium-cell">Attachment</th>
+                    <th class="py-2 px-4 border-b text-left narrow-cell">Condemned</th>
+                    <th class="py-2 px-4 border-b text-left narrow-cell">Disposed</th>
+                    <th class="py-2 px-4 border-b text-left narrow-cell">For PRNTrpci</th>
+                    <th class="py-2 px-4 border-b text-left narrow-cell">W ARE</th>
+                    <th class="py-2 px-4 border-b text-left medium-cell">Property Card</th>
+                    <th class="py-2 px-4 border-b text-left medium-cell">Notes</th>
+                    <th class="py-2 px-4 border-b text-left wide-cell">Remarks</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% data.forEach(row => { %>
+                    <tr class="hover:bg-gray-50">
+                      <td class="py-2 px-4 border-b narrow-cell"><%= row.id %></td>
+                      <td class="py-2 px-4 border-b narrow-cell"><%= row.pos_no %></td>
+                      <td class="py-2 px-4 border-b narrow-cell"><%= row.pr_id %></td>
+                      <td class="py-2 px-4 border-b narrow-cell"><%= row.ppe_code %></td>
+                      <td class="py-2 px-4 border-b medium-cell"><%= row.charging %></td>
+                      <td class="py-2 px-4 border-b medium-cell"><%= row.department %></td>
+                      <td class="py-2 px-4 border-b narrow-cell"><%= row.property_no %></td>
+                      <td class="py-2 px-4 border-b medium-cell"><%= row.note %></td>
+                      <td class="py-2 px-4 border-b wide-cell"><%= row.description %></td>
+                      <td class="py-2 px-4 border-b date-cell narrow-cell"><%= row.date_acq %></td>
+                      <td class="py-2 px-4 border-b number-cell narrow-cell"><%= row.quantity %></td>
+                      <td class="py-2 px-4 border-b narrow-cell"><%= row.unit_of_measurement %></td>
+                      <td class="py-2 px-4 border-b number-cell narrow-cell">₱<%= row.unit_of_value %></td>
+                      <td class="py-2 px-4 border-b number-cell narrow-cell"><%= row.balcard %></td>
+                      <td class="py-2 px-4 border-b number-cell narrow-cell"><%= row.onhand %></td>
+                      <td class="py-2 px-4 border-b medium-cell"><%= row.com_name %></td>
+                      <td class="py-2 px-4 border-b narrow-cell"><%= row.condition_code %></td>
+                      <td class="py-2 px-4 border-b narrow-cell"><%= row.sticker %></td>
+                      <td class="py-2 px-4 border-b medium-cell"><%= row.attachment %></td>
+                      <td class="py-2 px-4 border-b narrow-cell"><%= row.condemned %></td>
+                      <td class="py-2 px-4 border-b narrow-cell"><%= row.disposed %></td>
+                      <td class="py-2 px-4 border-b narrow-cell"><%= row.forPRNTrpci %></td>
+                      <td class="py-2 px-4 border-b narrow-cell"><%= row.w_ARE %></td>
+                      <td class="py-2 px-4 border-b medium-cell"><%= row.property_card %></td>
+                      <td class="py-2 px-4 border-b medium-cell"><%= row.notes %></td>
+                      <td class="py-2 px-4 border-b wide-cell"><%= row.remarks %></td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+                <tfoot>
+                  <tr class="bg-gray-100 font-semibold">
+                    <td colspan="12" class="py-2 px-4 border-b text-right">Total Value:</td>
+                    <td class="py-2 px-4 border-b number-cell">
+                      ₱<%= data.reduce((sum, row) => {
+                        const value = parseFloat(row.unit_of_value.replace(/,/g, '')) || 0;
+                        return sum + value * (parseFloat(row.quantity.replace(/,/g, '')) || 0);
+                      }, 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                    </td>
+                    <td colspan="13" class="py-2 px-4 border-b"></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        <% } else if (typeof reportType !== 'undefined' && reportType !== null) { %>
+          <div class="mt-8">
+            <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                </div>
+                <div class="ml-3">
+                  <h3 class="text-sm font-medium text-yellow-800">No data found</h3>
+                  <div class="mt-2 text-sm text-yellow-700">
+                    <p>No records match the selected filters. Try adjusting your search criteria.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+  <script>
+    function printReport() {
+      window.print();
+    }
+
+    async function exportToExcel() {
+      const table = document.querySelector('table');
+      if (!table) {
+        alert('No data to export');
+        return;
+      }
+
+      try {
+        const workbook = XLSX.utils.book_new();
+        const reportType = 'ics';
+        const currentDate = new Date().toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.innerText);
+        const rows = Array.from(table.querySelectorAll('tbody tr')).map(tr => {
+          return Array.from(tr.querySelectorAll('td')).map(td => td.innerText);
+        });
+
+        const wsData = [
+          [], // Row 1 - Logo space
+          [], // Row 2 - Logo space
+          ['CITY GOVERNMENT OF CALAPAN'],
+          ['CITY GENERAL SERVICES DEPARTMENT'],
+          ['ICS REPORT'],
+          [`Generated on: ${currentDate}`],
+          [],
+          headers,
+          ...rows
+        ];
+
+        const worksheet = XLSX.utils.aoa_to_sheet(wsData);
+
+        const columnWidths = [
+          { wch: 8 },  // ID
+          { wch: 8 },  // POS No
+          { wch: 8 },  // PR ID
+          { wch: 10 }, // PPE Code
+          { wch: 15 }, // Charging
+          { wch: 15 }, // Department
+          { wch: 10 }, // Property No
+          { wch: 15 }, // Note
+          { wch: 25 }, // Description
+          { wch: 12 }, // Date Acq
+          { wch: 8 },  // Qty
+          { wch: 8 },  // Unit
+          { wch: 10 }, // Unit Value
+          { wch: 8 },  // Bal Card
+          { wch: 8 },  // On Hand
+          { wch: 15 }, // Com Name
+          { wch: 8 },  // Cond Code
+          { wch: 8 },  // Sticker
+          { wch: 15 }, // Attachment
+          { wch: 8 },  // Condemned
+          { wch: 8 },  // Disposed
+          { wch: 8 },  // For PRNTrpci
+          { wch: 8 },  // W ARE
+          { wch: 15 }, // Property Card
+          { wch: 15 }, // Notes
+          { wch: 20 }  // Remarks
+        ];
+        worksheet['!cols'] = columnWidths;
+
+        const headerStyle = {
+          font: { bold: true, sz: 14, color: { rgb: "1E40AF" } },
+          alignment: { horizontal: "center", vertical: "center" },
+          fill: { fgColor: { rgb: "EBF4FF" } }
+        };
+
+        const titleStyle = {
+          font: { bold: true, sz: 16, color: { rgb: "1E40AF" } },
+          alignment: { horizontal: "center", vertical: "center" }
+        };
+
+        const subtitleStyle = {
+          font: { bold: true, sz: 12, color: { rgb: "374151" } },
+          alignment: { horizontal: "center", vertical: "center" }
+        };
+
+        const dateStyle = {
+          font: { sz: 10, color: { rgb: "6B7280" } },
+          alignment: { horizontal: "center", vertical: "center" }
+        };
+
+        if (worksheet['A3']) worksheet['A3'].s = titleStyle;
+        if (worksheet['A4']) worksheet['A4'].s = subtitleStyle;
+        if (worksheet['A5']) worksheet['A5'].s = titleStyle;
+        if (worksheet['A6']) worksheet['A6'].s = dateStyle;
+
+        const tableHeaderRow = 8;
+        headers.forEach((header, index) => {
+          const cellAddress = XLSX.utils.encode_cell({ r: tableHeaderRow - 1, c: index });
+          if (worksheet[cellAddress]) {
+            worksheet[cellAddress].s = {
+              font: { bold: true, color: { rgb: "FFFFFF" } },
+              fill: { fgColor: { rgb: "3B82F6" } },
+              alignment: { horizontal: "center", vertical: "center" },
+              border: {
+                top: { style: "thin", color: { rgb: "000000" } },
+                bottom: { style: "thin", color: { rgb: "000000" } },
+                left: { style: "thin", color: { rgb: "000000" } },
+                right: { style: "thin", color: { rgb: "000000" } }
+              }
+            };
+          }
+        });
+
+        const dataStartRow = tableHeaderRow;
+        rows.forEach((row, rowIndex) => {
+          row.forEach((cell, colIndex) => {
+            const cellAddress = XLSX.utils.encode_cell({ r: dataStartRow + rowIndex, c: colIndex });
+            if (worksheet[cellAddress]) {
+              worksheet[cellAddress].s = {
+                border: {
+                  top: { style: "thin", color: { rgb: "D1D5DB" } },
+                  bottom: { style: "thin", color: { rgb: "D1D5DB" } },
+                  left: { style: "thin", color: { rgb: "D1D5DB" } },
+                  right: { style: "thin", color: { rgb: "D1D5DB" } }
+                },
+                alignment: {
+                  horizontal: (colIndex === 10 || colIndex === 12 || colIndex === 13 || colIndex === 14) ? "right" : "left",
+                  vertical: "center"
+                }
+              };
+            }
+          });
+        });
+
+        worksheet['!merges'] = [
+          { s: { r: 2, c: 0 }, e: { r: 2, c: headers.length - 1 } },
+          { s: { r: 3, c: 0 }, e: { r: 3, c: headers.length - 1 } },
+          { s: { r: 4, c: 0 }, e: { r: 4, c: headers.length - 1 } },
+          { s: { r: 5, c: 0 }, e: { r: 5, c: headers.length - 1 } }
+        ];
+
+        worksheet['!rows'] = [
+          { hpt: 60 },
+          { hpt: 20 },
+          { hpt: 25 },
+          { hpt: 20 },
+          { hpt: 25 },
+          { hpt: 15 },
+          { hpt: 10 },
+          { hpt: 25 }
+        ];
+
+        XLSX.utils.book_append_sheet(workbook, worksheet, "ICS Report");
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        const filename = `Calapan_ICS_Report_${timestamp}.xlsx`;
+
+        if (worksheet['A1']) {
+          worksheet['A1'].c = [{
+            a: "System",
+            t: "Note: Calapan City Logo should be inserted in cell A1:B2 manually after opening the file."
+          }];
+        }
+
+        XLSX.writeFile(workbook, filename);
+        setTimeout(() => {
+          alert(`Excel file exported successfully!\n\nNote: To add the Calapan City logo:\n1. Open the exported Excel file\n2. Insert the logo in cells A1:B2\n3. Resize as needed`);
+        }, 500);
+      } catch (error) {
+        console.error('Error exporting to Excel:', error);
+        alert('Error exporting to Excel. Please try again.');
+      }
+    }
+
+    function exportToPDF() {
+      const table = document.querySelector('table');
+      if (!table) {
+        alert('No data to export');
+        return;
+      }
+
+      const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.innerText);
+      const rows = Array.from(table.querySelectorAll('tbody tr')).map(tr => {
+        return Array.from(tr.querySelectorAll('td')).map(td => td.innerText);
+      });
+
+      const currentDate = new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+
+      const documentDefinition = {
+        pageOrientation: 'landscape',
+        pageSize: 'LEGAL',
+        content: [
+          {
+            image: '/img/Calapan_City_Logo.png',
+            width: 80,
+            alignment: 'center',
+            margin: [0, 0, 0, 10]
+          },
+          { text: 'CITY GOVERNMENT OF CALAPAN', style: 'header', alignment: 'center' },
+          { text: 'CITY GENERAL SERVICES DEPARTMENT', style: 'subheader', alignment: 'center' },
+          { text: 'ICS REPORT', style: 'header', alignment: 'center' },
+          { text: `Generated on: ${currentDate}`, style: 'date', alignment: 'center', margin: [0, 0, 0, 20] },
+          {
+            table: {
+              headerRows: 1,
+              widths: [
+                30, 30, 30, 40, 60, 60, 40, 60, 80, 50,
+                30, 30, 40, 30, 30, 60, 30, 30, 60, 30,
+                30, 30, 30, 60, 60, 80
+              ],
+              body: [headers, ...rows]
+            },
+            layout: {
+              fillColor: function (rowIndex) {
+                return (rowIndex === 0) ? '#3B82F6' : null;
+              },
+              hLineWidth: function () { return 0.5; },
+              vLineWidth: function () { return 0.5; }
+            }
+          }
+        ],
+        styles: {
+          header: {
+            fontSize: 14,
+            bold: true,
+            color: '#1E40AF'
+          },
+          subheader: {
+            fontSize: 12,
+            bold: true,
+            color: '#374151'
+          },
+          date: {
+            fontSize: 10,
+            color: '#6B7280'
+          }
+        },
+        defaultStyle: {
+          fontSize: 8
+        }
+      };
+
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+      pdfMake.createPdf(documentDefinition).download(`ICS_report_${timestamp}.pdf`);
+    }
+  </script>
+</body>
+</html>

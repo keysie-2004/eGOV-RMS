@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>ICS Inventory Management</title>
+
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png">
+  <link href="/src/table.css" rel="stylesheet"/>
+  <!-- DataTables CSS -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+</head>
+
+<body class="bg-blue-50 font-sans">
+  <!-- Include Sidebar -->
+  <%- include('partials/sidebar') %>
+
+  <!-- Main Content -->
+  <div class="lg:ml-64 p-7 lg:p-10">
+    <div class="w-full">
+      <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
+        <h2 class="text-2xl font-bold text-blue-700 mb-6">ICS Inventory Management</h2>
+
+        <!-- Classification Tabs -->
+        <div class="mb-6">
+          <ul class="flex border-b border-gray-200" id="classificationTabs" role="tablist">
+            <li class="mr-1">
+              <button class="px-4 py-2 text-blue-700 font-semibold border-b-2 border-blue-700 active" id="small-tab" data-bs-target="#small" type="button">
+                <i class="fas fa-box-open mr-2"></i>Property Small (<5K)
+              </button>
+            </li>
+            <li class="mr-1">
+              <button class="px-4 py-2 text-gray-600 hover:text-blue-700 hover:border-b-2 hover:border-blue-700" id="medium-tab" data-bs-target="#medium" type="button">
+                <i class="fas fa-box mr-2"></i>ICS (5K-50K)
+              </button>
+            </li>
+            <li class="mr-1">
+              <button class="px-4 py-2 text-gray-600 hover:text-blue-700 hover:border-b-2 hover:border-blue-700" id="large-tab" data-bs-target="#large" type="button">
+                <i class="fas fa-pallet mr-2"></i>PAR (>50K)
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="classificationTabContent">
+          <!-- Small Items Tab -->
+          <div class="tab-pane active" id="small" role="tabpanel">
+            <div class="overflow-x-auto">
+              <table class="min-w-full bg-white border border-gray-200 shadow-sm rounded-lg" id="smallTable">
+                <thead>
+                  <tr class="bg-blue-700 text-white">
+                    <th class="p-4 text-left">ID</th>
+                    <th class="p-4 text-left">POS No.</th>
+                    <th class="p-4 text-left">PR ID</th>
+                    <th class="p-4 text-left">PPE Code</th>
+                    <th class="p-4 text-left">Charging</th>
+                    <th class="p-4 text-left">Department</th>
+                    <th class="p-4 text-left">Property No.</th>
+                    <th class="p-4 text-left">Note</th>
+                    <th class="p-4 text-left">Description</th>
+                    <th class="p-4 text-left">Date Acquired</th>
+                    <th class="p-4 text-left">Quantity</th>
+                    <th class="p-4 text-left">Unit of Measurement</th>
+                    <th class="p-4 text-left">Unit Value</th>
+                    <th class="p-4 text-left">Balcard</th>
+                    <th class="p-4 text-left">On Hand</th>
+                    <th class="p-4 text-left">COM Name</th>
+                    <th class="p-4 text-left">Condition</th>
+                    <th class="p-4 text-left">Sticker</th>
+                    <th class="p-4 text-left">Attachment</th>
+                    <th class="p-4 text-left">Condemned</th>
+                    <th class="p-4 text-left">Disposed</th>
+                    <th class="p-4 text-left">For PRNT/RPCI</th>
+                    <th class="p-4 text-left">W ARE</th>
+                    <th class="p-4 text-left">Property Card</th>
+                    <th class="p-4 text-left">Notes</th>
+                    <th class="p-4 text-left">Remarks</th>
+                    <th class="p-4 text-left">QR Code</th>
+                    <th class="p-4 text-left">First Scan</th>
+                    <th class="p-4 text-left">Second Scan</th>
+                    <th class="p-4 text-left">Scan Status</th>
+                    <th class="p-4 text-left">Scan %</th>
+                    <th class="p-4 text-left">Status</th>
+                    <th class="p-4 text-left">Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          
+          <!-- Medium Items Tab -->
+          <div class="tab-pane hidden" id="medium" role="tabpanel">
+            <div class="overflow-x-auto">
+              <table class="min-w-full bg-white border border-gray-200 shadow-sm rounded-lg" id="mediumTable">
+                <thead>
+                  <tr class="bg-blue-700 text-white">
+                    <th class="p-4 text-left">ID</th>
+                    <th class="p-4 text-left">POS No.</th>
+                    <th class="p-4 text-left">PR ID</th>
+                    <th class="p-4 text-left">PPE Code</th>
+                    <th class="p-4 text-left">Charging</th>
+                    <th class="p-4 text-left">Department</th>
+                    <th class="p-4 text-left">Property No.</th>
+                    <th class="p-4 text-left">Note</th>
+                    <th class="p-4 text-left">Description</th>
+                    <th class="p-4 text-left">Date Acquired</th>
+                    <th class="p-4 text-left">Quantity</th>
+                    <th class="p-4 text-left">Unit of Measurement</th>
+                    <th class="p-4 text-left">Unit Value</th>
+                    <th class="p-4 text-left">Balcard</th>
+                    <th class="p-4 text-left">On Hand</th>
+                    <th class="p-4 text-left">COM Name</th>
+                    <th class="p-4 text-left">Condition</th>
+                    <th class="p-4 text-left">Sticker</th>
+                    <th class="p-4 text-left">Attachment</th>
+                    <th class="p-4 text-left">Condemned</th>
+                    <th class="p-4 text-left">Disposed</th>
+                    <th class="p-4 text-left">For PRNT/RPCI</th>
+                    <th class="p-4 text-left">W ARE</th>
+                    <th class="p-4 text-left">Property Card</th>
+                    <th class="p-4 text-left">Notes</th>
+                    <th class="p-4 text-left">Remarks</th>
+                    <th class="p-4 text-left">QR Code</th>
+                    <th class="p-4 text-left">First Scan</th>
+                    <th class="p-4 text-left">Second Scan</th>
+                    <th class="p-4 text-left">Scan Status</th>
+                    <th class="p-4 text-left">Scan %</th>
+                    <th class="p-4 text-left">Status</th>
+                    <th class="p-4 text-left">Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          
+          <!-- Large Items Tab -->
+          <div class="tab-pane hidden" id="large" role="tabpanel">
+            <div class="overflow-x-auto">
+              <table class="min-w-full bg-white border border-gray-200 shadow-sm rounded-lg" id="largeTable">
+                <thead>
+                  <tr class="bg-blue-700 text-white">
+                    <th class="p-4 text-left">ID</th>
+                    <th class="p-4 text-left">POS No.</th>
+                    <th class="p-4 text-left">PR ID</th>
+                    <th class="p-4 text-left">PPE Code</th>
+                    <th class="p-4 text-left">Charging</th>
+                    <th class="p-4 text-left">Department</th>
+                    <th class="p-4 text-left">Property No.</th>
+                    <th class="p-4 text-left">Note</th>
+                    <th class="p-4 text-left">Description</th>
+                    <th class="p-4 text-left">Date Acquired</th>
+                    <th class="p-4 text-left">Quantity</th>
+                    <th class="p-4 text-left">Unit of Measurement</th>
+                    <th class="p-4 text-left">Unit Value</th>
+                    <th class="p-4 text-left">Balcard</th>
+                    <th class="p-4 text-left">On Hand</th>
+                    <th class="p-4 text-left">COM Name</th>
+                    <th class="p-4 text-left">Condition</th>
+                    <th class="p-4 text-left">Sticker</th>
+                    <th class="p-4 text-left">Attachment</th>
+                    <th class="p-4 text-left">Condemned</th>
+                    <th class="p-4 text-left">Disposed</th>
+                    <th class="p-4 text-left">For PRNT/RPCI</th>
+                    <th class="p-4 text-left">W ARE</th>
+                    <th class="p-4 text-left">Property Card</th>
+                    <th class="p-4 text-left">Notes</th>
+                    <th class="p-4 text-left">Remarks</th>
+                    <th class="p-4 text-left">QR Code</th>
+                    <th class="p-4 text-left">First Scan</th>
+                    <th class="p-4 text-left">Second Scan</th>
+                    <th class="p-4 text-left">Scan Status</th>
+                    <th class="p-4 text-left">Scan %</th>
+                    <th class="p-4 text-left">Status</th>
+                    <th class="p-4 text-left">Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Generate All QR Codes Button -->
+        <button id="generateAllQRCodes" class="fixed bottom-6 right-6 px-4 py-2 bg-blue-700 text-white rounded-lg shadow-md hover:bg-blue-800">
+          <i class="fas fa-qrcode mr-2"></i>Generate All Missing QR Codes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Item Details Modal -->
+  <div id="itemDetailsModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-3xl">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold text-blue-700">Item Details</h2>
+        <button type="button" class="text-gray-600 hover:text-gray-800" data-bs-dismiss="modal">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div id="itemDetailsContent" class="text-gray-700"></div>
+      <div class="flex justify-end mt-4">
+        <button type="button" class="px-4 py-2 bg-gray-500 text-white rounded-lg" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Print QR Code Modal -->
+  <div id="printQRModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold text-blue-700">Print QR Code</h2>
+        <button type="button" class="text-gray-600 hover:text-gray-800" data-bs-dismiss="modal">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div id="printQRContent" class="text-center text-gray-700"></div>
+      <div class="flex justify-end mt-4">
+        <button type="button" class="px-4 py-2 bg-gray-500 text-white rounded-lg mr-2" data-bs-dismiss="modal">Close</button>
+        <button type="button" id="printQRBtn" class="px-4 py-2 bg-blue-700 text-white rounded-lg">
+          <i class="fas fa-print mr-1"></i>Print
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Dependencies -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+  
+<script>
+  $(document).ready(function() {
+    // Editable fields
+    const editableFields = [
+      'description', 'dept', 'unit_of_value', 'condition_code',
+      'qty', 'unit_of_measurement', 'notes', 'remarks'
+    ];
+
+    // Initialize DataTables
+    const tables = {
+      smallTable: $('#smallTable').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+          url: '/api/items/small',
+          type: 'POST'
+        },
+        columns: [
+          { data: 'id' },
+          { data: 'pos_no' },
+          { data: 'pr_id' },
+          { data: 'ppe_code' },
+          { data: 'charging' },
+          {
+            data: 'dept',
+            render: function(data, type, row) {
+              return `<span class="editable" data-field="dept" data-id="${row.id}">${data || ''}</span>`;
+            }
+          },
+          { data: 'property_no' },
+          { data: 'note' },
+          {
+            data: 'description',
+            render: function(data, type, row) {
+              return `<span class="editable" data-field="description" data-id="${row.id}">${data || ''}</span>`;
+            }
+          },
+          {
+            data: 'date_acq',
+            render: function(data) {
+              return data ? new Date(data).toLocaleDateString() : 'N/A';
+            }
+          },
+          {
+            data: 'qty',
+            render: function(data, type, row) {
+              return `<span class="editable" data-field="qty" data-id="${row.id}">${data || ''}</span>`;
+            }
+          },
+          {
+            data: 'unit_of_measurement',
+            render: function(data, type, row) {
+              return `<span class="editable" data-field="unit_of_measurement" data-id="${row.id}">${data || ''}</span>`;
+            }
+          },
+          {
+            data: 'unit_of_value',
+            render: function(data, type, row) {
+              const value = data ? `₱${parseFloat(data).toLocaleString()}` : 'N/A';
+              return `<span class="editable" data-field="unit_of_value" data-id="${row.id}">${value}</span>`;
+            }
+          },
+          {
+              data: 'balcard',
+              render: function(data) {
+                  return data ? `₱${parseFloat(data).toLocaleString()}` : 'N/A';
+              }
+          },          
+          {
+              data: 'onhand',
+              render: function(data) {
+                  return data ? `₱${parseFloat(data).toLocaleString()}` : 'N/A';
+              }
+          },          
+          { data: 'com_name' },
+          {
+            data: 'condition_code',
+            render: function(data, type, row) {
+              return `<span class="editable" data-field="condition_code" data-id="${row.id}">${data || ''}</span>`;
+            }
+          },
+          { data: 'sticker' },
+          { data: 'attachment' },
+          { data: 'condemned' },
+          { data: 'disposed' },
+          { data: 'forPRNTrpci' },
+          { data: 'w_ARE' },
+          { data: 'property_card' },
+          {
+            data: 'notes',
+            render: function(data, type, row) {
+              return `<span class="editable" data-field="notes" data-id="${row.id}">${data || ''}</span>`;
+            }
+          },
+          {
+            data: 'remarks',
+            render: function(data, type, row) {
+              return `<span class="editable" data-field="remarks" data-id="${row.id}">${data || ''}</span>`;
+            }
+          },
+          // QR Code column: Display "N/A" for small items
+          {
+            data: null,
+            render: function(data, type, row) {
+              return 'N/A';
+            }
+          },
+          {
+            data: 'first_scan_date',
+            render: function(data) {
+              return data || 'Not scanned';
+            }
+          },
+          {
+            data: 'second_scan_date',
+            render: function(data) {
+              return data || 'Not scanned';
+            }
+          },
+          {
+            data: null,
+            render: function(data, type, row) {
+              let statusClass = '';
+              let statusText = '';
+              if (!row.first_scan_date && !row.second_scan_date) {
+                statusClass = 'scan-pending';
+                statusText = 'Pending';
+              } else if ((row.first_scan_date && !row.second_scan_date) || (!row.first_scan_date && row.second_scan_date)) {
+                statusClass = 'scan-partial';
+                statusText = row.first_scan_date ? 'First Scan' : 'Second Scan';
+              } else if (row.first_scan_date && row.second_scan_date) {
+                statusClass = 'scan-complete';
+                statusText = 'Complete';
+              }
+              return `<span class="scan-status ${statusClass}">${statusText}</span>`;
+            }
+          },
+          {
+            data: 'scan_percentage',
+            render: function(data) {
+              return data ? `${parseFloat(data).toFixed(2)}%` : '0%';
+            }
+          },
+          { data: 'status' },
+          {
+            data: null,
+            render: function(data, type, row) {
+              return `
+                <a href="#" class="text-blue-600 hover:underline view-details" data-id="${row.id}">
+                  <i class="fas fa-eye"></i>
+                </a> |
+                <a href="#" class="text-yellow-600 hover:underline edit-row" data-id="${row.id}">
+                  <i class="fas fa-edit"></i>
+                </a> |
+                <a href="#" class="text-red-600 hover:underline archive-row" data-id="${row.id}">
+                  <i class="fas fa-archive"></i>
+                </a>
+              `;
+            }
+          }
+        ],
+        rowCallback: function(row) {
+          $(row).addClass('border-b border-gray-200 hover:bg-gray-100');
+        }
+      }),
+      mediumTable: $('#mediumTable').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+          url: '/api/items/medium',
+          type: 'POST'
+        },
+        columns: [
+          { data: 'id' },
+          { data: 'pos_no' },
+          { data: 'pr_id' },
+          { data: 'ppe_code' },
+          { data: 'charging' },
+          {
+            data: 'dept',
+            render: function(data, type, row) {
+              return `<span class="editable" data-field="dept" data-id="${row.id}">${data || ''}</span>`;
+            }
+          },
+          { data: 'property_no' },
+          { data: 'note' },
+          {
+            data: 'description',
+            render: function(data, type, row) {
+              return `<span class="editable" data-field="description" data-id="${row.id}">${data || ''}</span>`;
+            }
+          },
+          {
+            data: 'date_acq',
+            render: function(data) {
+              return data ? new Date(data).toLocaleDateString() : 'N/A';
+            }
+          },
+          {
+            data: 'qty',
+            render: function(data, type, row) {
+              return `<span class="editable" data-field="qty" data-id="${row.id}">${data || ''}</span>`;
+            }
+          },
+          {
+            data: 'unit_of_measurement',
+            render: function(data, type, row) {
+              return `<span class="editable" data-field="unit_of_measurement" data-id="${row.id}">${data || ''}</span>`;
+            }
+          },
+          {
+            data: 'unit_of_value',
+            render: function(data, type, row) {
+              const value = data ? `₱${parseFloat(data).toLocaleString()}` : 'N/A';
+              return `<span class="editable" data-field="unit_of_value" data-id="${row.id}">${value}</span>`;
+            }
+          },
+{
+    data: 'balcard',
+    render: function(data) {
+        return data ? `₱${parseFloat(data).toLocaleString()}` : 'N/A';
+    }
+},
+{
+    data: 'onhand',
+    render: function(data) {
+        return data ? `₱${parseFloat(data).toLocaleString()}` : 'N/A';
+    }
+},          { data: 'com_name' },
+          {
+            data: 'condition_code',
+            render: function(data, type, row) {
+              return `<span class="editable" data-field="condition_code" data-id="${row.id}">${data || ''}</span>`;
+            }
+          },
+          { data: 'sticker' },
+          { data: 'attachment' },
+          { data: 'condemned' },
+          { data: 'disposed' },
+          { data: 'forPRNTrpci' },
+          { data: 'w_ARE' },
+          { data: 'property_card' },
+          {
+            data: 'notes',
+            render: function(data, type, row) {
+              return `<span class="editable" data-field="notes" data-id="${row.id}">${data || ''}</span>`;
+            }
+          },
+          {
+            data: 'remarks',
+            render: function(data, type, row) {
+              return `<span class="editable" data-field="remarks" data-id="${row.id}">${data || ''}</span>`;
+            }
+          },
+          // QR Code column: Display "N/A" for medium items
+          {
+            data: null,
+            render: function(data, type, row) {
+              return 'N/A';
+            }
+          },
+          {
+            data: 'first_scan_date',
+            render: function(data) {
+              return data || 'Not scanned';
+            }
+          },
+          {
+            data: 'second_scan_date',
+            render: function(data) {
+              return data || 'Not scanned';
+            }
+          },
+          {
+            data: null,
+            render: function(data, type, row) {
+              let statusClass = '';
+              let statusText = '';
+              if (!row.first_scan_date && !row.second_scan_date) {
+                statusClass = 'scan-pending';
+                statusText = 'Pending';
+              } else if ((row.first_scan_date && !row.second_scan_date) || (!row.first_scan_date && row.second_scan_date)) {
+                statusClass = 'scan-partial';
+                statusText = row.first_scan_date ? 'First Scan' : 'Second Scan';
+              } else if (row.first_scan_date && row.second_scan_date) {
+                statusClass = 'scan-complete';
+                statusText = 'Complete';
+              }
+              return `<span class="scan-status ${statusClass}">${statusText}</span>`;
+            }
+          },
+          {
+            data: 'scan_percentage',
+            render: function(data) {
+              return data ? `${parseFloat(data).toFixed(2)}%` : '0%';
+            }
+          },
+          { data: 'status' },
+          {
+            data: null,
+            render: function(data, type, row) {
+              return `
+                <a href="#" class="text-blue-600 hover:underline view-details" data-id="${row.id}">
+                  <i class="fas fa-eye"></i>
+                </a> |
+                <a href="#" class="text-yellow-600 hover:underline edit-row" data-id="${row.id}">
+                  <i class="fas fa-edit"></i>
+                </a> |
+                <a href="#" class="text-red-600 hover:underline archive-row" data-id="${row.id}">
+                  <i class="fas fa-archive"></i>
+                </a>
+              `;
+            }
+          }
+        ],
+        rowCallback: function(row) {
+          $(row).addClass('border-b border-gray-200 hover:bg-gray-100');
+        }
+      }),
+      largeTable: $('#largeTable').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+          url: '/api/items/large',
+          type: 'POST'
+        },
+        columns: [
+          { data: 'id' },
+          { data: 'pos_no' },
+          { data: 'pr_id' },
+          { data: 'ppe_code' },
+          { data: 'charging' },
+          {
+            data: 'dept',
+            render: function(data, type, row) {
+              return `<span class="editable" data-field="dept" data-id="${row.id}">${data || ''}</span>`;
+            }
+          },
+          { data: 'property_no' },
+          { data: 'note' },
+          {
+            data: 'description',
+            render: function(data, type, row) {
+              return `<span class="editable" data-field="description" data-id="${row.id}">${data || ''}</span>`;
+            }
+          },
+          {
+            data: 'date_acq',
+            render: function(data) {
+              return data ? new Date(data).toLocaleDateString() : 'N/A';
+            }
+          },
+          {
+            data: 'qty',
+            render: function(data, type, row) {
+              return `<span class="editable" data-field="qty" data-id="${row.id}">${data || ''}</span>`;
+            }
+          },
+          {
+            data: 'unit_of_measurement',
+            render: function(data, type, row) {
+              return `<span class="editable" data-field="unit_of_measurement" data-id="${row.id}">${data || ''}</span>`;
+            }
+          },
+          {
+            data: 'unit_of_value',
+            render: function(data, type, row) {
+              const value = data ? `₱${parseFloat(data).toLocaleString()}` : 'N/A';
+              return `<span class="editable" data-field="unit_of_value" data-id="${row.id}">${value}</span>`;
+            }
+          },
+          { data: 'balcard' },
+          { data: 'onhand' },
+          { data: 'com_name' },
+          {
+            data: 'condition_code',
+            render: function(data, type, row) {
+              return `<span class="editable" data-field="condition_code" data-id="${row.id}">${data || ''}</span>`;
+            }
+          },
+          { data: 'sticker' },
+          { data: 'attachment' },
+          { data: 'condemned' },
+          { data: 'disposed' },
+          { data: 'forPRNTrpci' },
+          { data: 'w_ARE' },
+          { data: 'property_card' },
+          {
+            data: 'notes',
+            render: function(data, type, row) {
+              return `<span class="editable" data-field="notes" data-id="${row.id}">${data || ''}</span>`;
+            }
+          },
+          {
+            data: 'remarks',
+            render: function(data, type, row) {
+              return `<span class="editable" data-field="remarks" data-id="${row.id}">${data || ''}</span>`;
+            }
+          },
+          // QR Code column: Keep QR code functionality for large items
+          {
+            data: 'qr_code_path',
+            render: function(data, type, row) {
+              return data ?
+                `<img src="${data}" alt="QR Code" class="qr-code-img">` :
+                `<button class="text-green-600 hover:underline generate-qr" data-id="${row.id}">
+                  <i class="fas fa-qrcode mr-1"></i>Generate
+                </button>`;
+            }
+          },
+          {
+            data: 'first_scan_date',
+            render: function(data) {
+              return data || 'Not scanned';
+            }
+          },
+          {
+            data: 'second_scan_date',
+            render: function(data) {
+              return data || 'Not scanned';
+            }
+          },
+          {
+            data: null,
+            render: function(data, type, row) {
+              let statusClass = '';
+              let statusText = '';
+              if (!row.first_scan_date && !row.second_scan_date) {
+                statusClass = 'scan-pending';
+                statusText = 'Pending';
+              } else if ((row.first_scan_date && !row.second_scan_date) || (!row.first_scan_date && row.second_scan_date)) {
+                statusClass = 'scan-partial';
+                statusText = row.first_scan_date ? 'First Scan' : 'Second Scan';
+              } else if (row.first_scan_date && row.second_scan_date) {
+                statusClass = 'scan-complete';
+                statusText = 'Complete';
+              }
+              return `<span class="scan-status ${statusClass}">${statusText}</span>`;
+            }
+          },
+          {
+            data: 'scan_percentage',
+            render: function(data) {
+              return data ? `${parseFloat(data).toFixed(2)}%` : '0%';
+            }
+          },
+          { data: 'status' },
+          {
+            data: null,
+            render: function(data, type, row) {
+              return `
+                <a href="#" class="text-blue-600 hover:underline view-details" data-id="${row.id}">
+                  <i class="fas fa-eye"></i>
+                </a> |
+                <a href="#" class="text-gray-600 hover:underline print-qr ${!row.qr_code_path ? 'pointer-events-none opacity-50' : ''}" data-id="${row.id}">
+                  <i class="fas fa-print"></i>
+                </a> |
+                <a href="#" class="text-yellow-600 hover:underline edit-row" data-id="${row.id}">
+                  <i class="fas fa-edit"></i>
+                </a> |
+                <a href="#" class="text-red-600 hover:underline archive-row" data-id="${row.id}">
+                  <i class="fas fa-archive"></i>
+                </a>
+              `;
+            }
+          }
+        ],
+        rowCallback: function(row) {
+          $(row).addClass('border-b border-gray-200 hover:bg-gray-100');
+        }
+      })
+    };
+
+    // Handle tab change to refresh active table
+    $('#classificationTabs button').on('click', function(e) {
+      $('#classificationTabs button').removeClass('text-blue-700 font-semibold border-b-2 border-blue-700 active');
+      $(this).addClass('text-blue-700 font-semibold border-b-2 border-blue-700 active');
+      $('.tab-pane').addClass('hidden');
+      const target = $(this).attr('data-bs-target');
+      $(target).removeClass('hidden');
+      tables[target.replace('#', '') + 'Table'].draw();
+    });
+
+    // Handle inline editing
+    $(document).on('click', '.edit-row', function() {
+      const itemId = $(this).data('id');
+      const $row = $(this).closest('tr');
+      const $editButton = $(this);
+
+      if ($row.hasClass('editing')) {
+        // Save changes
+        const updates = {};
+        $row.find('.editable').each(function() {
+          const field = $(this).data('field');
+          let value = $(this).text().trim();
+          if (field === 'unit_of_value') {
+            value = value.replace(/[^0-9.]/g, '');
+          }
+          updates[field] = value;
+        });
+
+        $.ajax({
+          url: `/item/${itemId}`,
+          type: 'PATCH',
+          data: JSON.stringify(updates),
+          contentType: 'application/json',
+          success: function(response) {
+            if (response.success) {
+              showAlert('Item updated successfully!', 'success');
+              $row.removeClass('editing');
+              $row.find('.editable').removeAttr('contenteditable');
+              $editButton.find('i').removeClass('fas fa-save').addClass('fas fa-edit');
+              tables[$('.tab-pane:not(.hidden)').find('table').attr('id')].draw();
+            } else {
+              showAlert(response.message, 'danger');
+            }
+          },
+          error: function(xhr) {
+            const error = xhr.responseJSON ? xhr.responseJSON.error : 'Server error';
+            showAlert(`Error: ${error}`, 'danger');
+          }
+        });
+      } else {
+        // Enter edit mode
+        $row.addClass('editing');
+        $row.find('.editable').attr('contenteditable', 'true').focus();
+        $editButton.find('i').removeClass('fas fa-edit').addClass('fas fa-save');
+      }
+    });
+
+    // Handle archive button
+    $(document).on('click', '.archive-row', function() {
+      const itemId = $(this).data('id');
+      const $button = $(this);
+      $button.html('<i class="fas fa-spinner fa-spin"></i>');
+      $button.addClass('pointer-events-none');
+
+      $.post(`/item/${itemId}/archive`, function(response) {
+        if (response.success) {
+          showAlert('Item archived successfully!', 'success');
+          const activeTab = $('.tab-pane:not(.hidden)').find('table').attr('id');
+          tables[activeTab].draw();
+        } else {
+          showAlert(response.message, 'danger');
+        }
+      }).fail(function(xhr) {
+        const error = xhr.responseJSON ? xhr.responseJSON.error : 'Server error';
+        showAlert(`Error: ${error}`, 'danger');
+      }).always(function() {
+        $button.html('<i class="fas fa-archive"></i>').removeClass('pointer-events-none');
+      });
+    });
+
+    // Handle view details button click
+    $(document).on('click', '.view-details', function() {
+      const itemId = $(this).data('id');
+      $.get(`/item/${itemId}`, function(response) {
+        if (response.success) {
+          const item = response.item;
+          let detailsHtml = `
+            <div class="flex flex-wrap">
+              <div class="w-full md:w-1/3 text-center">
+                ${item.qr_code_path && item.unit_of_value > 50000 ? `<img src="${item.qr_code_path}" alt="QR Code" class="w-48 h-48 mx-auto mb-4 border border-gray-200 rounded">` : '<p class="text-gray-500">No QR Code</p>'}
+                <p><span class="font-bold">Property No.:</span> ${item.property_no || 'N/A'}</p>
+                <span class="inline-block px-2 py-1 mt-2 text-xs font-semibold rounded-full
+                  ${item.item_classification?.includes('Small') ? 'bg-blue-100 text-blue-700' : ''}
+                  ${item.item_classification?.includes('Semi-Expendable') ? 'bg-yellow-100 text-yellow-700' : ''}
+                  ${item.item_classification?.includes('Equipment') ? 'bg-red-100 text-red-700' : ''}">
+                  ${item.item_classification || 'N/A'}
+                </span>
+              </div>
+              <div class="w-full md:w-2/3">
+                <h4 class="text-lg font-semibold mb-4">${item.description || 'No Description'}</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p><span class="font-bold">ID:</span> ${item.id || 'N/A'}</p>
+                    <p><span class="font-bold">POS No.:</span> ${item.pos_no || 'N/A'}</p>
+                    <p><span class="font-bold">PR ID:</span> ${item.pr_id || 'N/A'}</p>
+                    <p><span class="font-bold">PPE Code:</span> ${item.ppe_code || 'N/A'}</p>
+                    <p><span class="font-bold">Charging:</span> ${item.charging || 'N/A'}</p>
+                    <p><span class="font-bold">Department:</span> ${item.dept || 'N/A'}</p>
+                    <p><span class="font-bold">Property No.:</span> ${item.property_no || 'N/A'}</p>
+                    <p><span class="font-bold">Note:</span> ${item.note || 'N/A'}</p>
+                    <p><span class="font-bold">Quantity:</span> ${item.qty || 'N/A'} ${item.unit_of_measurement || ''}</p>
+                    <p><span class="font-bold">Unit Value:</span> ₱${item.unit_of_value ? parseFloat(item.unit_of_value).toLocaleString() : 'N/A'}</p>
+                    <p><span class="font-bold">Date Acquired:</span> ${item.date_acq ? new Date(item.date_acq).toLocaleDateString() : 'N/A'}</p>
+                    <p><span class="font-bold">Balcard:</span> ${item.balcard || 'N/A'}</p>
+                    <p><span class="font-bold">On Hand:</span> ${item.onhand || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p><span class="font-bold">COM Name:</span> ${item.com_name || 'N/A'}</p>
+                    <p><span class="font-bold">Condition:</span> ${item.condition_code || 'N/A'}</p>
+                    <p><span class="font-bold">Sticker:</span> ${item.sticker || 'N/A'}</p>
+                    <p><span class="font-bold">Attachment:</span> ${item.attachment || 'N/A'}</p>
+                    <p><span class="font-bold">Condemned:</span> ${item.condemned || 'N/A'}</p>
+                    <p><span class="font-bold">Disposed:</span> ${item.disposed || 'N/A'}</p>
+                    <p><span class="font-bold">For PRNT/RPCI:</span> ${item.forPRNTrpci || 'N/A'}</p>
+                    <p><span class="font-bold">W ARE:</span> ${item.w_ARE || 'N/A'}</p>
+                    <p><span class="font-bold">Property Card:</span> ${item.property_card || 'N/A'}</p>
+                    <p><span class="font-bold">First Scan:</span> ${item.first_scan_date || 'Not scanned'}</p>
+                    <p><span class="font-bold">Second Scan:</span> ${item.second_scan_date || 'Not scanned'}</p>
+                    <p><span class="font-bold">Scan Status:</span> ${item.scan_status || 'N/A'}</p>
+                    <p><span class="font-bold">Scan %:</span> ${item.scan_percentage ? parseFloat(item.scan_percentage).toFixed(2) + '%' : '0%'}</p>
+                    <p><span class="font-bold">Status:</span> ${item.status || 'N/A'}</p>
+                  </div>
+                </div>
+                ${item.notes ? `<p class="mt-4"><span class="font-bold">Notes:</span> ${item.notes}</p>` : ''}
+                ${item.remarks ? `<p><span class="font-bold">Remarks:</span> ${item.remarks}</p>` : ''}
+              </div>
+            </div>
+          `;
+          $('#itemDetailsContent').html(detailsHtml);
+          $('#itemDetailsModal').removeClass('hidden');
+        }
+      }).fail(function() {
+        showAlert('Error loading item details', 'danger');
+      });
+    });
+
+    // Handle generate QR button click (only for large items)
+    $(document).on('click', '.generate-qr', function() {
+      const itemId = $(this).data('id');
+      const $button = $(this);
+      $button.html('<i class="fas fa-spinner fa-spin mr-1"></i>Generating...');
+      $button.addClass('pointer-events-none');
+
+      $.post(`/item/${itemId}/generate-qr`, function(response) {
+        if (response.success) {
+          $button.replaceWith(
+            `<img src="${response.qrCodePath}" alt="QR Code" class="qr-code-img">`
+          );
+          $(`a.print-qr[data-id="${itemId}"]`).removeClass('pointer-events-none opacity-50');
+          showAlert('QR code generated successfully!', 'success');
+          const activeTab = $('.tab-pane:not(.hidden)').find('table').attr('id');
+          tables[activeTab].draw();
+        } else {
+          showAlert(response.message, 'danger');
+          $button.html('<i class="fas fa-qrcode mr-1"></i>Generate').removeClass('pointer-events-none');
+        }
+      }).fail(function(xhr) {
+        const error = xhr.responseJSON ? xhr.responseJSON.error : 'Server error';
+        showAlert(`Error: ${error}`, 'danger');
+        $button.html('<i class="fas fa-qrcode mr-1"></i>Generate').removeClass('pointer-events-none');
+      });
+    });
+
+    // Handle print QR button click (only for large items)
+    $(document).on('click', '.print-qr', function() {
+      const itemId = $(this).data('id');
+      $.get(`/item/${itemId}`, function(response) {
+        if (response.success) {
+          const item = response.item;
+          if (item.unit_of_value <= 50000) {
+            showAlert('QR code printing is only available for items above ₱50,000', 'danger');
+            return;
+          }
+          const printContent = `
+            <div class="mb-4">
+              <img src="${item.qr_code_path}" alt="QR Code" class="w-48 h-48 mx-auto mb-2 border border-gray-200 rounded">
+              <h4 class="text-lg font-semibold">${item.property_no || 'N/A'}</h4>
+              <p class="mb-1"><strong>${item.description || 'No Description'}</strong></p>
+              <p class="mb-1">Dept: ${item.dept || 'N/A'}</p>
+              <p class="mb-1">Value: ₱${item.unit_of_value ? parseFloat(item.unit_of_value).toLocaleString() : 'N/A'}</p>
+              <p class="mb-1">Acquired: ${item.date_acq ? new Date(item.date_acq).toLocaleDateString() : 'N/A'}</p>
+            </div>
+          `;
+          $('#printQRContent').html(printContent);
+          $('#printQRModal').removeClass('hidden');
+        }
+      }).fail(function() {
+        showAlert('Error loading item for printing', 'danger');
+      });
+    });
+
+    // Handle print button in modal
+    $('#printQRBtn').click(function() {
+      const printWindow = window.open('', '', 'width=600,height=600');
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Print QR Code</title>
+            <style>
+              body { font-family: sans-serif; text-align: center; padding: 20px; }
+              img { max-width: 300px; height: auto; margin-bottom: 10px; }
+              h4 { margin: 10px 0; }
+              p { margin: 5px 0; }
+            </style>
+          </head>
+          <body>
+            ${$('#printQRContent').html()}
+            <script>
+              window.onload = function() {
+                window.print();
+                setTimeout(function() {
+                  window.close();
+                }, 1000);
+              };
+            <\/script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    });
+
+    // Handle generate all QR codes button (only for large items)
+    $('#generateAllQRCodes').click(function() {
+      const $button = $(this);
+      $button.html('<i class="fas fa-spinner fa-spin mr-2"></i>Generating All QR Codes...');
+      $button.addClass('pointer-events-none');
+
+      $.post('/generate-all-qr-codes', function(response) {
+        if (response.success) {
+          showAlert(`Generated ${response.generatedCount} QR codes successfully!`, 'success');
+          tables.largeTable.draw();
+        } else {
+          showAlert(response.message, 'danger');
+        }
+      }).fail(function(xhr) {
+        const error = xhr.responseJSON ? xhr.responseJSON.error : 'Server error';
+        showAlert(`Error: ${error}`, 'danger');
+      }).always(function() {
+        $button.html('<i class="fas fa-qrcode mr-2"></i>Generate All Missing QR Codes');
+        $button.removeClass('pointer-events-none');
+      });
+    });
+
+    // Close modals
+    $('[data-bs-dismiss="modal"]').click(function() {
+      $(this).closest('.fixed').addClass('hidden');
+    });
+
+    // Show alert messages
+    function showAlert(message, type) {
+      const $alert = $(`
+        <div class="fixed top-4 right-4 p-4 rounded-lg shadow-md text-white
+          ${type === 'success' ? 'bg-green-600' : 'bg-red-600'}">
+          ${message}
+          <button type="button" class="ml-2 text-white hover:text-gray-200" onclick="$(this).parent().remove()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      `);
+      $('body').append($alert);
+      setTimeout(() => {
+        $alert.fadeOut(() => $alert.remove());
+      }, 5000);
+    }
+  });
+</script>

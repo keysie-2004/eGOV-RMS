@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css">
+    <style>
+        .scan-section {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .stats-card {
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .item-details {
+            display: none;
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .progress {
+            height: 25px;
+        }
+        .dept-progress {
+            margin-bottom: 10px;
+        }
+        #video {
+            width: 100%;
+            max-width: 400px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .condition-form {
+            display: none;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <h1 class="text-center mb-4">ICS Inventory Scanner</h1>
+        
+        <!-- Current Semester Info -->
+        <div class="alert alert-info text-center">
+            <h4>
+                <% const now = new Date(); 
+                   const month = now.getMonth() + 1;
+                   const year = now.getFullYear();
+                   const semester = month >= 1 && month <= 6 ? 'January-June' : 'July-December';
+                %>
+                Current Scanning Period: <strong><%= semester %> <%= year %></strong>
+            </h4>
+        </div>
+        
+        <div class="row">
+            <!-- Scanner Section -->
+            <div class="col-md-6">
+                <div class="scan-section">
+                    <h3 class="text-center mb-4">Scan Item</h3>
+                    
+                    <div class="form-group mb-3">
+                        <label for="scanType" class="form-label">Scan Type:</label>
+                        <select id="scanType" class="form-select">
+                            <option value="first">First Scan (Jan-Jun)</option>
+                            <option value="second">Second Scan (Jul-Dec)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group mb-3 text-center">
+                        <label class="form-label">Camera Scanner:</label>
+                        <video id="video" autoplay></video>
+                        <button id="startCameraBtn" class="btn btn-primary w-100 py-2">Start Camera</button>
+                        <button id="stopCameraBtn" class="btn btn-secondary w-100 py-2 mt-2" style="display: none;">Stop Camera</button>
+                    </div>
+                    
+                    <div class="condition-form" id="conditionForm">
+                        <div class="form-group mb-3">
+                            <label for="conditionCode" class="form-label">Update Condition:</label>
+                            <select id="conditionCode" class="form-select">
+                                <option value="">No Change</option>
+                                <option value="Good">Good</option>
+                                <option value="Fair">Fair</option>
+                                <option value="Poor">Poor</option>
+                            </select>
+                        </div>
+                        <button id="submitScanBtn" class="btn btn-primary w-100 py-2">Submit Scan</button>
+                    </div>
+                    
+                    <div id="scanResult" class="mt-3 alert" style="display: none;"></div>
+                    
+                    <div id="itemDetails" class="item-details">
+                        <h4>Item Details</h4>
+                        <table class="table table-bordered">
+                            <tbody>
+                                <tr>
+                                    <th>Property No.</th>
+                                    <td id="detail-property_no"></td>
+                                </tr>
+                                <tr>
+                                    <th>Description</th>
+                                    <td id="detail-description"></td>
+                                </tr>
+                                <tr>
+                                    <th>Department</th>
+                                    <td id="detail-dept"></td>
+                                </tr>
+                                <tr>
+                                    <th>Quantity</th>
+                                    <td id="detail-qty"></td>
+                                </tr>
+                                <tr>
+                                    <th>Unit Value</th>
+                                    <td id="detail-unit_of_value"></td>
+                                </tr>
+                                <tr>
+                                    <th>Condition</th>
+                                    <td id="detail-condition_code"></td>
+                                </tr>
+                                <tr>
+                                    <th>First Scan Date</th>
+                                    <td id="detail-first_scan_date"></td>
+                                </tr>
+                                <tr>
+                                    <th>Second Scan Date</th>
+                                    <td id="detail-second_scan_date"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Statistics Section -->
+            <div class="col-md-6">
+                <div class="stats-card bg-light">
+                    <h3 class="text-center mb-4">Scan Statistics (Items > ₱50,000)</h3>
+                    
+                    <div class="mb-4">
+                        <h5>Overall Progress</h5>
+                        <div class="progress">
+                            <div id="overallProgress" class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 role="progressbar" style="width: 0%">0%</div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2">
+                            <span>Total Items: <strong id="totalItems">0</strong></span>
+                            <span>Complete Scans: <strong id="completeScans">0</strong></span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5>Scan Breakdown</h5>
+                        <canvas id="scanChart" height="200"></canvas>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h5>Department Progress</h5>
+                        <div id="deptProgress"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            let stream = null;
+            let scanning = false;
+            let lastScanned = null;
+
+            // Load initial statistics
+            updateStatistics();
+            
+            // Set scan type based on current month
+            const month = new Date().getMonth() + 1;
+            if (month >= 7) {
+                $('#scanType').val('second');
+            } else {
+                $('#scanType').val('first');
+            }
+            
+            // Start camera
+            $('#startCameraBtn').click(function() {
+                startCamera();
+            });
+
+            // Stop camera
+            $('#stopCameraBtn').click(function() {
+                stopCamera();
+            });
+
+            // Handle scan submission
+            $('#submitScanBtn').click(function() {
+                const qrCode = lastScanned;
+                const scanType = $('#scanType').val();
+                const conditionCode = $('#conditionCode').val();
+                
+                if (!qrCode) {
+                    showScanResult('No QR code scanned', 'danger');
+                    return;
+                }
+
+                // Fetch item details to validate unit_of_value
+                $.get(`/item/${qrCode}`, function(response) {
+                    if (!response.success || !response.item) {
+                        showScanResult(response.message || 'Item not found', 'danger');
+                        return;
+                    }
+
+                    const item = response.item;
+                    if (item.unit_of_value <= 50000) {
+                        showScanResult('Scanning is only allowed for items with value above ₱50,000', 'danger');
+                        $('#conditionForm').hide();
+                        $('#conditionCode').val('');
+                        lastScanned = null;
+                        startCamera();
+                        return;
+                    }
+
+                    const data = { qrCode, scanType };
+                    if (conditionCode) {
+                        data.condition_code = conditionCode;
+                    }
+
+                    $.post('/scan', data, function(response) {
+                        if (response.success) {
+                            showScanResult('Scan successful!', 'success');
+                            showItemDetails(response.item);
+                            updateStatistics();
+                            $('#conditionForm').hide();
+                            $('#conditionCode').val('');
+                            lastScanned = null;
+                        } else {
+                            showScanResult(response.message, 'danger');
+                        }
+                    }).fail(function(xhr) {
+                        showScanResult(xhr.responseJSON?.message || 'Error processing scan', 'danger');
+                    }).always(function() {
+                        startCamera();
+                    });
+                }).fail(function(xhr) {
+                    showScanResult(xhr.responseJSON?.message || 'Error fetching item details', 'danger');
+                    startCamera();
+                });
+            });
+
+            function startCamera() {
+                navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' } // Prefer rear camera
+                }).then(function(mediaStream) {
+                    stream = mediaStream;
+                    const video = document.getElementById('video');
+                    video.srcObject = stream;
+                    video.play();
+                    $('#startCameraBtn').hide();
+                    $('#stopCameraBtn').show();
+                    scanning = true;
+                    scanQRCode();
+                }).catch(function(err) {
+                    showScanResult('Error accessing camera: ' + err.message, 'danger');
+                });
+            }
+
+            function stopCamera() {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                }
+                const video = document.getElementById('video');
+                video.srcObject = null;
+                $('#startCameraBtn').show();
+                $('#stopCameraBtn').hide();
+                scanning = false;
+            }
+
+            function scanQRCode() {
+                if (!scanning) return;
+
+                const video = document.getElementById('video');
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+
+                function tick() {
+                    if (video.readyState === video.HAVE_ENOUGH_DATA && scanning) {
+                        canvas.height = video.videoHeight;
+                        canvas.width = video.videoWidth;
+                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                        const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                            inversionAttempts: 'dontInvert'
+                        });
+
+                        if (code && code.data) {
+                            try {
+                                const qrData = JSON.parse(code.data);
+                                if (qrData.id && lastScanned !== qrData.id) {
+                                    lastScanned = qrData.id;
+                                    // Fetch item details to validate unit_of_value
+                                    $.get(`/item/${qrData.id}`, function(response) {
+                                        if (!response.success || !response.item) {
+                                            showScanResult(response.message || 'Item not found', 'danger');
+                                            startCamera();
+                                            return;
+                                        }
+                                        const item = response.item;
+                                        if (item.unit_of_value <= 50000) {
+                                            showScanResult('Scanning is only allowed for items with value above ₱50,000', 'danger');
+                                            lastScanned = null;
+                                            startCamera();
+                                            return;
+                                        }
+                                        showScanResult('QR code detected!', 'success');
+                                        showItemDetails(item);
+                                        $('#conditionForm').show();
+                                        stopCamera();
+                                    }).fail(function(xhr) {
+                                        showScanResult(xhr.responseJSON?.message || 'Error fetching item details', 'danger');
+                                        startCamera();
+                                    });
+                                }
+                            } catch (e) {
+                                showScanResult('Invalid QR code format', 'warning');
+                                startCamera();
+                            }
+                        }
+                    }
+                    if (scanning) {
+                        requestAnimationFrame(tick);
+                    }
+                }
+
+                requestAnimationFrame(tick);
+            }
+
+            function showScanResult(message, type) {
+                const $result = $('#scanResult');
+                $result.removeClass('alert-success alert-danger alert-warning')
+                      .addClass(`alert-${type}`)
+                      .text(message)
+                      .show();
+                
+                setTimeout(() => {
+                    $result.fadeOut();
+                }, 3000);
+            }
+            
+            function showItemDetails(item) {
+                $('#detail-property_no').text(item.property_no || 'N/A');
+                $('#detail-description').text(item.description || 'N/A');
+                $('#detail-dept').text(item.dept || 'Unknown');
+                $('#detail-qty').text(item.qty || 'N/A');
+                $('#detail-unit_of_value').text(item.unit_of_value ? `₱${parseFloat(item.unit_of_value).toLocaleString()}` : 'N/A');
+                $('#detail-condition_code').text(item.condition_code || 'N/A');
+                $('#detail-first_scan_date').text(item.first_scan_date || 'Not scanned');
+                $('#detail-second_scan_date').text(item.second_scan_date || 'Not scanned');
+                
+                $('#itemDetails').show();
+            }
+            
+            function updateStatistics() {
+                $.get('/statistics', function(response) {
+                    if (response.success) {
+                        const stats = response.statistics;
+                        
+                        // Update overall progress
+                        const overallPercentage = stats.total > 0 ? (stats.completeScan / stats.total * 100).toFixed(1) : 0;
+                        $('#overallProgress').css('width', `${overallPercentage}%`)
+                                             .text(`${overallPercentage}%`);
+                        
+                        $('#totalItems').text(stats.total);
+                        $('#completeScans').text(stats.completeScan);
+                        
+                        // Update department progress
+                        let deptHtml = '';
+                        stats.departments.forEach(dept => {
+                            const deptPercentage = dept.total > 0 ? (dept.complete_scan / dept.total * 100).toFixed(1) : 0;
+                            deptHtml += `
+                                <div class="dept-progress">
+                                    <div class="d-flex justify-content-between">
+                                        <span>${dept.dept || 'Unknown'}</span>
+                                        <span>${dept.complete_scan}/${dept.total} (${deptPercentage}%)</span>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar" 
+                                             style="width: ${deptPercentage}%"></div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        $('#deptProgress').html(deptHtml);
+                        
+                        // Update chart
+                        updateChart(stats);
+                    }
+                });
+            }
+            
+            let scanChart = null;
+            
+            function updateChart(stats) {
+                const ctx = document.getElementById('scanChart').getContext('2d');
+                
+                if (scanChart) {
+                    scanChart.destroy();
+                }
+                
+                scanChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['First Scan', 'Second Scan', 'Complete Scan'],
+                        datasets: [{
+                            label: 'Number of Items',
+                            data: [stats.firstScan, stats.secondScan, stats.completeScan],
+                            backgroundColor: [
+                                'rgba(54, 162, 235, 0.7)',
+                                'rgba(255, 206, 86, 0.7)',
+                                'rgba(75, 192, 192, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(255, 206, 86, 1)',
+                                'rgba(75, 192, 192, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

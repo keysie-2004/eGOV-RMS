@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Purchase Order Approvals</title>
+  <link href="/src/table.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png"/> <!-- Favicon link -->
+  <style>
+  </style>
+</head>
+
+<body class="bg-gradient-to-br from-blue-50 to-indigo-50 font-sans min-h-screen">
+  <!-- Include Sidebar -->
+  <%- include('partials/sidebar') %>
+
+  <!-- Main Content -->
+  <div class="lg:ml-64 p-7 lg:p-10">
+    <div class="w-full max-w-8xl mx-auto">
+      <!-- Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">Procurement Management</h1>
+      </div>
+
+      <div class="bg-white rounded-xl card-shadow p-6 lg:p-8">
+        <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+          <h2 class="text-2xl font-bold text-primary-700 flex items-center">
+            <i class="fas fa-check-circle mr-3 text-primary-500"></i>Purchase Order Approvals
+          </h2>
+          <div class="text-sm text-gray-500 bg-blue-50 px-3 py-1 rounded-full">
+            <i class="fas fa-list-ol mr-1"></i> <%= approvalList.length %> Approvals
+          </div>
+        </div>
+
+        <% if (approvalList.length === 0) { %>
+          <div class="text-center py-8 bg-gray-50 rounded-lg">
+            <p class="text-gray-500">No approvals found for your department.</p>
+          </div>
+        <% } else { %>
+          <div class="overflow-x-auto rounded-lg border border-gray-200">
+            <table class="w-full border-collapse">
+              <thead>
+                <tr class="bg-gradient-to-r from-primary-600 to-primary-700 text-white">
+                  <th class="p-3 text-left font-semibold department-header">PR ID</th>
+                  <th class="p-3 text-left font-semibold department-header">Department</th>
+                  
+                  <th colspan="3" class="p-3 text-center font-semibold department-header">Budget</th>
+                  <th colspan="3" class="p-3 text-center font-semibold department-header">Treasury</th>
+                  <th colspan="3" class="p-3 text-center font-semibold department-header">Mayor</th>
+                  <th colspan="3" class="p-3 text-center font-semibold department-header">GSO</th>
+                </tr>
+                <tr class="bg-gray-100">
+                  <th></th>
+                  <th></th>
+                  <!-- Budget subheaders -->
+                  <th class="p-2 text-center text-sm">Status</th>
+                  <th class="p-2 text-center text-sm">Date</th>
+                  <th class="p-2 text-center text-sm">Approver</th>
+                  <!-- Treasury subheaders -->
+                  <th class="p-2 text-center text-sm">Status</th>
+                  <th class="p-2 text-center text-sm">Date</th>
+                  <th class="p-2 text-center text-sm">Approver</th>
+                  <!-- Mayor subheaders -->
+                  <th class="p-2 text-center text-sm">Status</th>
+                  <th class="p-2 text-center text-sm">Date</th>
+                  <th class="p-2 text-center text-sm">Approver</th>
+                  <!-- GSO subheaders -->
+                  <th class="p-2 text-center text-sm">Status</th>
+                  <th class="p-2 text-center text-sm">Date</th>
+                  <th class="p-2 text-center text-sm">Approver</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% approvalList.forEach((approval, index) => { %>
+                  <tr class="<%= index % 2 === 0 ? 'bg-white' : 'bg-gray-50' %> hover:bg-blue-50 transition-all">
+                    <td class="p-3 border-t border-gray-200 font-medium"><%= approval.pr_id %></td>
+                    <td class="p-3 border-t border-gray-200"><%= approval.department %></td>
+                    
+                    <!-- Budget Approval -->
+                    <td class="p-3 border-t border-gray-200 text-center">
+                      <% if (currentUser.canApproveBudget) { %>
+                        <form action="/approvals/<%= approval.pr_id %>/budget" method="POST" class="flex justify-center">
+                          <input type="checkbox" 
+                                name="budget_status" 
+                                class="approval-checkbox rounded focus:ring-primary-500 text-primary-600"
+                                <%= approval.budget_status === 'Approved' ? 'checked' : '' %>
+                                onchange="this.form.submit()">
+                        </form>
+                      <% } else { %>
+                        <span class="status-badge <%= approval.budget_status.toLowerCase() %>">
+                          <i class="fas <%= approval.budget_status === 'Approved' ? 'fa-check-circle' : approval.budget_status === 'Rejected' ? 'fa-times-circle' : 'fa-clock' %> mr-1"></i>
+                          <%= approval.budget_status %>
+                        </span>
+                      <% } %>
+                    </td>
+                    <td class="p-3 border-t border-gray-200 approval-details text-center">
+                      <%= approval.budget_date ? formatDateTime(approval.budget_date) : '—' %>
+                    </td>
+                    <td class="p-3 border-t border-gray-200 approval-details text-center">
+                      <%= approval.budget_approver || '—' %>
+                    </td>
+                    
+                    <!-- Treasury Approval -->
+                    <td class="p-3 border-t border-gray-200 text-center">
+                      <% if (currentUser.canApproveTreasury) { %>
+                        <form action="/approvals/<%= approval.pr_id %>/treasury" method="POST" class="flex justify-center">
+                          <input type="checkbox" 
+                                name="treasury_status" 
+                                class="approval-checkbox rounded focus:ring-primary-500 text-primary-600"
+                                <%= approval.treasury_status === 'Approved' ? 'checked' : '' %>
+                                onchange="this.form.submit()">
+                        </form>
+                      <% } else { %>
+                        <span class="status-badge <%= approval.treasury_status.toLowerCase() %>">
+                          <i class="fas <%= approval.treasury_status === 'Approved' ? 'fa-check-circle' : approval.treasury_status === 'Rejected' ? 'fa-times-circle' : 'fa-clock' %> mr-1"></i>
+                          <%= approval.treasury_status %>
+                        </span>
+                      <% } %>
+                    </td>
+                    <td class="p-3 border-t border-gray-200 approval-details text-center">
+                      <%= approval.treasury_date ? formatDateTime(approval.treasury_date) : '—' %>
+                    </td>
+                    <td class="p-3 border-t border-gray-200 approval-details text-center">
+                      <%= approval.treasury_approver || '—' %>
+                    </td>
+                    
+                    <!-- Mayor Approval -->
+                    <td class="p-3 border-t border-gray-200 text-center">
+                      <% if (currentUser.canApproveMayor) { %>
+                        <form action="/approvals/<%= approval.pr_id %>/mayor" method="POST" class="flex justify-center">
+                          <input type="checkbox" 
+                                name="mayor_status" 
+                                class="approval-checkbox rounded focus:ring-primary-500 text-primary-600"
+                                <%= approval.mayor_status === 'Approved' ? 'checked' : '' %>
+                                onchange="this.form.submit()">
+                        </form>
+                      <% } else { %>
+                        <span class="status-badge <%= approval.mayor_status.toLowerCase() %>">
+                          <i class="fas <%= approval.mayor_status === 'Approved' ? 'fa-check-circle' : approval.mayor_status === 'Rejected' ? 'fa-times-circle' : 'fa-clock' %> mr-1"></i>
+                          <%= approval.mayor_status %>
+                        </span>
+                      <% } %>
+                    </td>
+                    <td class="p-3 border-t border-gray-200 approval-details text-center">
+                      <%= approval.mayor_date ? formatDateTime(approval.mayor_date) : '—' %>
+                    </td>
+                    <td class="p-3 border-t border-gray-200 approval-details text-center">
+                      <%= approval.mayor_approver || '—' %>
+                    </td>
+                    
+                    <!-- GSO Approval -->
+                    <td class="p-3 border-t border-gray-200 text-center">
+                      <% if (currentUser.canApproveGSO) { %>
+                        <form action="/approvals/<%= approval.pr_id %>/gso" method="POST" class="flex justify-center">
+                          <input type="checkbox" 
+                                name="gso_status" 
+                                class="approval-checkbox rounded focus:ring-primary-500 text-primary-600"
+                                <%= approval.gso_status === 'Approved' ? 'checked' : '' %>
+                                onchange="this.form.submit()">
+                        </form>
+                      <% } else { %>
+                        <span class="status-badge <%= approval.gso_status.toLowerCase() %>">
+                          <i class="fas <%= approval.gso_status === 'Approved' ? 'fa-check-circle' : approval.gso_status === 'Rejected' ? 'fa-times-circle' : 'fa-clock' %> mr-1"></i>
+                          <%= approval.gso_status %>
+                        </span>
+                      <% } %>
+                    </td>
+                    <td class="p-3 border-t border-gray-200 approval-details text-center">
+                      <%= approval.gso_date ? formatDateTime(approval.gso_date) : '—' %>
+                    </td>
+                    <td class="p-3 border-t border-gray-200 approval-details text-center">
+                      <%= approval.gso_approver || '—' %>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

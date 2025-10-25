@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bid Details - #<%= bid.bid_id %></title>
+    <link href="/src/table.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+    </style>
+</head>
+<body class="bg-blue-50 font-sans">
+    <%- include('../partials/sidebar') %>
+    
+    <div class="lg:ml-64 p-7 lg:p-10">
+        <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
+            <!-- Header -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                <h2 class="text-2xl font-bold text-blue-700 mb-2">
+                    Bid Details - #<%= bid.bid_id %>
+                </h2>
+                <a href="/admin/biddings" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-blue-700 transition">
+                    <i class="fas fa-arrow-left mr-2"></i> Back to Biddings
+                </a>
+            </div>
+
+            <!-- Bid Summary -->
+            <div class="bg-blue-100 text-blue-700 p-4 rounded-lg mb-6">
+                <h3 class="text-xl font-semibold text-blue-800 mb-4">Bid Information</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <p class="mb-2"><strong>Supplier:</strong> <%= bid.company_name %></p>
+                        <p><strong>Contact:</strong> <%= bid.contact_person %></p>
+                    </div>
+                    <div>
+                        <p class="mb-2"><strong>PR #:</strong> PR-<%= bid.pr_id %></p>
+                        <p><strong>Purpose:</strong> <%= bid.purpose %></p>
+                    </div>
+                    <div>
+                        <p class="mb-2"><strong>Status:</strong> 
+                            <span class="inline-block px-2 py-1 rounded-full text-sm <%= bid.status.toLowerCase() === 'pending' ? 'bg-yellow-100 text-yellow-700' : bid.status.toLowerCase() === 'approved' ? 'bg-green-100 text-green-700' : bid.status.toLowerCase() === 'received' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700' %>">
+                                <%= bid.status.charAt(0).toUpperCase() + bid.status.slice(1) %>
+                            </span>
+                        </p>
+                        <p><strong>Total Amount:</strong> 
+                            <span class="font-bold text-blue-800">
+                                <%= helpers.formatCurrency(bid.total_amount) %>
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items Table -->
+            <h3 class="text-xl font-semibold text-blue-700 mb-6">Bid Items</h3>
+            <% if (bid.items && bid.items.length === 0) { %>
+                <div class="bg-blue-100 text-blue-700 p-8 rounded-lg text-center">
+                    <i class="fas fa-exclamation-circle text-4xl text-blue-400 mb-4"></i>
+                    <p class="text-blue-700">No items found for this bid</p>
+                </div>
+            <% } else if (bid.items && bid.items.length > 0) { %>
+                <div class="overflow-x-auto mb-8">
+                    <table class="w-full border-collapse">
+                        <thead>
+                            <tr class="bg-blue-700 text-white">
+                                <th class="p-3 text-left">Item</th>
+                                <th class="p-3 text-left">Description</th>
+                                <th class="p-3 text-left">Unit</th>
+                                <th class="p-3 text-left">Requested Qty</th>
+                                <th class="p-3 text-left">Estimated Price</th>
+                                <th class="p-3 text-left">Bid Price</th>
+                                <th class="p-3 text-left">Savings</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% bid.items.forEach(item => { %>
+                                <tr class="border-b hover:bg-blue-50">
+                                    <td class="p-3 font-semibold">#<%= item.requested_item_id %></td>
+                                    <td class="p-3"><%= item.item_description %></td>
+                                    <td class="p-3">pcs</td>
+                                    <td class="p-3"><%= item.requested_quantity %></td>
+                                    <td class="p-3 font-semibold text-blue-700">
+                                        <%= helpers.formatCurrency(item.requested_unit_cost) %>
+                                    </td>
+                                    <td class="p-3 font-semibold text-blue-700">
+                                        <%= helpers.formatCurrency(item.supplier_unit_price) %>
+                                    </td>
+                                    <td class="p-3 font-semibold <%= item.savings >= 0 ? 'savings-positive' : 'savings-negative' %>">
+                                        <%= helpers.formatCurrency(item.savings) %><br>
+                                        <span class="text-sm">
+                                            (<%= ((item.savings / item.estimated_price) * 100).toFixed(2) %>%)
+                                        </span>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } else { %>
+                <div class="bg-blue-100 text-blue-700 p-8 rounded-lg text-center">
+                    <i class="fas fa-exclamation-circle text-4xl text-blue-400 mb-4"></i>
+                    <p class="text-blue-700">No items data available</p>
+                </div>
+            <% } %>
+
+            <!-- Notes Section -->
+            <% if (bid.notes) { %>
+                <div class="mt-6 bg-yellow-100 text-yellow-700 p-4 rounded-lg">
+                    <h3 class="text-xl font-semibold text-yellow-800 mb-4">Supplier Notes</h3>
+                    <p class="text-yellow-800"><%= bid.notes %></p>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</body>
+</html>

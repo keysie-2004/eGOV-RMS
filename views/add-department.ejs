@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Add Department</title>
+  <link href="/src/table.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png"/> <!-- Favicon link -->
+</head>
+
+<body class="bg-blue-50 font-sans">
+  <!-- Include Sidebar -->
+  <%- include('partials/sidebar') %>
+
+  <!-- Main Content -->
+  <div class="lg:ml-64 p-7 lg:p-10">
+    <div class="w-full">
+      <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
+        <h2 class="text-2xl font-bold text-blue-700 mb-6">Add Department</h2>
+
+        <% if (error) { %>
+          <p class="text-red-500 mb-4"><%= error %></p>
+        <% } %>
+
+        <form action="/add-department" method="POST">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div>
+              <label class="block text-gray-600 mb-2">Department Code</label>
+              <input type="text" name="department_code" class="w-full p-3 border rounded-lg bg-blue-50" required />
+            </div>
+            <div>
+              <label class="block text-gray-600 mb-2">Department Name</label>
+              <input type="text" name="department_name" class="w-full p-3 border rounded-lg bg-blue-50" required />
+            </div>
+            <div>
+              <label class="block text-gray-600 mb-2">Department Head</label>
+              <input type="text" name="department_head" class="w-full p-3 border rounded-lg bg-blue-50" required />
+            </div>
+            <div>
+              <label class="block text-gray-600 mb-2">Contact Person</label>
+              <input type="text" name="contact_person" class="w-full p-3 border rounded-lg bg-blue-50" required />
+            </div>
+            <div>
+              <label class="block text-gray-600 mb-2">Contact Number</label>
+              <input type="text" name="contact_number" class="w-full p-3 border rounded-lg bg-blue-50" required />
+            </div>
+          </div>
+          
+          <div class="flex justify-end">
+            <button class="bg-blue-700 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-blue-800" type="submit">
+              Add Department
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

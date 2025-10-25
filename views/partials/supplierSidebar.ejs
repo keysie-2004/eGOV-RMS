@@ -1,0 +1,130 @@
+<!-- Sidebar -->
+<div class="fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-10 hidden md:block">
+    <div class="flex items-center justify-center h-16 bg-blue-700">
+        <h1 class="text-white font-bold text-xl">Supplier Portal</h1>
+    </div>
+    <div class="p-4">
+        <!-- Supplier Info -->
+        <div class="flex items-center mb-8">
+            <div class="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                <% if (supplier.profile_image) { %>
+                    <img src="<%= supplier.profile_image %>" alt="Profile" class="h-12 w-12 rounded-full object-cover">
+                <% } else { %>
+                    <i class="fas fa-user text-blue-600 text-xl"></i>
+                <% } %>
+            </div>
+            <div>
+                <p class="font-medium"><%= supplier.company_name %></p>
+                <p class="text-sm text-gray-500"><%= supplier.contact_person %></p>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav>
+            <ul class="space-y-2">
+                <li>
+                    <a href="/supplier/dashboard" class="flex items-center p-3 rounded-lg <%= currentPage === 'dashboard' ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100' %>">
+                        <i class="fas fa-tachometer-alt mr-3"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/supplier/my-bids" class="flex items-center p-3 rounded-lg <%= currentPage === 'biddings' ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100' %>">
+                        <i class="fas fa-gavel mr-3"></i>
+                        <span>Open Biddings</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/supplier/bids-report" class="flex items-center p-3 rounded-lg <%= currentPage === 'bids' ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100' %>">
+                        <i class="fas fa-file-alt mr-3"></i>
+                        <span>Reports</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/supplier/profile-settings" class="flex items-center p-3 rounded-lg <%= currentPage === 'profile' ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100' %>">
+                        <i class="fas fa-user-cog mr-3"></i>
+                        <span>Profile Settings</span>
+                    </a>
+                </li>
+                <li class="pt-4 mt-4 border-t border-gray-200">
+                    <a href="/supplier/logout" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100">
+                        <i class="fas fa-sign-out-alt mr-3"></i>
+                        <span>Logout</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Mobile menu button -->
+<div class="md:hidden fixed bottom-4 right-4 z-20">
+    <button id="mobileMenuButton" class="p-3 bg-blue-600 text-white rounded-full shadow-lg">
+        <i class="fas fa-bars"></i>
+    </button>
+</div>
+
+<!-- Mobile menu -->
+<div id="mobileMenu" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden">
+    <div class="absolute right-0 top-0 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out translate-x-full">
+        <div class="flex items-center justify-between p-4 border-b">
+            <h2 class="text-lg font-medium">Menu</h2>
+            <button id="closeMobileMenu" class="p-1 rounded-full hover:bg-gray-100">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="p-4">
+            <nav>
+                <ul class="space-y-3">
+                    <li>
+                        <a href="/supplier/dashboard" class="flex items-center p-3 rounded-lg <%= currentPage === 'dashboard' ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100' %>">
+                            <i class="fas fa-tachometer-alt mr-3"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/supplier/biddings" class="flex items-center p-3 rounded-lg <%= currentPage === 'biddings' ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100' %>">
+                            <i class="fas fa-gavel mr-3"></i>
+                            <span>Open Biddings</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/supplier/bids" class="flex items-center p-3 rounded-lg <%= currentPage === 'bids' ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100' %>">
+                            <i class="fas fa-file-alt mr-3"></i>
+                            <span>Your Bids</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/supplier/profile" class="flex items-center p-3 rounded-lg <%= currentPage === 'profile' ? 'bg-blue-100 text-blue-700' : 'text-gray-700 hover:bg-gray-100' %>">
+                            <i class="fas fa-user-cog mr-3"></i>
+                            <span>Profile Settings</span>
+                        </a>
+                    </li>
+                    <li class="pt-4 mt-4 border-t border-gray-200">
+                        <a href="/supplier/logout" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100">
+                            <i class="fas fa-sign-out-alt mr-3"></i>
+                            <span>Logout</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Mobile menu toggle
+    document.getElementById('mobileMenuButton').addEventListener('click', function() {
+        document.getElementById('mobileMenu').classList.remove('hidden');
+        setTimeout(() => {
+            document.querySelector('#mobileMenu > div').classList.remove('translate-x-full');
+        }, 10);
+    });
+
+    document.getElementById('closeMobileMenu').addEventListener('click', function() {
+        document.querySelector('#mobileMenu > div').classList.add('translate-x-full');
+        setTimeout(() => {
+            document.getElementById('mobileMenu').classList.add('hidden');
+        }, 300);
+    });
+</script>

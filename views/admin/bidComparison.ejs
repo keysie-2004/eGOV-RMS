@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bid Comparison - PR #<%= purchaseRequest.pr_id %></title>
+    <link href="/src/table.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        .status-badge {
+            @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+        }
+        .status-pending { @apply bg-yellow-100 text-yellow-800; }
+        .status-approved { @apply bg-green-100 text-green-800; }
+        .status-declined { @apply bg-red-100 text-red-800; }
+        .best-value {
+            @apply bg-green-50 border-l-4 border-green-500;
+        }
+        .savings-positive {
+            @apply text-green-600;
+        }
+        .savings-negative {
+            @apply text-red-600;
+        }
+    </style>
+</head>
+<body class="bg-blue-50 font-sans">
+    <%- include('../partials/sidebar') %>
+
+    <div class="lg:ml-64 p-7 lg:p-10">
+        <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
+            <!-- Page Header -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                <h2 class="text-2xl font-bold text-blue-700 mb-2">Bid Comparison for PR #<%= purchaseRequest.pr_id %></h2>
+                <a href="/admin/biddings" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-blue-700 transition">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Biddings
+                </a>
+            </div>
+
+            <!-- Purchase Request Summary -->
+            <div class="bg-blue-100 text-blue-700 p-4 rounded-lg mb-6">
+                <h3 class="text-xl font-semibold text-blue-800 mb-4">Purchase Request Summary</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <p class="mb-2"><strong>Purpose:</strong> <%= purchaseRequest.purpose %></p>
+                        <p><strong>Estimated Budget:</strong> 
+                            <span class="font-bold">
+                                <%= new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(purchaseRequest.total) %>
+                            </span>
+                        </p>
+                    </div>
+                    <div>
+                        <p class="mb-2"><strong>Total Bids:</strong> <%= bids.length %></p>
+                        <p><strong>Lowest Bid:</strong> 
+                            <% if (bids.length > 0) { %>
+                                <%= new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(bids[0].total_amount) %>
+                            <% } else { %>
+                                N/A
+                            <% } %>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bids Comparison Table -->
+            <div class="overflow-x-auto mb-8">
+                <table class="w-full border-collapse">
+                    <thead>
+                        <tr class="bg-blue-700 text-white">
+                            <th class="p-3 text-left">Rank</th>
+                            <th class="p-3 text-left">Supplier</th>
+                            <th class="p-3 text-left">Bid Amount</th>
+                            <th class="p-3 text-left">Savings</th>
+                            <th class="p-3 text-left">% Savings</th>
+                            <th class="p-3 text-left">Supplier Rating</th>
+                            <th class="p-3 text-left">Status</th>
+                            <th class="p-3 text-left">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (bids.length === 0) { %>
+                            <tr>
+                                <td colspan="8" class="text-center p-8">
+                                    <div class="bg-blue-100 text-blue-700 p-8 rounded-lg">
+                                        <i class="fas fa-inbox text-4xl text-blue-400 mb-4"></i><br>
+                                        No bids found for comparison
+                                    </div>
+                                </td>
+                            </tr>
+                        <% } else { %>
+                            <% bids.forEach((bid, index) => { %>
+                                <tr class="border-b hover:bg-blue-50 <%= index === 0 ? 'best-value' : '' %>">
+                                    <td class="p-3 font-semibold"><%= index + 1 %></td>
+                                    <td class="p-3">
+                                        <strong class="text-blue-700"><%= bid.company_name %></strong><br>
+                                        <span class="text-sm text-gray-600"><%= bid.contact_person %></span><br>
+                                        <span class="text-sm text-gray-600"><%= bid.email %></span><br>
+                                        <span class="text-sm text-gray-600"><%= bid.phone %></span>
+                                    </td>
+                                    <td class="p-3 font-semibold text-blue-700">
+                                        <%= new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(bid.total_amount) %>
+                                    </td>
+                                    <td class="p-3 font-semibold <%= bid.total_savings >= 0 ? 'savings-positive' : 'savings-negative' %>">
+                                        <%= new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(bid.total_savings) %>
+                                    </td>
+                                    <td class="p-3 font-semibold <%= bid.percentage_savings >= 0 ? 'savings-positive' : 'savings-negative' %>">
+                                        <%= bid.percentage_savings.toFixed(2) %>%
+                                    </td>
+                                    <td class="p-3">
+                                        <% if (bid.rating) { %>
+                                            <div class="rating-stars">
+                                                <% for (let i = 1; i <= 5; i++) { %>
+                                                    <% if (i <= Math.floor(bid.rating)) { %>
+                                                        <i class="fas fa-star text-yellow-400"></i>
+                                                    <% } else if (i === Math.ceil(bid.rating) && (bid.rating % 1 > 0.3)) { %>
+                                                        <i class="fas fa-star-half-alt text-yellow-400"></i>
+                                                    <% } else { %>
+                                                        <i class="far fa-star text-yellow-400"></i>
+                                                    <% } %>
+                                                <% } %>
+                                                <span class="ml-2 text-sm text-gray-600">(<%= bid.rating_count %>)</span>
+                                            </div>
+                                        <% } else { %>
+                                            <span class="text-gray-500">No ratings</span>
+                                        <% } %>
+                                    </td>
+                                    <td class="p-3">
+                                        <span class="inline-block px-2 py-1 rounded-full text-sm <%= bid.status.toLowerCase() === 'pending' ? 'bg-yellow-100 text-yellow-700' : bid.status.toLowerCase() === 'approved' ? 'bg-green-100 text-green-700' : bid.status.toLowerCase() === 'received' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700' %>">
+                                            <%= bid.status.charAt(0).toUpperCase() + bid.status.slice(1) %>
+                                        </span>
+                                    </td>
+                                    <td class="p-3 flex space-x-2">
+                                        <% if (bid.status !== 'approved') { %>
+                                            <button onclick="awardBid(<%= purchaseRequest.pr_id %>, <%= bid.bid_id %>)" 
+                                                    class="bg-green-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-green-700">
+                                                <i class="fas fa-check mr-1"></i> Award
+                                            </button>
+                                        <% } %>
+                                        <button onclick="viewBidDetails(<%= bid.bid_id %>)" 
+                                                class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-blue-700">
+                                            <i class="fas fa-eye mr-1"></i> Details
+                                        </button>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Items Comparison -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold text-blue-700 mb-6">Item-wise Comparison</h3>
+                <% if (bids.length > 0 && bids[0].items.length > 0) { %>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-blue-700 text-white">
+                                    <th class="p-3 text-left">Item</th>
+                                    <th class="p-3 text-left">Description</th>
+                                    <th class="p-3 text-left">Quantity</th>
+                                    <% bids.forEach((bid, index) => { %>
+                                        <th class="p-3 text-left">
+                                            <%= bid.company_name %><br>
+                                            <span class="text-sm font-normal">
+                                                (<%= new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(bid.total_amount) %>)
+                                            </span>
+                                        </th>
+                                    <% }); %>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% bids[0].items.forEach((item, itemIndex) => { %>
+                                    <tr class="border-b hover:bg-blue-50">
+                                        <td class="p-3 font-semibold">Item #<%= item.item_id %></td>
+                                        <td class="p-3"><%= item.description %></td>
+                                        <td class="p-3"><%= item.quantity %> <%= item.unit %></td>
+                                        <% bids.forEach(bid => { %>
+                                            <td class="p-3">
+                                                <span class="font-semibold text-blue-700">
+                                                    <%= new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(bid.items[itemIndex].unit_price) %>/unit
+                                                </span><br>
+                                                <span class="text-sm text-gray-600">
+                                                    Total: <%= new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(bid.items[itemIndex].total_price) %>
+                                                </span>
+                                            </td>
+                                        <% }); %>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } else { %>
+                    <div class="bg-blue-100 text-blue-700 p-4 rounded-lg">
+                        No items to compare
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function awardBid(prId, bidId) {
+            if (confirm('Are you sure you want to award this bid for PR #' + prId + '?')) {
+                fetch(`/admin/biddings/${prId}/award/${bidId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Bid awarded successfully');
+                        window.location.reload();
+                    } else {
+                        alert('Error awarding bid: ' + (data.message || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error awarding bid');
+                });
+            }
+        }
+
+        function viewBidDetails(bidId) {
+            window.open(`/admin/bids/${bidId}/details`, '_blank');
+        }
+    </script>
+</body>
+</html>

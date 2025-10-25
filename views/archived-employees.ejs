@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Archived Employees</title>
+  <link href="/src/table.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png"/> 
+</head>
+
+<body class="bg-blue-50 font-sans">
+  <!-- Include Sidebar -->
+  <%- include('partials/sidebar') %>
+
+  <!-- Main Content -->
+  <div class="lg:ml-64 p-7 lg:p-10">
+    <div class="w-full">
+      <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold text-blue-700">Archived Employees</h2>
+          <a href="/employees" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center">
+            <i class="fas fa-users mr-2"></i> View Active Employees
+          </a>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="min-w-full bg-white border border-gray-200 shadow-sm rounded-lg">
+            <thead>
+              <tr class="bg-blue-700 text-white">
+                <th class="p-4 text-left">Employee ID</th>
+                <th class="p-4 text-left">Full Name</th>
+                <th class="p-4 text-left">Department</th>
+                <th class="p-4 text-left">Position</th>
+                <th class="p-4 text-left">Birth Date</th>
+                <th class="p-4 text-left">TIN No.</th>
+                <th class="p-4 text-left">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (employees && employees.length > 0) { %>
+
+              <% employees.forEach(employee => { %>
+                <tr class="border-b border-gray-200 hover:bg-gray-100">
+                  <td class="p-4"><%= employee.emp_id %></td>
+                  <td class="p-4"><%= employee.first_name %> <%= employee.midname || '' %> <%= employee.last_name %></td>
+                  <td class="p-4"><%= employee.department_name ? employee.department_name : 'N/A' %></td>
+                  <td class="p-4"><%= employee.position || 'N/A' %></td>
+                  <td class="p-4"><%= employee.b_date ? new Date(employee.b_date).toLocaleDateString() : 'N/A' %></td>
+                  <td class="p-4"><%= employee.tin_no || 'N/A' %></td>
+                  <td class="p-4">
+                    <div class="flex space-x-2">
+                      <button onclick="restoreEmployee('<%= employee.emp_id %>')" 
+                        class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-sm">
+                        <i class="fas fa-undo mr-1"></i> Restore
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              <% }); %>
+              <% } else { %>
+                <tr>
+                  <td colspan="7" class="p-4 text-center text-gray-500">No archived employees found</td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success/Error Modals -->
+  <div id="errorModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+      <div class="mt-3 text-center">
+        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+          <i class="fas fa-exclamation-circle text-red-600 text-xl"></i>
+        </div>
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mt-2">Error</h3>
+        <div class="mt-2 px-4 py-3">
+          <p id="errorMessage" class="text-sm text-gray-500"></p>
+        </div>
+        <div class="items-center px-4 py-3">
+          <button onclick="closeErrorModal()" class="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="successModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+      <div class="mt-3 text-center">
+        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+          <i class="fas fa-check-circle text-green-600 text-xl"></i>
+        </div>
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mt-2">Success</h3>
+        <div class="mt-2 px-4 py-3">
+          <p id="successMessage" class="text-sm text-gray-500"></p>
+        </div>
+        <div class="items-center px-4 py-3">
+          <button onclick="closeSuccessModal()" class="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Modal control functions
+    function showErrorModal(message) {
+      document.getElementById('errorMessage').textContent = message;
+      document.getElementById('errorModal').classList.remove('hidden');
+    }
+
+    function closeErrorModal() {
+      document.getElementById('errorModal').classList.add('hidden');
+    }
+
+    function showSuccessModal(message) {
+      document.getElementById('successMessage').textContent = message;
+      document.getElementById('successModal').classList.remove('hidden');
+    }
+
+    function closeSuccessModal() {
+      document.getElementById('successModal').classList.add('hidden');
+    }
+
+    // Check for URL parameters on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const error = urlParams.get('error');
+      const success = urlParams.get('success');
+      
+      if (error) {
+        showErrorModal(decodeURIComponent(error));
+        // Clean up URL
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
+      
+      if (success) {
+        showSuccessModal(decodeURIComponent(success));
+        // Clean up URL
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
+    });
+
+    // Restore employee function
+    function restoreEmployee(emp_id) {
+      if (confirm("Are you sure you want to restore this employee?")) {
+        fetch(`/archived-employees/restore/${emp_id}`, { 
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        })
+        .then(response => {
+          if (!response.ok) {
+            return response.json().then(err => { throw err; });
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.success) {
+            showSuccessModal(data.message || 'Employee restored successfully');
+            setTimeout(() => {
+              window.location.reload();
+            }, 1500);
+          } else {
+            throw new Error(data.message || 'Restore failed');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          showErrorModal('Error restoring employee: ' + (error.message || 'Unknown error'));
+        });
+      }
+    }
+  </script>
+</body>
+</html>

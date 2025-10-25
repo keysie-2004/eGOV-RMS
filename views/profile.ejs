@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= profile.employee_name %>'s Profile</title>
+    <link href="/src/table.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="/fa/all.min.css">
+    <script src="/signature/signature_pad.umd.min.js"></script>
+    <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png"/> 
+</head>
+<body class="bg-blue-50 font-sans">
+    <% if (user) { %>
+        <%- include('partials/sidebar', {user: user}) %>
+    <% } else { %>
+        <nav class="bg-white shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex">
+                        <div class="flex-shrink-0 flex items-center">
+                            <a href="/" class="text-xl font-bold text-blue-700">MyApp</a>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <a href="/login" class="text-gray-600 hover:text-blue-700 px-3 py-2 rounded-md text-sm font-medium">Login</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    <% } %>
+    
+    <div class="lg:ml-64 p-4 lg:p-10">
+        <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
+            <div class="flex justify-between items-center mb-8">
+                <h1 class="text-2xl font-bold text-blue-700"><%= profile.employee_name %>'s Profile</h1>
+                <% if (user && user.employee_id === profile.employee_id) { %>
+                    <span class="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">Your Profile</span>
+                <% } %>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Profile Card -->
+                <div class="lg:col-span-1">
+                    <div class="bg-blue-50 p-6 rounded-lg">
+                        <div class="flex flex-col items-center">
+                            <label for="profilePicture" class="profile-picture-label">
+                                <div class="w-32 h-32 rounded-full overflow-hidden bg-blue-100 mb-4 shadow-sm">
+                                    <% if (profile.profile_image) { %>
+                                        <img src="<%= profile.profile_image %>" alt="Profile" class="w-full h-full object-cover" id="profileImagePreview">
+                                    <% } else { %>
+                                        <div class="w-full h-full flex items-center justify-center" id="initialsPreview">
+                                            <span class="text-4xl text-blue-600 font-medium">
+                                                <%= profile.employee_name.split(' ').map(n => n[0]).join('').toUpperCase() %>
+                                            </span>
+                                        </div>
+                                    <% } %>
+                                </div>
+                                <% if (user && user.employee_id === profile.employee_id) { %>
+                                    <div class="profile-picture-overlay">
+                                        <span class="text-white"><i class="fas fa-camera mr-2"></i>Change Photo</span>
+                                    </div>
+                                <% } %>
+                            </label>
+                            <input type="file" id="profilePicture" name="profile_picture" accept="image/*" class="profile-picture-upload">
+                            
+                            <h2 class="text-xl font-semibold text-gray-800"><%= profile.employee_name %></h2>
+                            <p class="text-blue-600 font-medium"><%= profile.position %></p>
+                            <% if (profile.department_name) { %>
+                                <p class="text-gray-500 text-sm mt-2"><i class="fas fa-building mr-2"></i><%= profile.department_name %></p>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Combined Profile Form -->
+                <div class="lg:col-span-2">
+                    <form id="profileForm" action="/profile/<%= profile.employee_id %>" method="POST" enctype="multipart/form-data" class="space-y-6">
+                        <input type="hidden" name="employee_id" value="<%= profile.employee_id %>">
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-gray-600 mb-2">Employee Name</label>
+                                <input type="text" name="employee_name" value="<%= profile.employee_name %>" 
+                                    class="w-full p-3 border rounded-lg bg-blue-50">
+                            </div>
+                            <div>
+                                <label class="block text-gray-600 mb-2">Position</label>
+                                <input type="text" name="position" value="<%= profile.position %>" 
+                                    class="w-full p-3 border rounded-lg bg-blue-50">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-600 mb-2">Email</label>
+                            <input type="email" name="email" value="<%= profile.email %>" 
+                                class="w-full p-3 border rounded-lg bg-blue-50">
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-gray-600 mb-2">Department</label>
+                                <select name="department_id" class="w-full p-3 border rounded-lg bg-blue-50">
+                                    <option value="">Select Department</option>
+                                    <% departments.forEach(department => { %>
+                                        <option value="<%= department.department_id %>" 
+                                            <%= profile.department_id == department.department_id ? 'selected' : '' %>>
+                                            <%= department.department_name %>
+                                        </option>
+                                    <% }); %>
+                                </select>
+                            </div>
+                        </div>
+                                                
+                        <div>
+                            <label class="block text-gray-600 mb-2">Signature</label>
+                            <div class="flex space-x-4 mb-4">
+                                <div class="tab active" data-tab="manual">Draw Signature</div>
+                                <div class="tab" data-tab="upload">Upload Signature</div>
+                            </div>
+                            
+                            <!-- Manual Signature -->
+                            <div id="manualSignature" class="signature-tab-content">
+                                <div class="signature-container mb-4">
+                                    <canvas id="signatureCanvas"></canvas>
+                                </div>
+                                <div class="flex space-x-3">
+                                    <button type="button" id="clearSignature" class="bg-gray-200 px-4 py-2 rounded-lg hover:bg-gray-300">
+                                        <i class="fas fa-eraser mr-2"></i>Clear
+                                    </button>
+                                    <button type="button" id="saveSignature" class="bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-800">
+                                        <i class="fas fa-save mr-2"></i>Save Signature
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Upload Signature -->
+                            <div id="uploadSignature" class="signature-tab-content hidden">
+                                <div class="drop-zone" id="signatureDropZone">
+                                    <p class="text-gray-600">Drag & drop your signature image here or click to select</p>
+                                    <input type="file" id="signatureUpload" name="signature_upload" accept="image/*" class="signature-upload">
+                                </div>
+                                <div class="flex space-x-3 mt-4">
+                                    <button type="button" id="addSignature" class="bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-800">
+                                        <i class="fas fa-plus mr-2"></i>Add Signature
+                                    </button>
+                                </div>
+                                <div id="signaturePreview" class="mt-4 hidden">
+                                    <p class="text-sm text-gray-600 mb-2">Signature Preview:</p>
+                                    <img id="signaturePreviewImg" alt="Signature Preview" class="border p-2 rounded-lg bg-blue-50" style="max-height: 100px;">
+                                </div>
+                            </div>
+
+                            <input type="hidden" name="signature" id="signatureData" value="<%= profile.signature || '' %>">
+                            
+                            <% if (profile.signature) { %>
+                                <div class="mt-4">
+                                    <p class="text-sm text-gray-600 mb-2">Current Signature:</p>
+                                    <img src="<%= profile.signature %>" alt="Current Signature" class="border p-2 rounded-lg bg-blue-50" style="max-height: 100px;">
+                                </div>
+                            <% } %>
+                        </div>
+                        
+                        <div class="pt-4 flex justify-end">
+                            <button type="submit" class="bg-blue-700 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-blue-800">
+                                <i class="fas fa-sync-alt mr-2"></i>Update Profile
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Additional Information Table -->
+            <div class="mt-10 bg-white p-6 rounded-lg shadow-sm">
+                <h2 class="text-xl font-bold text-blue-700 mb-6">Additional Information</h2>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border border-gray-200">
+                        <thead class="bg-blue-50">
+                            <tr>
+                                <th class="py-3 px-4 border-b text-left text-gray-600">Field</th>
+                                <th class="py-3 px-4 border-b text-left text-gray-600">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="hover:bg-blue-50">
+                                <td class="py-3 px-4 border-b text-gray-600">Employee ID</td>
+                                <td class="py-3 px-4 border-b"><%= profile.employee_id %></td>
+                            </tr>
+                            <tr class="hover:bg-blue-50">
+                                <td class="py-3 px-4 border-b text-gray-600">Department</td>
+                                <td class="py-3 px-4 border-b"><%= profile.department_name || 'N/A' %></td>
+                            </tr>
+                            <tr class="hover:bg-blue-50">
+                                <td class="py-3 px-4 border-b text-gray-600">Account Created</td>
+                                <td class="py-3 px-4 border-b"><%= new Date(profile.created_at).toLocaleDateString() %></td>
+                            </tr>
+                            <tr class="hover:bg-blue-50">
+                                <td class="py-3 px-4 border-b text-gray-600">Last Updated</td>
+                                <td class="py-3 px-4 border-b">
+                                    <%= profile.updated_at ? new Date(profile.updated_at).toLocaleDateString() : 'Never' %>
+                                    <% if (profile.updated_by_name) { %>
+                                        <span class="text-sm text-gray-500">by <%= profile.updated_by_name %></span>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Signature Pad
+            const canvas = document.getElementById('signatureCanvas');
+            const signatureInput = document.getElementById('signatureData');
+            const clearBtn = document.getElementById('clearSignature');
+            const saveBtn = document.getElementById('saveSignature');
+            const signatureUpload = document.getElementById('signatureUpload');
+            const dropZone = document.getElementById('signatureDropZone');
+            const addSignatureBtn = document.getElementById('addSignature');
+            const signaturePreview = document.getElementById('signaturePreview');
+            const signaturePreviewImg = document.getElementById('signaturePreviewImg');
+            
+            // Tab switching
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.signature-tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.add('hidden'));
+                    
+                    tab.classList.add('active');
+                    document.getElementById(`${tab.dataset.tab}Signature`).classList.remove('hidden');
+                    
+                    if (tab.dataset.tab === 'manual') {
+                        resizeCanvas();
+                    }
+                });
+            });
+
+            // Set canvas dimensions
+            function resizeCanvas() {
+                const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                canvas.width = 400 * ratio;
+                canvas.height = 150 * ratio;
+                canvas.getContext('2d').scale(ratio, ratio);
+            }
+            
+            // Initialize signature pad
+            const signaturePad = new SignaturePad(canvas, {
+                backgroundColor: 'rgb(255, 255, 255)',
+                penColor: 'rgb(30, 58, 138)',
+                minWidth: 1,
+                maxWidth: 3,
+                throttle: 16
+            });
+            
+            // Initial resize
+            resizeCanvas();
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                const data = signaturePad.toDataURL();
+                resizeCanvas();
+                if (data && document.getElementById('manualSignature').classList.contains('hidden') === false) {
+                    signaturePad.fromDataURL(data);
+                }
+            });
+            
+            // Load existing signature if available
+            if (signatureInput.value) {
+                signaturePad.fromDataURL(signatureInput.value);
+                signaturePreviewImg.src = signatureInput.value;
+                signaturePreview.classList.remove('hidden');
+            }
+            
+            // Clear button
+            clearBtn.addEventListener('click', function() {
+                signaturePad.clear();
+                signatureInput.value = "";
+            });
+            
+            // Save signature button
+            saveBtn.addEventListener('click', function() {
+                if (!signaturePad.isEmpty()) {
+                    const signatureData = signaturePad.toDataURL('image/png');
+                    signatureInput.value = signatureData;
+                    signaturePreviewImg.src = signatureData;
+                    signaturePreview.classList.remove('hidden');
+                    alert('Signature saved! It will be updated when you submit the form.');
+                } else {
+                    alert('Please provide a signature first.');
+                }
+            });
+
+            // Drag and drop handling
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    handleSignatureUpload(file);
+                } else {
+                    alert('Please upload a valid image file.');
+                }
+            });
+
+            dropZone.addEventListener('click', () => {
+                signatureUpload.click();
+            });
+
+            signatureUpload.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    handleSignatureUpload(file);
+                }
+            });
+
+            function handleSignatureUpload(file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    signaturePreviewImg.src = event.target.result;
+                    signaturePreview.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+
+            // Add signature button
+            addSignatureBtn.addEventListener('click', () => {
+                const file = signatureUpload.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        signatureInput.value = event.target.result;
+                        signaturePreviewImg.src = event.target.result;
+                        signaturePreview.classList.remove('hidden');
+                        alert('Signature added successfully! It will be updated when you submit the form.');
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    alert('Please upload a signature first.');
+                }
+            });
+
+            // Profile picture preview
+            const profilePictureInput = document.getElementById('profilePicture');
+            const profileImagePreview = document.getElementById('profileImagePreview');
+            const initialsPreview = document.getElementById('initialsPreview');
+            
+            if (profilePictureInput) {
+                profilePictureInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            if (profileImagePreview) {
+                                profileImagePreview.src = event.target.result;
+                            } else {
+                                initialsPreview.innerHTML = `<img src="${event.target.result}" alt="Profile" class="w-full h-full object-cover">`;
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+
+            // Form submission
+            const profileForm = document.getElementById('profileForm');
+            profileForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(profileForm);
+                const employeeId = '<%= profile.employee_id %>';
+                
+                const submitBtn = profileForm.querySelector('button[type="submit"]');
+                const originalBtnText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Updating...';
+                submitBtn.disabled = true;
+                
+                fetch(`/profile/${employeeId}`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        if (data.profile.profile_image) {
+                            if (profileImagePreview) {
+                                profileImagePreview.src = data.profile.profile_image;
+                            } else if (initialsPreview) {
+                                initialsPreview.innerHTML = `<img src="${data.profile.profile_image}" alt="Profile" class="w-full h-full object-cover">`;
+                            }
+                        }
+                        
+                        if (data.profile.signature && signatureInput.value) {
+                            signaturePad.fromDataURL(data.profile.signature);
+                            signaturePreviewImg.src = data.profile.signature;
+                            signaturePreview.classList.remove('hidden');
+                        }
+                        
+                        alert('Profile updated successfully!');
+                        window.location.reload();
+                    } else {
+                        throw new Error(data.message || 'Unknown error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error updating profile: ' + error.message);
+                })
+                .finally(() => {
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+                });
+            });
+        });
+    </script>
+</body>
+</html>

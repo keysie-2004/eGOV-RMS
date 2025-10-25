@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Manage Budgets</title>
+  <link href="/src/table.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png"/>
+</head>
+<body class="bg-blue-50 font-sans">
+  <%- include('partials/sidebar') %>
+  <div class="lg:ml-64 p-7 lg:p-10">
+    <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
+      <h2 class="text-2xl font-bold text-blue-700 mb-6">Manage Department Budgets</h2>
+
+      <% if (error && error.length > 0) { %>
+        <div class="bg-red-100 text-red-700 p-4 rounded-lg mb-6">
+          <%= error %>
+        </div>
+      <% } %>
+      <% if (success && success.length > 0) { %>
+        <div class="bg-green-100 text-green-700 p-4 rounded-lg mb-6">
+          <%= success %>
+        </div>
+      <% } %>
+
+      <!-- Departments Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse">
+          <thead>
+            <tr class="bg-blue-700 text-white">
+              <th class="p-3 text-left">Department</th>
+              <th class="p-3 text-left">Total Budget</th>
+              <th class="p-3 text-left">Remaining Budget</th>
+              <th class="p-3 text-left">Last Updated</th>
+              <th class="p-3 text-left">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% departments.forEach(dept => { %>
+              <% 
+                const budget = budgets.find(b => b.department_id === dept.department_id);
+              %>
+              <tr class="border-b hover:bg-blue-50">
+                <td class="p-3 font-medium"><%= dept.department_name %></td>
+                <td class="p-3">
+                  <% if (budget) { %>
+                    <span class="font-semibold text-blue-700">₱<%= budget.budget_amount.toLocaleString() %></span>
+                  <% } else { %>
+                    <span class="text-gray-500">No budget set</span>
+                  <% } %>
+                </td>
+                <td class="p-3">
+                  <% if (budget) { %>
+                    <span class="font-semibold text-blue-700">₱<%= budget.remaining_budget.toLocaleString() %></span>
+                  <% } else { %>
+                    <span class="text-gray-500">-</span>
+                  <% } %>
+                </td>
+                <td class="p-3">
+                  <% if (budget && budget.updated_at) { %>
+                    <%= new Date(budget.updated_at).toLocaleDateString() %>
+                  <% } else { %>
+                    <span class="text-gray-500">-</span>
+                  <% } %>
+                </td>
+                <td class="p-3">
+                  <div class="flex space-x-2">
+                    <!-- Edit/Set Budget Button -->
+                    <button 
+                      onclick="openSetBudgetModal('<%= dept.department_id %>', '<%= dept.department_name %>', '<%= budget ? budget.budget_amount : 0 %>')"
+                      class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-blue-700"
+                      title="<%= budget ? 'Edit Budget' : 'Set Budget' %>">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    
+                    <!-- Add to Budget Button (only if budget exists) -->
+                    <% if (budget) { %>
+                      <button 
+                        onclick="openAddBudgetModal('<%= dept.department_id %>', '<%= dept.department_name %>')"
+                        class="bg-green-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-green-700"
+                        title="Add to Budget">
+                        <i class="fas fa-plus"></i>
+                      </button>
+                    <% } %>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Set/Edit Budget Modal -->
+  <div id="setBudgetModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h3 id="setBudgetTitle" class="text-lg font-semibold text-blue-700">Set Budget</h3>
+            <button onclick="closeBudgetModal()" class="text-gray-400 hover:text-gray-600">
+              <i class="fas fa-times text-xl"></i>
+            </button>
+          </div>
+          
+          <form action="/budget/admin/set" method="POST">
+            <input type="hidden" id="setBudgetDeptId" name="department_id" />
+            
+            <div class="mb-4">
+              <label class="block text-gray-700 font-medium mb-2">Department</label>
+              <input type="text" id="setBudgetDeptName" class="w-full p-3 border rounded-lg bg-gray-100" readonly />
+            </div>
+            
+            <div class="mb-6">
+              <label class="block text-gray-700 font-medium mb-2">Budget Amount</label>
+              <input 
+                type="number" 
+                id="setBudgetAmount" 
+                name="budget_amount" 
+                class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                placeholder="Enter budget amount"
+                min="0"
+                step="0.01"
+                required 
+              />
+            </div>
+            
+            <div class="flex justify-end space-x-3">
+              <button 
+                type="button" 
+                onclick="closeBudgetModal()" 
+                class="px-4 py-2 text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                Save Budget
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Budget Modal -->
+  <div id="addBudgetModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-green-700">Add to Budget</h3>
+            <button onclick="closeAddBudgetModal()" class="text-gray-400 hover:text-gray-600">
+              <i class="fas fa-times text-xl"></i>
+            </button>
+          </div>
+          
+          <form action="/budget/admin/add" method="POST">
+            <input type="hidden" id="addBudgetDeptId" name="department_id" />
+            
+            <div class="mb-4">
+              <label class="block text-gray-700 font-medium mb-2">Department</label>
+              <input type="text" id="addBudgetDeptName" class="w-full p-3 border rounded-lg bg-gray-100" readonly />
+            </div>
+            
+            <div class="mb-6">
+              <label class="block text-gray-700 font-medium mb-2">Additional Amount</label>
+              <input 
+                type="number" 
+                name="additional_amount" 
+                class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" 
+                placeholder="Enter amount to add"
+                min="0"
+                step="0.01"
+                required 
+              />
+            </div>
+            
+            <div class="flex justify-end space-x-3">
+              <button 
+                type="button" 
+                onclick="closeAddBudgetModal()" 
+                class="px-4 py-2 text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors">
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                Add Amount
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openSetBudgetModal(deptId, deptName, currentBudget) {
+      document.getElementById('setBudgetDeptId').value = deptId;
+      document.getElementById('setBudgetDeptName').value = deptName;
+      document.getElementById('setBudgetAmount').value = currentBudget > 0 ? currentBudget : '';
+      
+      const title = currentBudget > 0 ? 'Edit Budget' : 'Set Budget';
+      document.getElementById('setBudgetTitle').textContent = title;
+      
+      document.getElementById('setBudgetModal').classList.remove('hidden');
+    }
+
+    function closeBudgetModal() {
+      document.getElementById('setBudgetModal').classList.add('hidden');
+    }
+
+    function openAddBudgetModal(deptId, deptName) {
+      document.getElementById('addBudgetDeptId').value = deptId;
+      document.getElementById('addBudgetDeptName').value = deptName;
+      document.getElementById('addBudgetModal').classList.remove('hidden');
+    }
+
+    function closeAddBudgetModal() {
+      document.getElementById('addBudgetModal').classList.add('hidden');
+    }
+
+    // Close modals when clicking outside
+    document.getElementById('setBudgetModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeBudgetModal();
+      }
+    });
+
+    document.getElementById('addBudgetModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeAddBudgetModal();
+      }
+    });
+
+    // Close modals with Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeBudgetModal();
+        closeAddBudgetModal();
+      }
+    });
+  </script>
+</body>
+</html>

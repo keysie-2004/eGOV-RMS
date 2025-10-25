@@ -1,0 +1,529 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bidding Management</title>
+    <link href="/src/table.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/dataTables.tailwindcss.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.tailwindcss.min.js"></script>
+</head>
+<body class="bg-blue-50 font-sans">
+    <!-- Include Admin Sidebar -->
+    <%- include('../partials/sidebar') %>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64 p-7 lg:p-10">
+        <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
+            <!-- Page Header -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-blue-700 mb-2">Bidding Management</h2>
+                    <p class="text-blue-600">Manage all bidding activities</p>
+                </div>
+            </div>
+
+            <!-- Status Tabs -->
+            <div class="flex flex-wrap gap-2 mb-6">
+                <a href="/admin/biddings?status=all" class="status-tab <%= currentStatus === 'all' ? 'active' : 'inactive' %>">
+                    All Biddings
+                </a>
+                <a href="/admin/biddings?status=open" class="status-tab <%= currentStatus === 'open' ? 'active' : 'inactive' %>">
+                    Open
+                </a>
+                <a href="/admin/biddings?status=closed" class="status-tab <%= currentStatus === 'closed' ? 'active' : 'inactive' %>">
+                    Closed
+                </a>
+                <a href="/admin/biddings?status=awarded" class="status-tab <%= currentStatus === 'awarded' ? 'active' : 'inactive' %>">
+                    Awarded
+                </a>
+                <a href="/admin/biddings?status=archived" class="status-tab <%= currentStatus === 'archived' ? 'active' : 'inactive' %>">
+                    Archived
+                </a>
+            </div>
+
+            <!-- Biddings Table -->
+            <div class="overflow-x-auto">
+                <table id="biddingsTable" class="w-full border-collapse">
+                    <thead>
+                        <tr class="bg-blue-700 text-white">
+                            <th class="p-3 text-left">Bidding ID</th>
+                            <th class="p-3 text-left">PR #</th>
+                            <th class="p-3 text-left">Purpose</th>
+                            <th class="p-3 text-left">Budget</th>
+                            <th class="p-3 text-left">Deadline</th>
+                            <th class="p-3 text-left">Posted By</th>
+                            <th class="p-3 text-left">Bids</th>
+                            <th class="p-3 text-left">Status</th>
+                            <th class="p-3 text-left">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Sample data rows - replace with dynamic content -->
+                        <tr class="border-b">
+                            <td class="p-3">BID001</td>
+                            <td class="p-3">PR-2025-001</td>
+                            <td class="p-3">Office Supplies Purchase</td>
+                            <td class="p-3">₱25,000.00</td>
+                            <td class="p-3">2025-08-15 17:00</td>
+                            <td class="p-3">John Admin</td>
+                            <td class="p-3">3</td>
+                            <td class="p-3">
+                                <span class="inline-block px-2 py-1 rounded-full text-sm bg-green-100 text-green-700">
+                                    Open
+                                </span>
+                            </td>
+                            <td class="p-3 flex space-x-2">
+                                <button class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-blue-700">
+                                    View
+                                </button>
+                                <button class="bg-yellow-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-yellow-700">
+                                    Edit
+                                </button>
+                            </td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-3">BID002</td>
+                            <td class="p-3">PR-2025-002</td>
+                            <td class="p-3">Computer Equipment</td>
+                            <td class="p-3">₱150,000.00</td>
+                            <td class="p-3">2025-08-20 15:00</td>
+                            <td class="p-3">Jane Manager</td>
+                            <td class="p-3">5</td>
+                            <td class="p-3">
+                                <span class="inline-block px-2 py-1 rounded-full text-sm bg-blue-100 text-blue-700">
+                                    Closed
+                                </span>
+                            </td>
+                            <td class="p-3 flex space-x-2">
+                                <button class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-blue-700">
+                                    View
+                                </button>
+                                <button class="bg-green-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-green-700">
+                                    Award
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading" class="text-center py-12 hidden">
+                <div class="flex justify-center">
+                    <i class="fas fa-circle-notch loading-spinner text-3xl text-blue-600"></i>
+                </div>
+                <p class="mt-4 text-blue-600">Loading biddings...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="text-center py-12 hidden">
+                <div class="bg-blue-100 text-blue-700 p-8 rounded-lg">
+                    <div class="flex justify-center mb-4">
+                        <i class="fas fa-gavel text-4xl text-blue-400"></i>
+                    </div>
+                    <p class="text-blue-700 text-lg font-semibold">No biddings found</p>
+                    <p class="text-blue-600 mt-1" id="emptyStateMessage">There are currently no biddings</p>
+                    <a href="/admin/biddings/new" class="mt-4 inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-blue-700">
+                        <i class="fas fa-plus mr-2"></i> Create New Bidding
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Bidding Modal -->
+    <div id="editBiddingModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-sm w-full max-w-md p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h5 class="text-xl font-bold text-blue-700">Edit Bidding</h5>
+                <button id="closeEditModal" class="text-gray-600 hover:text-gray-800">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="editBiddingForm">
+                <input type="hidden" id="editBiddingId" />
+                
+                <div class="mb-4">
+                    <label for="editPurpose" class="block text-gray-600 mb-2">Purpose</label>
+                    <textarea id="editPurpose" rows="3" class="w-full p-3 border rounded-lg bg-blue-50" placeholder="Enter purpose"></textarea>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="editDeadline" class="block text-gray-600 mb-2">Deadline</label>
+                    <input type="datetime-local" id="editDeadline" class="w-full p-3 border rounded-lg bg-blue-50" />
+                </div>
+                
+                <div class="mb-4">
+                    <label for="editBudget" class="block text-gray-600 mb-2">Estimated Total (₱)</label>
+                    <input type="number" id="editBudget" step="0.01" min="0" class="w-full p-3 border rounded-lg bg-blue-50" placeholder="0.00" />
+                </div>
+                
+                <div class="mb-4">
+                    <label for="editStatus" class="block text-gray-600 mb-2">Status</label>
+                    <select id="editStatus" class="w-full p-3 border rounded-lg bg-blue-50">
+                        <option value="open">Open</option>
+                        <option value="closed">Closed</option>
+                        <option value="awarded">Awarded</option>
+                    </select>
+                </div>
+                
+                <div class="mb-6">
+                    <label for="editNotes" class="block text-gray-600 mb-2">Notes</label>
+                    <textarea id="editNotes" rows="3" class="w-full p-3 border rounded-lg bg-blue-50" placeholder="Enter additional notes (optional)"></textarea>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button type="button" id="cancelEdit" class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">
+                        Cancel
+                    </button>
+                    <button type="submit" class="bg-blue-700 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-blue-800">
+                        <i class="fas fa-save mr-2"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<script>
+$(document).ready(function() {
+    const status = new URLSearchParams(window.location.search).get('status') || 'all';
+    
+    // Initialize DataTable with modern styling
+    const table = $('#biddingsTable').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: '/admin/biddings/data',
+            type: 'GET',
+            data: function(d) {
+                d.status = status;
+            },
+            error: function(xhr, error, code) {
+                console.error('DataTable AJAX error:', error, code);
+                $('#loading').hide();
+                $('#emptyStateMessage').text('Error loading data. Please try again.');
+                $('#emptyState').removeClass('hidden');
+            }
+        },
+        columns: [
+            { 
+                data: 'bidding_id',
+                render: function(data) {
+                    return `<span class="font-medium text-gray-900">#${data}</span>`;
+                }
+            },
+            { 
+                data: 'pr_id',
+                render: function(data) {
+                    return `<span class="font-medium text-blue-600">PR-${data}</span>`;
+                },
+                defaultContent: '-'
+            },
+            { 
+                data: 'purpose',
+                render: function(data) {
+                    if (!data) return 'N/A';
+                    const truncated = data.length > 40 ? data.substring(0, 40) + '...' : data;
+                    return `<span class="text-gray-700" title="${data}">${truncated}</span>`;
+                },
+                defaultContent: 'N/A'
+            },
+            { 
+                data: 'estimated_total',
+                render: function(data) {
+                    if (!data) return '₱0.00';
+                    return `<span class="font-medium">${new Intl.NumberFormat('en-PH', {
+                        style: 'currency',
+                        currency: 'PHP',
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    }).format(data)}</span>`;
+                },
+                defaultContent: '₱0.00'
+            },
+            { 
+                data: 'deadline',
+                render: function(data, type, row) {
+                    if (!data) return '-';
+                    const deadline = new Date(data);
+                    const now = new Date();
+                    const isOverdue = deadline < now && row.status === 'open';
+                    return `
+                        <div class="flex items-center">
+                            <i class="fas fa-calendar-alt mr-2 text-gray-400"></i>
+                            <span class="${isOverdue ? 'text-red-600 font-medium' : 'text-gray-700'}">
+                                ${deadline.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}
+                                ${isOverdue ? '<i class="fas fa-exclamation-circle ml-1 text-red-500"></i>' : ''}
+                            </span>
+                        </div>
+                    `;
+                },
+                defaultContent: '-'
+            },
+            { 
+                data: 'posted_by_name',
+                render: function(data) {
+                    return `<span class="text-gray-700">${data || 'Unknown User'}</span>`;
+                },
+                defaultContent: 'Unknown User'
+            },
+            { 
+                data: 'bid_count',
+                render: function(data) {
+                    return `<span class="badge-count ${data > 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}">${data}</span>`;
+                },
+                defaultContent: '0'
+            },
+            { 
+                data: 'status',
+                render: function(data, type, row) {
+                    if (!data) return '-';
+                    let badgeClass = 'bg-gray-100 text-gray-800';
+                    if (data === 'open') badgeClass = 'bg-blue-100 text-blue-800';
+                    if (data === 'closed') badgeClass = 'bg-purple-100 text-purple-800';
+                    if (data === 'awarded') badgeClass = 'bg-green-100 text-green-800';
+                    if (row.is_archived) badgeClass = 'bg-gray-100 text-gray-800';
+                    return `<span class="status-badge ${badgeClass}">${row.is_archived ? 'Archived' : (data.charAt(0).toUpperCase() + data.slice(1))}</span>`;
+                },
+                defaultContent: '-'
+            },
+            {
+                data: null,
+                render: function(data, type, row) {
+                    return `
+                        <div class="flex items-center space-x-2">
+                            <button data-pr-id="${row.pr_id}" 
+                                    class="action-btn view-bids-btn bg-blue-100 text-blue-600 hover:bg-blue-200" 
+                                    title="Compare Bids">
+                                <i class="fas fa-chart-bar"></i>
+                            </button>
+                            <button data-bidding-id="${row.bidding_id}" 
+                                    class="action-btn edit-bidding-btn bg-yellow-100 text-yellow-600 hover:bg-yellow-200" 
+                                    title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            ${row.is_archived ? `
+                                <button data-bidding-id="${row.bidding_id}" 
+                                        class="action-btn unarchive-bidding-btn bg-green-100 text-green-600 hover:bg-green-200" 
+                                        title="Unarchive">
+                                    <i class="fas fa-box-open"></i>
+                                </button>
+                            ` : `
+                                <button data-bidding-id="${row.bidding_id}" 
+                                        class="action-btn archive-bidding-btn bg-gray-100 text-gray-600 hover:bg-gray-200" 
+                                        title="Archive">
+                                    <i class="fas fa-archive"></i>
+                                </button>
+                            `}
+                        </div>
+                    `;
+                },
+                orderable: false,
+                searchable: false
+            }
+        ],
+        order: [[4, 'desc']],
+        pageLength: 10,
+        lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+        language: {
+            emptyTable: "",
+            info: "Showing _START_ to _END_ of _TOTAL_ biddings",
+            infoEmpty: "Showing 0 to 0 of 0 biddings",
+            infoFiltered: "(filtered from _MAX_ total biddings)",
+            lengthMenu: "Show _MENU_ biddings",
+            loadingRecords: "",
+            processing: "",
+            search: "Search biddings:",
+            zeroRecords: ""
+        },
+        initComplete: function(settings, json) {
+            $('#loading').hide();
+        },
+        drawCallback: function(settings) {
+            const api = this.api();
+            const recordsTotal = api.page.info().recordsTotal;
+            if (recordsTotal === 0) {
+                $('#emptyStateMessage').text(`No ${status === 'all' ? '' : status} biddings found`);
+                $('#emptyState').removeClass('hidden');
+            } else {
+                $('#emptyState').addClass('hidden');
+            }
+        }
+    });
+
+    // Edit Bidding Modal Handling
+    $(document).on('click', '.edit-bidding-btn', function() {
+        const biddingId = $(this).data('bidding-id');
+        fetchBiddingDetails(biddingId);
+    });
+    
+    $('#closeEditModal, #cancelEdit').on('click', function() {
+        $('#editBiddingModal').hide();
+    });
+    
+    $('#editBiddingForm').on('submit', function(e) {
+        e.preventDefault();
+        saveBiddingChanges();
+    });
+    
+    // Close modal when clicking outside
+    $('#editBiddingModal').on('click', function(e) {
+        if (e.target === this) {
+            $('#editBiddingModal').hide();
+        }
+    });
+    
+    // Close modal with Escape key
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape' && $('#editBiddingModal').is(':visible')) {
+            $('#editBiddingModal').hide();
+        }
+    });
+
+    // Updated JavaScript for the EJS template
+    function fetchBiddingDetails(biddingId) {
+        $('#loading').show();
+        fetch(`/admin/biddings/${biddingId}/details`)
+            .then(response => {
+                if (!response.ok) {
+                    console.error('Response status:', response.status);
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Received data:', data);
+                
+                // Populate modal fields
+                $('#editBiddingId').val(data.bidding_id);
+                $('#editPurpose').val(data.purpose || '');
+                
+                // Format deadline for datetime-local input
+                if (data.deadline) {
+                    const deadline = new Date(data.deadline);
+                    const formattedDeadline = deadline.toISOString().slice(0, 16);
+                    $('#editDeadline').val(formattedDeadline);
+                }
+                
+                $('#editBudget').val(data.estimated_total || '');
+                $('#editStatus').val(data.status || 'open');
+                $('#editNotes').val(data.notes || '');
+                
+                $('#editBiddingModal').show();
+                $('#loading').hide();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error loading bidding details: ' + error.message);
+                $('#loading').hide();
+            });
+    }
+
+function saveBiddingChanges() {
+    const biddingId = $('#editBiddingId').val();
+    const formData = {
+        purpose: $('#editPurpose').val(),
+        deadline: $('#editDeadline').val(),
+        estimated_total: $('#editBudget').val(),
+        status: $('#editStatus').val(),
+        notes: $('#editNotes').val()
+    };
+    
+    $('#loading').show();
+    fetch(`/admin/biddings/${biddingId}/update`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            console.error('Response status:', response.status);
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (!data.success) throw new Error(data.error || data.message || 'Update failed');
+        
+        $('#editBiddingModal').hide();
+        table.ajax.reload(null, false); // Ensure this is called
+        $('#loading').hide();
+        alert('Bidding updated successfully');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating bidding: ' + error.message);
+        $('#loading').hide();
+    });
+}
+
+    // Event handlers using event delegation
+    $(document).on('click', '.view-bids-btn', function() {
+        const prId = $(this).data('pr-id');
+        window.location.href = `/admin/bids/pr/${prId}/compare`;
+    });
+
+    $(document).on('click', '.archive-bidding-btn', function() {
+        const biddingId = $(this).data('bidding-id');
+        confirmAction(
+            `/admin/biddings/${biddingId}/archive`, 
+            'archive', 
+            'Are you sure you want to archive this bidding? Archived biddings will be moved to the archive section.'
+        );
+    });
+
+    $(document).on('click', '.unarchive-bidding-btn', function() {
+        const biddingId = $(this).data('bidding-id');
+        confirmAction(
+            `/admin/biddings/${biddingId}/unarchive`, 
+            'unarchive', 
+            'Are you sure you want to unarchive this bidding? It will be moved back to the active biddings list.'
+        );
+    });
+
+    // Status tab navigation
+    $('a[href*="status="]').on('click', function(e) {
+        e.preventDefault();
+        const newStatus = $(this).attr('href').split('status=')[1];
+        window.history.pushState({}, '', `/admin/biddings?status=${newStatus}`);
+        table.ajax.url(`/admin/biddings/data?status=${newStatus}`).load();
+        $('a[href*="status="]').removeClass('active').addClass('inactive');
+        $(this).removeClass('inactive').addClass('active');
+    });
+
+    // Helper functions
+    function confirmAction(url, action, confirmationMessage) {
+        if (confirm(confirmationMessage)) {
+            $('#loading').show();
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                if (!data.success) throw new Error(data.message || 'Unknown error');
+                table.ajax.reload(null, false);
+                $('#loading').hide();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert(`Error ${action}ing bidding: ${error.message}`);
+                $('#loading').hide();
+            });
+        }
+    }
+});
+</script>
+</body>
+</html>

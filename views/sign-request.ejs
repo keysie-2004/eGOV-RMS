@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Review Purchase Request Documents</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png"/>
+  <style>
+    .document-container {
+      border: 1px solid #e2e8f0;
+      border-radius: 0.75rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      background-color: #f8fafc;
+    }
+    .comment-box {
+      display: none;
+    }
+    .comment-box.active {
+      display: block;
+    }
+    .comments-section {
+      margin-top: 1rem;
+      padding: 1rem;
+      background-color: #f1f5f9;
+      border-radius: 0.5rem;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-content {
+      background-color: white;
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      max-width: 500px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body class="bg-blue-50 font-sans">
+  <%- include('partials/sidebar', {user: user}) %>
+
+  <div class="lg:ml-64 p-4 lg:p-10">
+    <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
+      <h1 class="text-2xl font-bold text-blue-700 mb-6">Review Purchase Request #<%= request.pr_id %></h1>
+      <p class="text-gray-600 mb-4">Purpose: <%= request.purpose %></p>
+      <p class="text-gray-600 mb-4">Requested By: <%= request.requested_by %></p>
+      <p class="text-gray-600 mb-4">Date Requested: <%= new Date(request.date_requested).toLocaleDateString() %></p>
+
+      <!-- Display Existing Comments -->
+      <% if (request.comments && request.comments.length > 0) { %>
+        <div class="comments-section">
+          <h3 class="text-lg font-semibold text-gray-800 mb-2">BAC Comments</h3>
+          <% request.comments.forEach(comment => { %>
+            <p class="text-gray-600 mb-2">
+              <strong><%= comment.bac_position %>:</strong> <%= comment.comment %>
+              (By Employee ID: <%= comment.employee_id %>)
+            </p>
+          <% }) %>
+        </div>
+      <% } %>
+
+      <% if (!user.employee_id) { %>
+        <p class="text-red-600">Error: Your account is missing an employee ID (User: <%= user.employee_name %>, Role: <%= user.user_type %>, BAC Position: <%= user.bac_position || 'None' %>). Please contact the system administrator to update your account.</p>
+      <% } else if (isAuthorized && request.status === 'e-sign' && !userHasSigned) { %>
+        <form id="reviewForm" action="/requests/<%= request.pr_id %>/review" method="POST" class="space-y-6">
+          <input type="hidden" name="employee_id" value="<%= user.employee_id %>">
+          <input type="hidden" name="bac_position" value="<%= user.bac_position || (user.employee_name === request.requested_by ? 'Requested By' : 'BAC Member') %>">
+          <!-- Approval/Decline Section -->
+          <div class="document-container">
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Review as <%= user.bac_position || (user.employee_name === request.requested_by ? 'Requested By' : 'BAC Member') %></h3>
+            <p class="text-gray-600 mb-4">Do you agree that all documents (RFQ Form, Abstract, Acceptance, Purchase Order) are approved and the request can proceed?</p>
+            <div class="flex space-x-4 mb-2">
+              <label class="inline-flex items-center">
+                <input type="radio" name="approval_status" value="approved" class="form-radio text-blue-600" required>
+                <span class="ml-2">Approve</span>
+              </label>
+              <label class="inline-flex items-center">
+                <input type="radio" name="approval_status" value="declined" class="form-radio text-blue-600">
+                <span class="ml-2">Decline</span>
+              </label>
+            </div>
+            <div class="comment-box" id="comment_box">
+              <label class="block text-gray-600 mb-2">Comment (required if declined):</label>
+              <textarea name="comment" class="w-full p-3 border rounded-lg bg-blue-50" rows="4"></textarea>
+            </div>
+          </div>
+
+          <div class="flex justify-end space-x-3">
+            <a href="/requests" class="bg-gray-500 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-gray-600">
+              <i class="fas fa-times mr-2"></i>Cancel
+            </a>
+            <button type="submit" class="bg-blue-700 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-blue-800">
+              <i class="fas fa-save mr-2"></i>Submit Review
+            </button>
+          </div>
+        </form>
+      <% } else { %>
+        <p class="text-red-600">
+          <% if (!isAuthorized) { %>
+            You are not authorized to review this request (User: <%= user.employee_name %>, Role: <%= user.user_type %>, BAC Position: <%= user.bac_position || 'None' %>).
+          <% } else if (request.status !== 'e-sign') { %>
+            This request is not in e-sign status.
+          <% } else if (userHasSigned) { %>
+            You have already reviewed this request.
+          <% } %>
+        </p>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div id="successModal" class="modal">
+    <div class="modal-content">
+      <p id="successMessage" class="text-green-600"></p>
+    </div>
+  </div>
+
+  <!-- Error Modal -->
+  <div id="errorModal" class="modal">
+    <div class="modal-content">
+      <p id="errorMessage" class="text-red-600"></p>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const radios = document.getElementsByName('approval_status');
+      const commentBox = document.getElementById('comment_box');
+      const reviewForm = document.getElementById('reviewForm');
+
+      if (reviewForm) {
+        radios.forEach(radio => {
+          radio.addEventListener('change', () => {
+            if (radio.value === 'declined') {
+              commentBox.classList.add('active');
+              commentBox.querySelector('textarea').required = true;
+            } else {
+              commentBox.classList.remove('active');
+              commentBox.querySelector('textarea').required = false;
+            }
+          });
+        });
+
+        reviewForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const formData = new FormData(reviewForm);
+          const employeeId = formData.get('employee_id');
+          const bacPosition = formData.get('bac_position');
+          const approvalStatus = formData.get('approval_status');
+          const comment = formData.get('comment')?.trim();
+
+          // Debug form data
+          console.log('Form Data:', {
+            employee_id: employeeId,
+            bac_position: bacPosition,
+            approval_status: approvalStatus,
+            comment: comment
+          });
+
+          // Client-side validation
+          if (!employeeId) {
+            showErrorModal('Employee ID is missing. Please contact the administrator.');
+            return;
+          }
+          if (!bacPosition) {
+            showErrorModal('BAC position is missing. Please contact the administrator.');
+            return;
+          }
+          if (!approvalStatus) {
+            showErrorModal('Please select Approve or Decline');
+            return;
+          }
+          if (approvalStatus === 'declined' && !comment) {
+            showErrorModal('Comment is required when declining the request');
+            return;
+          }
+
+          const submitBtn = reviewForm.querySelector('button[type="submit"]');
+          const originalBtnText = submitBtn.innerHTML;
+          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Submitting...';
+          submitBtn.disabled = true;
+
+          try {
+            const response = await fetch(reviewForm.action, {
+              method: 'POST',
+              body: formData,
+              headers: {
+                'Authorization': `Bearer ${getCookie('token') || ''}`,
+              },
+              credentials: 'include',
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+              throw new Error(data.message || `HTTP error! Status: ${response.status}`);
+            }
+
+            if (data.success) {
+              showSuccessModal(data.message || 'Review submitted successfully');
+              setTimeout(() => window.location.href = '/requests', 2000);
+            } else {
+              throw new Error(data.message || 'Failed to submit review');
+            }
+          } catch (error) {
+            console.error('Error submitting review:', error);
+            showErrorModal(error.message || 'Failed to submit review. Please try again.');
+          } finally {
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.disabled = false;
+          }
+        });
+      }
+
+      function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+      }
+
+      function showSuccessModal(message) {
+        const modal = document.getElementById('successModal');
+        document.getElementById('successMessage').textContent = message;
+        modal.style.display = 'flex';
+        setTimeout(() => modal.style.display = 'none', 2000);
+      }
+
+      function showErrorModal(message) {
+        const modal = document.getElementById('errorModal');
+        document.getElementById('errorMessage').textContent = message;
+        modal.style.display = 'flex';
+        setTimeout(() => modal.style.display = 'none', 3000);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>BAC Members Management</title>
+  <link href="/src/table.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png"/>
+</head>
+
+<body class="bg-blue-50 font-sans">
+  <!-- Include Sidebar -->
+  <%- include('partials/sidebar') %>
+
+  <!-- Main Content -->
+  <div class="lg:ml-64 p-4 lg:p-10">
+    <div class="w-full">
+      <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold text-blue-700">BAC Members Management</h2>
+          <button id="addBacMember" class="bg-green-600 text-white px-4 py-3 rounded-lg shadow-sm hover:bg-green-700 transition-colors flex items-center">
+            <i class="fas fa-plus mr-2"></i>Add New Member
+          </button>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="mb-6 relative">
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i class="fas fa-search text-gray-400"></i>
+            </div>
+            <input type="text" id="search" class="w-full pl-10 p-3 border rounded-lg bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300" placeholder="Search by name, position, or department">
+          </div>
+        </div>
+
+        <!-- BAC Members Table -->
+        <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+          <table class="min-w-full bg-white">
+            <thead>
+              <tr class="bg-blue-600 text-white">
+                <th class="py-3 px-4 text-left">ID</th>
+                <th class="py-3 px-4 text-left">Employee Name</th>
+                <th class="py-3 px-4 text-left">Position</th>
+                <th class="py-3 px-4 text-left">BAC Position</th>
+                <th class="py-3 px-4 text-left">Department</th>
+                <th class="py-3 px-4 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="bacTableBody" class="divide-y divide-gray-200">
+              <% bacMembers.forEach(member => { %>
+                <tr class="hover:bg-gray-50 transition-colors" data-id="<%= member.employee_id %>">
+                  <td class="py-4 px-4"><%= member.employee_id %></td>
+                  <td class="py-4 px-4 font-medium"><%= member.employee_name %></td>
+                  <td class="py-4 px-4 text-gray-600"><%= member.position %></td>
+                  <td class="py-4 px-4">
+                    <input type="text" value="<%= member.bac_position || '' %>" class="bac-position w-full p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-300">
+                  </td>
+                  <td class="py-4 px-4 text-gray-600"><%= member.department_name || 'N/A' %></td>
+                  <td class="py-4 px-4">
+                    <div class="flex justify-center space-x-2">
+                      <button class="update-btn bg-blue-600 text-white px-3 py-1.5 rounded-lg shadow-sm hover:bg-blue-700 transition-colors" title="Save changes">
+                        <i class="fas fa-save"></i>
+                      </button>
+                      <button class="remove-btn bg-red-500 text-white px-3 py-1.5 rounded-lg shadow-sm hover:bg-red-600 transition-colors" title="Remove member">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      </div>      
+    </div>
+  </div>
+
+  <!-- Add BAC Member Modal -->
+  <div id="addBacModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md mx-4">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold text-blue-700">Add BAC Member</h3>
+        <button id="cancelAddBac" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <form id="addBacForm">
+        <div class="mb-4">
+          <label class="block text-gray-600 mb-2 font-medium">Select Employee</label>
+          <select name="employee_id" class="w-full p-3 border rounded-lg bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300" required>
+            <option value="">Select Employee</option>
+            <% nonBacEmployees.forEach(employee => { %>
+              <option value="<%= employee.employee_id %>"><%= employee.employee_name %> (<%= employee.position %>)</option>
+            <% }); %>
+          </select>
+        </div>
+        <div class="mb-6">
+          <label class="block text-gray-600 mb-2 font-medium">BAC Position (Optional)</label>
+          <input type="text" name="bac_position" class="w-full p-3 border rounded-lg bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300" placeholder="Enter BAC position">
+        </div>
+        <div class="flex justify-end space-x-3">
+          <button type="button" id="cancelAddBacBtn" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
+            Cancel
+          </button>
+          <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center">
+            <i class="fas fa-plus mr-2"></i> Add Member
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const searchInput = document.getElementById("search");
+      const addBacBtn = document.getElementById("addBacMember");
+      const addBacModal = document.getElementById("addBacModal");
+      const cancelAddBac = document.getElementById("cancelAddBacBtn");
+      const cancelAddBacX = document.getElementById("cancelAddBac");
+      const addBacForm = document.getElementById("addBacForm");
+
+      // Enhanced search functionality
+      searchInput.addEventListener("input", function () {
+        const searchValue = this.value.toLowerCase();
+        document.querySelectorAll("#bacTableBody tr").forEach(row => {
+          const name = row.querySelector("td:nth-child(2)").textContent.toLowerCase();
+          const position = row.querySelector("td:nth-child(3)").textContent.toLowerCase();
+          const department = row.querySelector("td:nth-child(5)").textContent.toLowerCase();
+          if (name.includes(searchValue) || position.includes(searchValue) || department.includes(searchValue)) {
+            row.style.display = "";
+          } else {
+            row.style.display = "none";
+          }
+        });
+      });
+
+      // Update BAC member
+      document.querySelectorAll(".update-btn").forEach(button => {
+        button.addEventListener("click", function () {
+          const row = this.closest("tr");
+          const employeeId = row.dataset.id;
+          const bacPosition = row.querySelector(".bac-position").value;
+
+          fetch(`/bac-members/update/${employeeId}`, {
+            method: "POST",
+            headers: { 
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            body: JSON.stringify({ 
+              bac_position: bacPosition
+            }),
+          })
+            .then(response => {
+              if (!response.ok) {
+                throw new Error('Network response was not ok');
+              }
+              return response.json();
+            })
+            .then(data => {
+              if (data.success) {
+                showAlert("BAC member updated successfully!", "success");
+              } else {
+                showAlert("Error updating BAC member: " + (data.message || 'Unknown error'), "error");
+              }
+            })
+            .catch(error => {
+              console.error("Error updating BAC member:", error);
+              showAlert("Error updating BAC member. Please try again.", "error");
+            });
+        });
+      });
+
+      // Remove BAC member with confirmation
+      document.querySelectorAll(".remove-btn").forEach(button => {
+        button.addEventListener("click", function () {
+          const row = this.closest("tr");
+          const employeeName = row.querySelector("td:nth-child(2)").textContent;
+          
+          showConfirmDialog(
+            `Remove BAC Member`, 
+            `Are you sure you want to remove ${employeeName} from BAC members?`,
+            "Remove",
+            "Cancel",
+            () => {
+              const employeeId = row.dataset.id;
+              fetch(`/bac-members/remove/${employeeId}`, {
+                method: "POST",
+                headers: { 
+                  "Content-Type": "application/json",
+                  "Accept": "application/json"
+                }
+              })
+                .then(response => {
+                  if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                  }
+                  return response.json();
+                })
+                .then(data => {
+                  if (data.success) {
+                    showAlert(`${employeeName} removed successfully!`, "success");
+                    row.remove();
+                  } else {
+                    showAlert("Error removing BAC member: " + (data.message || 'Unknown error'), "error");
+                  }
+                })
+                .catch(error => {
+                  console.error("Error removing BAC member:", error);
+                  showAlert("Error removing BAC member. Please try again.", "error");
+                });
+            }
+          );
+        });
+      });
+
+      // Add BAC member modal
+      addBacBtn.addEventListener("click", () => {
+        addBacModal.classList.remove("hidden");
+      });
+
+      cancelAddBac.addEventListener("click", () => {
+        addBacModal.classList.add("hidden");
+      });
+
+      cancelAddBacX.addEventListener("click", () => {
+        addBacModal.classList.add("hidden");
+      });
+
+      // Add BAC member form submission
+      addBacForm.addEventListener("submit", function(e) {
+        e.preventDefault();
+        
+        const formData = {
+          employee_id: this.querySelector('[name="employee_id"]').value,
+          bac_position: this.querySelector('[name="bac_position"]').value || null
+        };
+
+        fetch("/bac-members/add", {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify(formData)
+        })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.json();
+          })
+          .then(data => {
+            if (data.success) {
+              showAlert("BAC member added successfully!", "success");
+              addBacModal.classList.add("hidden");
+              setTimeout(() => window.location.reload(), 1500);
+            } else {
+              showAlert("Error adding BAC member: " + (data.message || 'Unknown error'), "error");
+            }
+          })
+          .catch(error => {
+            console.error("Error adding BAC member:", error);
+            showAlert("Error adding BAC member. Please try again.", "error");
+          });
+      });
+
+      // Helper function to show alerts
+      function showAlert(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg text-white z-50 transition-all duration-300 ${
+          type === 'success' ? 'bg-green-500' : 'bg-red-500'
+        }`;
+        alertDiv.innerHTML = `
+          <div class="flex items-center">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
+            <span>${message}</span>
+          </div>
+        `;
+        document.body.appendChild(alertDiv);
+        
+        setTimeout(() => {
+          alertDiv.style.opacity = '0';
+          setTimeout(() => alertDiv.remove(), 300);
+        }, 3000);
+      }
+
+      // Helper function for confirmation dialog
+      function showConfirmDialog(title, message, confirmText, cancelText, confirmCallback) {
+        const dialog = document.createElement('div');
+        dialog.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        dialog.innerHTML = `
+          <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md mx-4">
+            <h3 class="text-xl font-bold text-blue-700 mb-2">${title}</h3>
+            <p class="text-gray-600 mb-6">${message}</p>
+            <div class="flex justify-end space-x-3">
+              <button id="confirmCancel" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
+                ${cancelText}
+              </button>
+              <button id="confirmOk" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">
+                ${confirmText}
+              </button>
+            </div>
+          </div>
+        `;
+        
+        document.body.appendChild(dialog);
+        
+        dialog.querySelector('#confirmCancel').addEventListener('click', () => {
+          dialog.remove();
+        });
+        
+        dialog.querySelector('#confirmOk').addEventListener('click', () => {
+          dialog.remove();
+          confirmCallback();
+        });
+      }
+    });
+  </script>
+</body>
+</html>

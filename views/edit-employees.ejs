@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manage Employees</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png">
+</head>
+
+<body class="bg-gray-100 font-sans">
+  <!-- Include Sidebar -->
+  <%- include('partials/sidebar') %>
+
+  <!-- Main Content -->
+  <div class="lg:ml-64 p-4 lg:p-10">
+    <div class="container mx-auto">
+      <h1 class="text-2xl font-bold mb-4">Manage Employees</h1>
+      <% if (employees.length > 0) { %>
+        <div class="overflow-x-auto">
+          <table class="min-w-full bg-white border border-gray-200 shadow-sm rounded-lg">
+            <thead>
+              <tr class="bg-blue-700 text-white">
+                <th class="p-4 text-left">Employee Name</th>
+                <th class="p-4 text-left">Email</th>
+                <th class="p-4 text-left">User Type</th>
+                <th class="p-4 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% employees.forEach(employee => { %>
+                <tr class="border-b border-gray-200 hover:bg-gray-100">
+                  <td class="p-4"><%= employee.employee_name %></td>
+                  <td class="p-4"><%= employee.email %></td>
+                  <td class="p-4"><%= employee.user_type %></td>
+                  <td class="p-4">
+                    <form action="/employees/edit/<%= employee.employee_id %>" method="POST" class="flex items-center">
+                      <select name="user_type" class="p-2 border rounded">
+                        <option value="superadmin" <%= employee.user_type === 'superadmin' ? 'selected' : '' %>>Superadmin</option>
+                        <option value="ics" <%= employee.user_type === 'ics' ? 'selected' : '' %>>ICS</option>
+                        <option value="par" <%= employee.user_type === 'par' ? 'selected' : '' %>>PAR</option>
+                        <option value="admin" <%= employee.user_type === 'admin' ? 'selected' : '' %>>Admin</option>
+                      </select>
+                      <button type="submit" class="ml-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                        Update
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <p class="text-gray-500">No employees found.</p>
+      <% } %>
+    </div>
+  </div>
+</body>
+</html>

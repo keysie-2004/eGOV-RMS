@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>GSO Inspection Management</title>
+  <link href="/src/table.css" rel="stylesheet"/>
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png">
+</head>
+
+<body class="bg-gradient-to-br from-blue-50 to-indigo-50 font-sans min-h-screen">
+  <!-- Include Sidebar -->
+  <%- include('partials/sidebar') %>
+
+  <!-- Main Content -->
+  <div class="lg:ml-64 p-7 lg:p-10">
+    <div class="w-full max-w-8xl mx-auto">
+
+      <div class="bg-white rounded-xl card-shadow p-6 lg:p-8">
+        <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+          <h2 class="text-2xl font-bold text-primary-700 flex items-center">
+            <i class="fas fa-clipboard-check mr-3 text-primary-500"></i>GSO Approved Items for Inspection
+          </h2>
+          <div class="text-sm text-gray-500 bg-blue-50 px-3 py-1 rounded-full">
+            <i class="fas fa-list-ol mr-1"></i> <%= items.length %> Items
+          </div>
+        </div>
+
+        <div class="overflow-x-auto rounded-lg border border-gray-200">
+          <table class="w-full border-collapse">
+            <thead>
+              <tr class="bg-gradient-to-r from-primary-600 to-primary-700 text-white">
+                <th class="p-4 text-left font-semibold">PR ID</th>
+                <th class="p-4 text-left font-semibold">Items</th>
+                <th class="p-4 text-left font-semibold">GSO Approval Date</th>
+                <th class="p-4 text-left font-semibold">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% items.forEach((item) => { 
+                // Split the concatenated strings back into arrays
+                const itemDescriptions = item.items.split('; ');
+                const units = item.units.split('; ');
+                const quantities = item.quantities.split('; ');
+              %>
+                <tr class="<%= items.indexOf(item) % 2 === 0 ? 'bg-white' : 'bg-gray-50' %> hover:bg-blue-50 transition-all">
+                  <td class="p-4 border-t border-gray-200"><%= item.pr_id %></td>
+                  <td class="p-4 border-t border-gray-200">
+                    <div class="space-y-2">
+                      <% for (let i = 0; i < itemDescriptions.length; i++) { %>
+                        <div class="flex items-baseline gap-2">
+                          <span class="font-medium"><%= itemDescriptions[i] %></span>
+                          <span class="text-sm text-gray-600"><%= quantities[i] %> <%= units[i] %></span>
+                        </div>
+                      <% } %>
+                    </div>
+                  </td>
+                  <td class="p-4 border-t border-gray-200"><%= item.gso_date ? new Date(item.gso_date).toLocaleDateString() : 'N/A' %></td>
+                  <td class="p-4 border-t border-gray-200">
+                    <a href="/inspection-form/<%= item.pr_id %>" 
+                        class="flex items-center bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-all">
+                      <i class="fas fa-clipboard-check mr-2"></i> Inspect
+                    </a>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

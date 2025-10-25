@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Department Budget</title>
+  <link href="/src/table.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png"/>
+</head>
+<body class="bg-blue-50 font-sans">
+  <%- include('partials/sidebar') %>
+  <div class="lg:ml-64 p-7 lg:p-10">
+    <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
+      <% if (user.user_type !== 'superadmin' || (user.user_type === 'superadmin' && user.department_id)) { %>
+        <h2 class="text-2xl font-bold text-blue-700 mb-6">Department Budget - <%= budget?.department_name || 'Unknown Department' %></h2>
+
+        <% if (error && error.length > 0) { %>
+          <div class="bg-red-100 text-red-700 p-4 rounded-lg mb-6">
+            <%= error %>
+          </div>
+        <% } %>
+        <% if (success && success.length > 0) { %>
+          <div class="bg-green-100 text-green-700 p-4 rounded-lg mb-6">
+            <%= success %>
+          </div>
+        <% } %>
+
+        <% if (!budget || (budget.budget_amount === 0 && budget.remaining_budget === 0)) { %>
+          <div class="mb-6 bg-yellow-50 border-l-4 border-yellow-500 p-4">
+            <p class="text-yellow-700">No budget set for <%= budget?.department_name || 'this department' %>. Contact an admin to set a budget.</p>
+          </div>
+        <% } else { %>
+          <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <p class="text-gray-600">Total Budget: ₱<%= parseFloat(budget.budget_amount || 0).toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %></p>
+              <p class="text-gray-600">Remaining Budget: ₱<%= parseFloat(budget.remaining_budget || 0).toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %></p>
+              <% if ((budget.remaining_budget || 0) <= 20000 && (budget.remaining_budget || 0) > 0) { %>
+                <p class="text-red-500 font-bold mt-2">Warning: Budget is low (≤ ₱20,000)</p>
+              <% } %>
+            </div>
+            <div class="bg-blue-50 p-4 rounded-lg">
+              <h3 class="text-lg font-semibold text-blue-700 mb-2">Budget Utilization</h3>
+              <div class="flex items-center">
+                <div class="w-full bg-gray-200 rounded-full h-4">
+                  <div 
+                    class="bg-blue-600 h-4 rounded-full" 
+                    style="width: <%= ((budget.budget_amount - budget.remaining_budget) / budget.budget_amount * 100) %>%"
+                  ></div>
+                </div>
+                <span class="ml-2 text-sm font-medium text-gray-700">
+                  <%= Math.round((budget.budget_amount - budget.remaining_budget) / budget.budget_amount * 100) %>%
+                </span>
+              </div>
+              <div class="flex justify-between text-xs text-gray-500 mt-1">
+                <span>₱0</span>
+                <span>₱<%= parseFloat(budget.budget_amount || 0).toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %></span>
+              </div>
+            </div>
+          </div>
+        <% } %>
+
+        <% if (history && history.length > 0) { %>
+          <div class="mb-8">
+            <h3 class="text-xl font-semibold text-blue-600 mb-4">Budget History Visualization</h3>
+            <div class="bg-white p-4 rounded-lg border border-gray-200">
+              <div class="chart-container" style="position: relative; height: 400px; width: 100%">
+                <canvas id="budgetChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <h3 class="text-xl font-semibold text-blue-600 mb-4">Budget Reduction History</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full border-collapse">
+              <thead>
+                <tr class="bg-blue-700 text-white">
+                  <th class="p-3 text-left">Request ID</th>
+                  <th class="p-3 text-left">Purpose</th>
+                  <th class="p-3 text-left">Amount</th>
+                  <th class="p-3 text-left">Date</th>
+                  <th class="p-3 text-left">Running Balance</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% let runningBalance = parseFloat(budget?.budget_amount || 0); %>
+                <% history.forEach(item => { %>
+                  <% runningBalance -= parseFloat(item.total); %>
+                  <tr class="border-b hover:bg-blue-50">
+                    <td class="p-3 font-medium"><%= item.pr_id %></td>
+                    <td class="p-3"><%= item.purpose %></td>
+                    <td class="p-3 font-semibold text-blue-700">₱<%= parseFloat(item.total).toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %></td>
+                    <td class="p-3"><%= new Date(item.date_requested).toLocaleDateString() %></td>
+                    <td class="p-3 font-semibold text-blue-700">₱<%= runningBalance.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } else { %>
+          <div class="text-center py-12">
+            <i class="fas fa-inbox text-4xl text-gray-300 mb-4"></i>
+            <p class="text-gray-500 text-lg">No approved purchase requests found</p>
+          </div>
+        <% } %>
+      <% } else { %>
+        <div class="text-center py-12">
+          <i class="fas fa-exclamation-circle text-4xl text-red-300 mb-4"></i>
+          <p class="text-red-500 text-lg">Budget information is not available for superadmin users without departments</p>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <% if (history && history.length > 0) { %>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Prepare chart data
+        const historyData = [
+          { 
+            date: 'Initial Budget', 
+            amount: 0, 
+            balance: <%= budget?.budget_amount || 0 %>
+          },
+          <% let chartBalance = parseFloat(budget?.budget_amount || 0); %>
+          <% history.forEach(item => { %>
+            <% chartBalance -= parseFloat(item.total); %>
+            { 
+              date: new Date('<%= item.date_requested %>').toLocaleDateString(), 
+              amount: <%= item.total %>, 
+              balance: <%= chartBalance %> 
+            },
+          <% }) %>
+        ];
+
+        const ctx = document.getElementById('budgetChart').getContext('2d');
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: historyData.map(item => item.date),
+            datasets: [
+              {
+                label: 'Remaining Budget',
+                data: historyData.map(item => item.balance),
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.3,
+                fill: true,
+                yAxisID: 'y'
+              },
+              {
+                label: 'Expense Amount',
+                data: historyData.map(item => item.amount),
+                borderColor: 'rgb(239, 68, 68)',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                type: 'bar',
+                yAxisID: 'y1'
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false, 
+            interaction: {
+              mode: 'index',
+              intersect: false,
+            },
+            plugins: {
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    let label = context.dataset.label || '';
+                    if (label) {
+                      label += ': ';
+                    }
+                    if (context.parsed.y !== null) {
+                      label += new Intl.NumberFormat('en-PH', {
+                        style: 'currency',
+                        currency: 'PHP'
+                      }).format(context.parsed.y);
+                    }
+                    return label;
+                  }
+                }
+              },
+              legend: {
+                position: 'top',
+              },
+              title: {
+                display: true,
+                text: 'Budget Utilization Over Time'
+              }
+            },
+            scales: {
+              y: {
+                type: 'linear',
+                display: true,
+                position: 'left',
+                title: {
+                  display: true,
+                  text: 'Remaining Budget'
+                },
+                ticks: {
+                  callback: function(value) {
+                    return new Intl.NumberFormat('en-PH', {
+                      style: 'currency',
+                      currency: 'PHP',
+                      maximumFractionDigits: 0
+                    }).format(value);
+                  }
+                }
+              },
+              y1: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                title: {
+                  display: true,
+                  text: 'Expense Amount'
+                },
+                grid: {
+                  drawOnChartArea: false,
+                },
+                ticks: {
+                  callback: function(value) {
+                    return new Intl.NumberFormat('en-PH', {
+                      style: 'currency',
+                      currency: 'PHP',
+                      maximumFractionDigits: 0
+                    }).format(value);
+                  }
+                }
+              }
+            }
+          }
+        });
+      });
+    </script>
+  <% } %>
+</body>
+</html>

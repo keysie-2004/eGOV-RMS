@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Purchase Order</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="/fa/all.min.css"/>
+  <link rel="stylesheet" href="/css/poppins.css"/>
+  <link rel="stylesheet" href="/css/noto-sans.css"/>
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png">
+  <link href="/src/table.css" rel="stylesheet"/>
+  <style>
+    /* Additional responsive styles based on Add Requests layout */
+    .bg-blue-50 {
+      background-color: #eff6ff;
+    }
+    
+    .card-shadow {
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .font-sans {
+      font-family: 'Noto Sans', sans-serif;
+    }
+    
+    .text-primary-600 {
+      color: #2563eb;
+    }
+    
+    .text-primary-700 {
+      color: #1d4ed8;
+    }
+    
+    .bg-primary-600 {
+      background-color: #2563eb;
+    }
+    
+    .bg-primary-700 {
+      background-color: #1d4ed8;
+    }
+    
+    .bg-primary-100 {
+      background-color: #dbeafe;
+    }
+    
+    .bg-primary-500 {
+      background-color: #3b82f6;
+    }
+    
+    .border-primary-500 {
+      border-color: #3b82f6;
+    }
+    
+    .hover\:bg-primary-700:hover {
+      background-color: #1d4ed8;
+    }
+    
+    .hover\:bg-gray-700:hover {
+      background-color: #374151;
+    }
+    
+    .transition-all {
+      transition: all 0.3s ease;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .lg\:ml-64 {
+        margin-left: 0;
+      }
+      
+      .lg\:p-10 {
+        padding: 1.5rem;
+      }
+      
+      .main-content {
+        padding: 1rem;
+      }
+      
+      .grid-cols-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-blue-50 font-sans min-h-screen">
+  <!-- Include Sidebar -->
+  <%- include('partials/sidebar') %>
+  <%- include('partials/modal') %>
+
+  <!-- Main Content - Updated with responsive layout similar to Add Requests -->
+  <div class="lg:ml-64 p-7 lg:p-10 main-content">
+    <div class="w-full max-w-8xl mx-auto">
+      <!-- Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">Procurement Management</h1>
+        <div class="flex items-center mt-2">
+          <i class="fas fa-home text-primary-600 mr-2"></i>
+          <span class="text-gray-500">Dashboard</span>
+          <i class="fas fa-chevron-right text-gray-400 mx-2 text-xs"></i>
+          <span class="text-primary-600 font-medium">Purchase Order</span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl card-shadow p-6 lg:p-8">
+        <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+          <h2 class="text-2xl font-bold text-primary-700 flex items-center">
+            <i class="fas fa-file-invoice-dollar mr-3 text-primary-500"></i>Purchase Order
+          </h2>
+          <div class="text-sm text-gray-500 bg-blue-50 px-3 py-1 rounded-full">
+            <i class="fas fa-clock mr-1"></i> <%= purchaseOrderData.po_id ? 'P.O. No: ' + purchaseOrderData.po_id : 'New PO' %>
+          </div>
+        </div>
+
+        <form id="purchaseOrderForm" onsubmit="savePurchaseOrder(event)" class="space-y-6">
+          <input type="hidden" name="pr_id" value="<%= purchaseOrderData.pr_id %>">
+          <input type="hidden" name="po_id" value="<%= purchaseOrderData.po_id || '' %>">
+
+          <!-- Supplier Information -->
+          <div class="mb-8 bg-blue-50 p-5 rounded-lg border-l-4 border-primary-500">
+            <h3 class="text-lg font-semibold text-primary-700 mb-4 flex items-center">
+              <i class="fas fa-building mr-2"></i>Supplier Information
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-gray-500 text-sm mb-1">Supplier</label>
+                <input type="text" name="company_name" value="<%= purchaseOrderData.company_name || '' %>" 
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white" readonly>
+              </div>
+              <div>
+                <label class="block text-gray-500 text-sm mb-1">Address</label>
+                <input type="text" name="address" value="<%= purchaseOrderData.address || '' %>" 
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white" required>
+              </div>
+              <div>
+                <label class="block text-gray-500 text-sm mb-1">TIN</label>
+                <input type="text" name="tin" value="<%= purchaseOrderData.tin || '' %>" 
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white" required>
+              </div>
+              <div>
+                <label class="block text-gray-500 text-sm mb-1">P.O. No.</label>
+                <input type="text" name="po_id_display" value="<%= purchaseOrderData.po_id || 'Auto-generated' %>" 
+                      class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white" readonly
+                      placeholder="Auto-generated upon save">
+              </div>
+            </div>
+          </div>
+
+          <!-- Purchase Details -->
+          <div class="mb-8 bg-blue-50 p-5 rounded-lg border-l-4 border-primary-500">
+            <h3 class="text-lg font-semibold text-primary-700 mb-4 flex items-center">
+              <i class="fas fa-shopping-cart mr-2"></i>Purchase Details
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-gray-500 text-sm mb-1">Date Issued</label>
+                <div class="relative">
+                  <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                    <i class="fas fa-calendar-alt"></i>
+                  </span>
+                  <input type="date" name="date_issued" value="<%= purchaseOrderData.date_issued || '' %>" 
+                         class="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white" required>
+                </div>
+              </div>
+              <div>
+                <label class="block text-gray-500 text-sm mb-1">Mode of Procurement</label>
+                <input type="text" name="mode_of_procurement" value="<%= purchaseOrderData.mode_of_procurement || '' %>" 
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white" required>
+              </div>
+              <div>
+                <label class="block text-gray-500 text-sm mb-1">PR No.</label>
+                <input type="text" name="pr_id_display" value="<%= purchaseOrderData.pr_id || '' %>" 
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white" readonly>
+              </div>
+              <div>
+                <label class="block text-gray-500 text-sm mb-1">Place of Delivery</label>
+                <input type="text" name="place_of_delivery" value="<%= purchaseOrderData.place_of_delivery || '' %>" 
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white" required>
+              </div>
+            </div>
+          </div>
+
+          <!-- Delivery & Payment -->
+          <div class="mb-8 bg-blue-50 p-5 rounded-lg border-l-4 border-primary-500">
+            <h3 class="text-lg font-semibold text-primary-700 mb-4 flex items-center">
+              <i class="fas fa-truck mr-2"></i>Delivery & Payment
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-gray-500 text-sm mb-1">Date of Delivery</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                  <i class="fas fa-calendar-alt"></i>
+                </span>
+                <input type="text" name="date_of_delivery" value="<%= purchaseOrderData.date_of_delivery || '' %>" 
+                      class="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white" required>
+              </div>
+            </div>              
+            <div>
+                <label class="block text-gray-500 text-sm mb-1">Delivery Term</label>
+                <input type="text" name="delivery_term" value="<%= purchaseOrderData.delivery_term || '' %>" 
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white" required>
+              </div>
+              <div>
+                <label class="block text-gray-500 text-sm mb-1">Payment Term</label>
+                <input type="text" name="payment_term" value="<%= purchaseOrderData.payment_term || '' %>" 
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white" required>
+              </div>
+              <div>
+                <label class="block text-gray-500 text-sm mb-1">Resolution No.</label>
+                <input type="text" name="resolution_no" value="<%= purchaseOrderData.resolution_no || '' %>" 
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white" required>
+              </div>
+            </div>
+          </div>
+
+          <!-- Additional Information -->
+          <div class="mb-8 bg-blue-50 p-5 rounded-lg border-l-4 border-primary-500">
+            <h3 class="text-lg font-semibold text-primary-700 mb-4 flex items-center">
+              <i class="fas fa-info-circle mr-2"></i>Additional Information
+            </h3>
+            <div>
+              <label class="block text-gray-500 text-sm mb-1">Secretary</label>
+              <input type="text" name="secretary" value="<%= purchaseOrderData.secretary || '' %>" 
+                     class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white" required>
+            </div>
+          </div>
+
+<!-- Items Table -->
+<div class="mb-8">
+  <div class="overflow-hidden rounded-lg border border-gray-200">
+    <table class="w-full border-collapse">
+      <thead>
+        <tr class="bg-gradient-to-r from-primary-600 to-primary-700 text-white">
+          <th class="p-3 text-left font-semibold">Stock/Property No.</th>
+          <th class="p-3 text-left font-semibold">Unit</th>
+          <th class="p-3 text-left font-semibold">Item Description</th>
+          <th class="p-3 text-left font-semibold">Quantity</th>
+          <th class="p-3 text-left font-semibold">Unit Cost</th>
+          <th class="p-3 text-left font-semibold">Total Cost</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (purchaseOrderData.items && purchaseOrderData.items.length > 0) { %>
+          <% purchaseOrderData.items.forEach((item, index) => { %>
+            <tr class="<%= index % 2 === 0 ? 'bg-white' : 'bg-gray-50' %> hover:bg-blue-50 transition-all">
+              <td class="p-3 border-t border-gray-200">
+                <input type="hidden" name="item_id" value="<%= item.item_id %>">
+                <input type="text" name="stock_property_no" value="<%= index + 1 %>" 
+                       class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white" readonly>
+              </td>
+              <td class="p-3 border-t border-gray-200"><%= item.unit %></td>
+              <td class="p-3 border-t border-gray-200"><%= item.item_description %></td>
+              <td class="p-3 border-t border-gray-200"><%= item.quantity %></td>
+              <td class="p-3 border-t border-gray-200"><%= item.unit_cost %></td>
+              <td class="p-3 border-t border-gray-200"><%= item.total_cost %></td>
+            </tr>
+          <% }); %>
+        <% } else { %>
+          <tr>
+            <td colspan="7" class="text-center p-3">No items available</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+          <!-- Total Amount -->
+          <div class="flex justify-end mb-6">
+            <div class="bg-primary-100 p-4 rounded-lg w-64">
+              <div class="text-sm text-primary-800">Total Amount</div>
+              <div class="text-xl font-bold text-primary-700"><%= purchaseOrderData.totalAmount %></div>
+              <div class="text-xs text-primary-600 mt-1">In Words: <%= purchaseOrderData.totalAmountInWords %></div>
+            </div>
+          </div>
+
+          <!-- Buttons - Updated with colors matching Add Requests -->
+          <div class="flex flex-wrap justify-end gap-4">
+            <button type="button" onclick="printDocument()" class="flex items-center bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-all">
+              <i class="fas fa-print mr-2"></i> Print
+            </button>
+            <button type="submit" class="flex items-center bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition-all">
+              <i class="fas fa-save mr-2"></i> Save Purchase Order
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Print Section - Updated to match style and layout from the provided template -->
+  <div id="printSection" class="hidden">
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap');
+      
+      #printSection {
+        font-family: 'Noto Sans', Arial, sans-serif;
+        font-size: 12px;
+        line-height: 1.2;
+        margin: 0;
+        padding: 20px;
+        color: #000;
+        background-color: #fff;
+      }
+      
+      .purchase-order {
+        width: 100%;
+        max-width: 800px;
+        margin: 0;
+        border: 1px solid #000;
+        padding: 15px;
+        box-sizing: border-box;
+      }
+      
+      .header {
+        text-align: center;
+        margin-bottom: 15px;
+      }
+      
+      .header h1 {
+        font-size: 16px;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin: 0;
+        letter-spacing: 1px;
+      }
+      
+      .header h2 {
+        font-size: 14px;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin: 0;
+        letter-spacing: 1px;
+      }
+      
+      .supplier-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        margin-bottom: 15px;
+      }
+      
+      .supplier-details, .po-details {
+        border: 1px solid #000;
+        padding: 5px;
+      }
+      
+      .info-row {
+        display: flex;
+        margin-bottom: 3px;
+      }
+      
+      .info-label {
+        font-weight: bold;
+        min-width: 80px;
+      }
+      
+      .info-value {
+        flex: 1;
+        border-bottom: 1px solid #000;
+        min-height: 16px;
+      }
+      
+      .salutation {
+        margin-bottom: 15px;
+      }
+      
+      .delivery-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        margin-bottom: 15px;
+      }
+      
+      .delivery-details, .payment-details {
+        border: 1px solid #000;
+        padding: 5px;
+      }
+      
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 15px;
+      }
+      
+      th, td {
+        border: 1px solid #000;
+        padding: 5px;
+        text-align: left;
+        height: 16px;
+      }
+      
+      th {
+        font-weight: bold;
+        text-align: center;
+      }
+      
+      .total-amount {
+        margin-bottom: 15px;
+        font-weight: bold;
+      }
+      
+      .terms {
+        margin-bottom: 15px;
+        font-size: 11px;
+      }
+      
+      .signatures {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        margin-bottom: 15px;
+      }
+      
+      .signature-box {
+        text-align: center;
+      }
+      
+      .signature-line {
+        border-bottom: 1px solid #000;
+        margin: 25px 0 5px;
+        min-height: 18px;
+      }
+      
+      .signature-label {
+        font-size: 11px;
+        margin-top: 3px;
+      }
+      
+      .approval-section {
+        border-top: 1px solid #000;
+        padding-top: 10px;
+        margin-bottom: 15px;
+        font-size: 11px;
+      }
+      
+      .footer {
+        text-align: right;
+        font-size: 11px;
+      }
+    </style>
+    <div class="purchase-order">
+      <!-- Header -->
+      <div class="header">
+        <h1>PURCHASE ORDER</h1>
+        <h2>CITY OF CALAPAN</h2>
+      </div>
+      
+      <!-- Supplier Information -->
+      <div class="supplier-info">
+        <div class="supplier-details">
+          <div class="info-row">
+            <span class="info-label">Supplier</span>
+            <span class="info-value" id="print-supplier"><%= purchaseOrderData.company_name || '' %></span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Address</span>
+            <span class="info-value" id="print-address"><%= purchaseOrderData.address || '' %></span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">TIN:</span>
+            <span class="info-value" id="print-tin"><%= purchaseOrderData.tin || '' %></span>
+          </div>
+        </div>
+        
+        <div class="po-details">
+          <div class="info-row">
+            <span class="info-label">P.O. Nos.</span>
+            <span class="info-value" id="print-po-no"><%= purchaseOrderData.po_id || '' %></span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Date:</span>
+            <span class="info-value" id="print-date"><%= purchaseOrderData.date_issued || '' %></span>          </div>
+          <div class="info-row">
+            <span class="info-label">Mode of Procurement:</span>
+            <span class="info-value" id="print-mode"><%= purchaseOrderData.mode_of_procurement || '' %></span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">PR No.</span>
+            <span class="info-value" id="print-pr-no"><%= purchaseOrderData.pr_id || '' %></span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Salutation -->
+      <div class="salutation">
+        <p><strong>Gentlemen:</strong></p>
+        <p>Please furnish this Office the following articles subject to the terms and conditions contained herein:</p>
+      </div>
+      
+      <!-- Delivery Information -->
+      <div class="delivery-info">
+        <div class="delivery-details">
+          <div class="info-row">
+            <span class="info-label">Place of Delivery:</span>
+            <span class="info-value" id="print-place-delivery"><%= purchaseOrderData.place_of_delivery || '' %></span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Date of Delivery:</span>
+            <span class="info-value" id="print-date-delivery"><%= purchaseOrderData.date_of_delivery || '' %></span>
+          </div>
+
+        <div class="payment-details">
+          <div class="info-row">
+            <span class="info-label">Delivery Term:</span>
+            <span class="info-value" id="print-delivery-term"><%= purchaseOrderData.delivery_term || '' %></span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Payment Term:</span>
+            <span class="info-value" id="print-payment-term"><%= purchaseOrderData.payment_term || '' %></span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Items Table -->
+      <table id="print-items-table">
+        <thead>
+          <tr>
+            <th>Stock/Property No.</th>
+            <th>Unit</th>
+            <th>Description</th>
+            <th>Quantity</th>
+            <th>Unit Cost</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (purchaseOrderData.items && purchaseOrderData.items.length > 0) { %>
+            <% purchaseOrderData.items.forEach((item, index) => { %>
+              <tr data-item-index="<%= index %>">
+                <td id="print-stock-<%= index %>"><%= item.stock_property_no || '' %></td>
+                <td><%= item.unit || '' %></td>
+                <td><%= item.item_description || '' %></td>
+                <td><%= item.quantity || '' %></td>
+                <td><%= parseFloat(item.unit_cost || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+                <td id="print-amount-<%= index %>"><%= parseFloat(item.total_cost || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+              </tr>
+            <% }); %>
+            <% for(let i = purchaseOrderData.items.length; i < 15; i++) { %>
+              <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <% } %>
+          <% } else { %>
+            <% for(let i = 0; i < 15; i++) { %>
+              <tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <% } %>
+          <% } %>
+        </tbody>
+      </table>
+      
+      <!-- Total Amount -->
+      <div class="total-amount">
+        <p id="print-total-words">(Total Amount in Words) <%= purchaseOrderData.totalAmountInWords || '' %></p>
+      </div>
+      
+      <!-- Terms -->
+      <div class="terms">
+        <p>In case of failure to make the full delivery within the time specified above, a penalty of one-tenth (1/10) of one percent for every day of delay shall be imposed on the undelivered items.</p>
+      </div>
+      
+      <!-- Signatures -->
+      <div class="signatures">
+        <div class="signature-box">
+          <p class="signature-label">Conforme:</p>
+          <div class="signature-line"></div>
+          <p class="signature-label">Signature over Printed Name of Supplier</p>
+          <p class="signature-label">Date</p>
+        </div>
+        
+        <div class="signature-box">
+          <p class="signature-label">Very truly yours,</p>
+          <div class="signature-line"></div>
+          <p class="signature-label"><strong>MARILOU F. HERNANDEZ</strong></p>
+          <p class="signature-label">City Mayor</p>
+        </div>
+      </div>
+      
+      <!-- Approval Section -->
+      <div class="approval-section">
+        <p><em>(In case of Negotiated Purchase pursuant to Section 369 (d) of RA 7160, this portion must be accomplished.)</em></p>
+        <p>Approved per Sangguniang Resolution No.: <span id="print-resolution"><%= purchaseOrderData.resolution_no || '' %></span></p>
+        
+        <div class="signatures" style="grid-template-columns: 2fr 1fr; margin-top: 10px;">
+          <div class="signature-box">
+            <div class="signature-line" style="width: 60%; margin-left: auto; margin-right: auto;"></div>
+            <p class="signature-label" id="print-secretary"><%= purchaseOrderData.secretary || '' %></p>
+          </div>
+          
+          <div class="signature-box">
+            <p class="signature-label">Date</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Footer -->
+      <div class="footer">
+        <p>PO 2021 v. 9</p>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Function to show error modal
+  function showErrorModal(message) {
+    const modal = document.getElementById('errorModal');
+    const errorMessage = document.getElementById('errorMessage');
+    errorMessage.textContent = message;
+    modal.classList.remove('hidden');
+  }
+
+  // Function to close error modal
+  function closeErrorModal() {
+    const modal = document.getElementById('errorModal');
+    modal.classList.add('hidden');
+  }
+
+  // Purchase Order Calculation Script
+  document.addEventListener('DOMContentLoaded', function() {
+    // Set current date
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const currentDate = new Date().toLocaleDateString('en-US', options);
+    const currentDateElement = document.getElementById('currentDate');
+    if (currentDateElement) {
+      currentDateElement.textContent = currentDate;
+    }
+    
+    // Initialize the purchase order form
+    initPurchaseOrderForm();
+  });
+
+  // Calculate total amount from items
+  function calculateTotalAmount(items) {
+    if (!Array.isArray(items) || items.length === 0) {
+      return 0;
+    }
+    return items.reduce((sum, item) => {
+      const itemCost = parseFloat(item.total_cost) || 0;
+      return sum + itemCost;
+    }, 0);
+  }
+
+  // Calculate total amount from form rows
+  function calculateTotalAmountFromForm() {
+    let total = 0;
+    const rows = document.querySelectorAll('#purchaseOrderForm tbody tr');
+    rows.forEach(row => {
+      const totalCell = row.cells[5];
+      if (totalCell) {
+        total += parseFloat(totalCell.textContent.replace(/,/g, '')) || 0;
+      }
+    });
+    return total;
+  }
+
+  // Format currency with 2 decimal places
+  function formatCurrency(amount) {
+    return parseFloat(amount).toLocaleString('en-US', { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    });
+  }
+
+  // Calculate total cost for a single item
+  function calculateItemTotal(quantity, unitCost) {
+    const qty = parseFloat(quantity) || 0;
+    const cost = parseFloat(unitCost) || 0;
+    return qty * cost;
+  }
+
+  // Convert number to words for Philippine Peso
+  function numberToWords(num) {
+    if (num === 0) return "Zero pesos only";
+    
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
+      'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 
+      'Seventeen', 'Eighteen', 'Nineteen'];
+    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    
+    function convertLessThanThousand(num) {
+      if (num === 0) return '';
+      if (num < 20) return ones[num];
+      if (num < 100) return tens[Math.floor(num / 10)] + (num % 10 ? ' ' + ones[num % 10] : '');
+      return ones[Math.floor(num / 100)] + ' Hundred' + (num % 100 ? ' ' + convertLessThanThousand(num % 100) : '');
+    }
+    
+    const parts = num.toFixed(2).split('.');
+    const wholePart = parseInt(parts[0]);
+    const decimalPart = parseInt(parts[1]);
+    
+    let result = '';
+    
+    if (wholePart > 0) {
+      const billions = Math.floor(wholePart / 1000000000);
+      const millions = Math.floor((wholePart % 1000000000) / 1000000);
+      const thousands = Math.floor((wholePart % 1000000) / 1000);
+      const remainder = wholePart % 1000;
+      
+      if (billions) result += convertLessThanThousand(billions) + ' Billion ';
+      if (millions) result += convertLessThanThousand(millions) + ' Million ';
+      if (thousands) result += convertLessThanThousand(thousands) + ' Thousand ';
+      if (remainder) result += convertLessThanThousand(remainder);
+      
+      result += ' Pesos';
+    }
+    
+    if (decimalPart > 0) {
+      result += ' and ' + convertLessThanThousand(decimalPart) + ' Centavos';
+    }
+    
+    return result + ' only';
+  }
+
+  // Update calculations when form data changes
+  function updateCalculations() {
+    const rows = document.querySelectorAll('#purchaseOrderForm tbody tr');
+    const items = [];
+    
+    rows.forEach(row => {
+      const quantityCell = row.cells[3];
+      const unitCostCell = row.cells[4];
+      const totalCostCell = row.cells[5];
+      
+      if (quantityCell && unitCostCell && totalCostCell) {
+        const quantity = parseFloat(quantityCell.textContent) || 0;
+        const unitCost = parseFloat(unitCostCell.textContent) || 0;
+        const totalCost = calculateItemTotal(quantity, unitCost);
+        totalCostCell.textContent = formatCurrency(totalCost);
+        
+        items.push({
+          quantity: quantity,
+          unit_cost: unitCost,
+          total_cost: totalCost
+        });
+      }
+    });
+    
+    const totalAmount = calculateTotalAmount(items);
+    const totalAmountElement = document.querySelector('.text-xl.font-bold.text-primary-700');
+    if (totalAmountElement) {
+      totalAmountElement.textContent = formatCurrency(totalAmount);
+    }
+    
+    const amountInWordsElement = document.querySelector('.text-xs.text-primary-600.mt-1');
+    if (amountInWordsElement) {
+      amountInWordsElement.textContent = 'In Words: ' + numberToWords(totalAmount);
+    }
+    
+    document.getElementById('totalAmountValue').value = totalAmount;
+    document.getElementById('totalAmountInWords').value = numberToWords(totalAmount);
+  }
+
+  // Initialize and bind events
+  function initPurchaseOrderForm() {
+    const form = document.getElementById('purchaseOrderForm');
+    if (!form) return;
+    
+    if (!document.getElementById('totalAmountValue')) {
+      const totalAmountInput = document.createElement('input');
+      totalAmountInput.type = 'hidden';
+      totalAmountInput.id = 'totalAmountValue';
+      totalAmountInput.name = 'totalAmount';
+      form.appendChild(totalAmountInput);
+    }
+    
+    if (!document.getElementById('totalAmountInWords')) {
+      const totalAmountInWordsInput = document.createElement('input');
+      totalAmountInWordsInput.type = 'hidden';
+      totalAmountInWordsInput.id = 'totalAmountInWords';
+      totalAmountInWordsInput.name = 'totalAmountInWords';
+      form.appendChild(totalAmountInWordsInput);
+    }
+    
+    updateCalculations();
+    
+    const editableCells = form.querySelectorAll('tbody td[contenteditable="true"]');
+    if (editableCells.length > 0) {
+      editableCells.forEach(cell => {
+        cell.addEventListener('input', updateCalculations);
+        cell.addEventListener('blur', updateCalculations);
+      });
+    }
+    
+    const inputFields = form.querySelectorAll('input[type="number"], input[type="text"].numeric');
+    if (inputFields.length > 0) {
+      inputFields.forEach(field => {
+        field.addEventListener('input', updateCalculations);
+        field.addEventListener('change', updateCalculations);
+      });
+    }
+  }
+
+  // Save Purchase Order
+function savePurchaseOrder(event) {
+  event.preventDefault();
+  const form = document.getElementById('purchaseOrderForm');
+  const submitButton = form.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Saving...';
+  
+  try {
+    // Ensure stock numbers are up to date before saving
+    generateStockPropertyNumbers();
+    
+    const items = Array.from(document.querySelectorAll('#purchaseOrderForm tbody tr')).map((row, index) => {
+      const itemIdInput = row.querySelector('input[name="item_id"]');
+      const stockPropertyNoInput = row.querySelector('input[name="stock_property_no"]');
+      if (!itemIdInput) return null;
+      
+      const quantity = parseFloat(row.cells[3]?.textContent.trim().replace(/,/g, '')) || 0;
+      const unitCost = parseFloat(row.cells[4]?.textContent.trim().replace(/,/g, '')) || 0;
+      const totalCost = calculateItemTotal(quantity, unitCost);
+      
+      return {
+        item_id: itemIdInput.value,
+        stock_property_no: stockPropertyNoInput ? stockPropertyNoInput.value : (index + 1).toString(),
+        unit: row.cells[1]?.textContent.trim(),
+        item_description: row.cells[2]?.textContent.trim(),
+        quantity: quantity,
+        unit_cost: unitCost,
+        total_cost: totalCost,
+        supplier_name: row.cells[6]?.textContent.trim(),
+      };
+    }).filter(item => item !== null);
+
+    // Safely get form values with null checks
+    const formData = {
+      pr_id: form.querySelector('input[name="pr_id"]')?.value || '',
+      po_id: form.querySelector('input[name="po_id"]')?.value || null, // Allow null for new POs
+      company_name: form.querySelector('input[name="company_name"]')?.value || '',
+      address: form.querySelector('input[name="address"]')?.value || '',
+      tin: form.querySelector('input[name="tin"]')?.value || '',
+      date_issued: form.querySelector('input[name="date_issued"]')?.value || '',
+      mode_of_procurement: form.querySelector('input[name="mode_of_procurement"]')?.value || '',
+      place_of_delivery: form.querySelector('input[name="place_of_delivery"]')?.value || '',
+      date_of_delivery: form.querySelector('input[name="date_of_delivery"]')?.value || '',
+      delivery_term: form.querySelector('input[name="delivery_term"]')?.value || '',
+      payment_term: form.querySelector('input[name="payment_term"]')?.value || '',
+      resolution_no: form.querySelector('input[name="resolution_no"]')?.value || '',
+      secretary: form.querySelector('input[name="secretary"]')?.value || '',
+      items: items,
+      totalAmount: parseFloat(document.getElementById('totalAmountValue')?.value) || 0,
+      totalAmountInWords: document.getElementById('totalAmountInWords')?.value || ''
+    };
+
+    console.log('Sending purchase order data:', formData);
+
+    fetch('/save-purchase-order', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(formData),
+    })
+    .then(async (response) => {
+      const text = await response.text();
+      console.log('Raw response:', text);
+      
+      try {
+        const data = JSON.parse(text);
+        return data;
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', parseError);
+        throw new Error('Server returned invalid JSON: ' + text.substring(0, 100));
+      }
+    })
+    .then(result => {
+      if (result.success) {
+        alert('Purchase order saved successfully!');
+        if (result.po_id) {
+          // Update the form with the new PO ID
+          const poIdInput = form.querySelector('input[name="po_id"]');
+          const poIdDisplayInput = form.querySelector('input[name="po_id_display"]');
+          const statusElement = document.querySelector('.text-sm.bg-blue-50');
+          
+          if (poIdInput) poIdInput.value = result.po_id;
+          if (poIdDisplayInput) poIdDisplayInput.value = result.po_id;
+          if (statusElement) {
+            statusElement.innerHTML = '<i class="fas fa-clock mr-1"></i> P.O. No: ' + result.po_id;
+          }
+        }
+      } else {
+        throw new Error(result.message || 'Failed to save purchase order');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Error saving purchase order: ' + error.message);
+    })
+    .finally(() => {
+      submitButton.disabled = false;
+      submitButton.innerHTML = '<i class="fas fa-save mr-2"></i> Save Purchase Order';
+    });
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Error saving purchase order: ' + error.message);
+    submitButton.disabled = false;
+    submitButton.innerHTML = '<i class="fas fa-save mr-2"></i> Save Purchase Order';
+  }
+}
+
+function printDocument() {
+  // Ensure stock numbers are up to date before printing
+  if (typeof generateStockPropertyNumbers === 'function') {
+    generateStockPropertyNumbers();
+  }
+  
+  // Dynamically update print section with current form data
+  const form = document.getElementById('purchaseOrderForm');
+
+  // Map of print IDs to form input names
+  const fieldMap = {
+    'supplier': 'company_name',
+    'address': 'address',
+    'tin': 'tin',
+    'po-no': 'po_id_display',
+    'date': 'date_issued',
+    'mode': 'mode_of_procurement',
+    'pr-no': 'pr_id_display',
+    'place-delivery': 'place_of_delivery',
+    'date-delivery': 'date_of_delivery', // varchar field
+    'delivery-term': 'delivery_term',
+    'payment-term': 'payment_term',
+    'resolution': 'resolution_no',
+    'secretary': 'secretary'
+  };
+
+  Object.entries(fieldMap).forEach(([printId, formName]) => {
+    const printEl = document.getElementById(`print-${printId}`);
+    if (printEl) {
+      const value = form.querySelector(`input[name="${formName}"]`)?.value || '';
+      printEl.textContent = value;
+    }
+  });
+
+  // Update item stock/property no and amounts from form
+  const formRows = document.querySelectorAll('#purchaseOrderForm tbody tr');
+  formRows.forEach((row, index) => {
+    const printRow = document.querySelector(`#print-items-table tr[data-item-index="${index}"]`);
+    if (printRow) {
+      const stockInput = row.querySelector('input[name="stock_property_no"]');
+      if (stockInput) {
+        document.getElementById(`print-stock-${index}`).textContent = stockInput.value || (index + 1);
+      } else {
+        document.getElementById(`print-stock-${index}`).textContent = index + 1;
+      }
+      const totalCell = row.cells[5];
+      if (totalCell) {
+        document.getElementById(`print-amount-${index}`).textContent = totalCell.textContent;
+      }
+    }
+  });
+
+  // Update total amount in words
+  const totalAmount = calculateTotalAmountFromForm();
+  const totalWordsEl = document.getElementById('print-total-words');
+  if (totalWordsEl) {
+    totalWordsEl.textContent = `(Total Amount in Words) ${numberToWords(totalAmount)}`;
+  }
+
+  const printSection = document.getElementById('printSection');
+  printSection.classList.remove('hidden');
+  
+  const printStyle = document.createElement('style');
+  printStyle.innerHTML = `
+    @page {
+      size: A4;
+      margin: 5mm;
+    }
+    body {
+      background-color: white !important;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      font-family: 'Inter', sans-serif;
+    }
+    #printSection {
+      position: relative;
+      left: 0;
+      top: 0;
+      width: 100%;
+      margin: 0 !important;
+      padding: 5mm;
+      background-color: white;
+      font-size: 9pt;
+      line-height: 1.2;
+    }
+    body > *:not(#printSection) {
+      display: none !important;
+      visibility: hidden !important;
+    }
+    .no-print, 
+    .lg\\:ml-64, 
+    .sidebar, 
+    [class*="sidebar"], 
+    [id*="sidebar"],
+    nav,
+    button,
+    #purchaseOrderForm,
+    .main-content > *:not(#printSection) {
+      display: none !important;
+      visibility: hidden !important;
+      width: 0 !important;
+      height: 0 !important;
+      position: absolute !important;
+      overflow: hidden !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      page-break-inside: auto;
+    }
+    tr {
+      page-break-inside: avoid;
+      page-break-after: auto;
+    }
+    .print-header {
+      font-size: 14pt !important;
+      line-height: 1.2;
+    }
+    .print-subheader {
+      font-size: 12pt !important;
+      line-height: 1.2;
+    }
+    .grid {
+      row-gap: 0.25rem;
+    }
+    p {
+      margin: 0.25rem 0;
+    }
+  `;
+  document.head.appendChild(printStyle);
+  
+  window.print();
+  
+  setTimeout(() => {
+    printSection.classList.add('hidden');
+    if (printStyle && printStyle.parentNode) {
+      document.head.removeChild(printStyle);
+    }
+  }, 500);
+}
+
+  // Simple function to regenerate stock property numbers
+function generateStockPropertyNumbers() {
+  const rows = document.querySelectorAll('#purchaseOrderForm tbody tr');
+  rows.forEach((row, index) => {
+    const stockInput = row.querySelector('input[name="stock_property_no"]');
+    if (stockInput) {
+      stockInput.value = index + 1;
+    }
+  });
+}
+
+// Call this whenever you add/remove rows or need to refresh numbers
+generateStockPropertyNumbers();
+</script>

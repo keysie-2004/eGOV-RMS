@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Hareneth</title>
+  <link href="/src/table.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <!-- Add DataTables CSS -->
+  <link href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" rel="stylesheet"/>
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png"/>
+</head>
+
+<body class="bg-blue-50 font-sans">
+  <!-- Include Sidebar -->
+  <%- include('partials/sidebar') %>
+
+  <!-- Include Modals -->
+  <%- include('partials/modal') %>
+
+  <!-- Main Content -->
+  <div class="lg:ml-64 p-7 lg:p-10">
+    <div class="w-full">
+      <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
+        <h2 class="text-2xl font-bold text-blue-700 mb-6">User List</h2>
+
+        <!-- Employee Table -->
+        <div class="overflow-x-auto">
+          <table id="employeeTable" class="min-w-full bg-white border border-gray-300">
+            <thead>
+              <tr class="bg-blue-100 text-gray-600">
+                <th class="py-3 px-4 border-b">ID</th>
+                <th class="py-3 px-4 border-b">Employee Name</th>
+                <th class="py-3 px-4 border-b">Email</th>
+                <th class="py-3 px-4 border-b">User Type</th>
+                <th class="py-3 px-4 border-b">Department</th>
+                <th class="py-3 px-4 border-b">Created At</th>
+                <th class="py-3 px-4 border-b">Status</th>
+                <th class="py-3 px-4 border-b">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- DataTables will populate this -->
+            </tbody>
+          </table>
+        </div>
+      </div>      
+    </div>
+  </div>
+
+  <!-- Add jQuery and DataTables JS -->
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+  $(document).ready(function () {
+    // Initialize DataTable
+    const table = $('#employeeTable').DataTable({
+      processing: true,
+      serverSide: true,
+      ajax: {
+        url: '/search-employees',
+        type: 'GET',
+        data: function (d) {
+          // Add custom parameters for search and filter
+          d.search = $('#search').val();
+          d.userType = $('#filterUserType').val();
+        },
+      },
+      columns: [
+        { data: 'employee_id' },
+        { data: 'employee_name' },
+        { data: 'email' },
+        {
+          data: 'user_type',
+          render: function (data, type, row) {
+            const userTypes = ['superadmin', 'bac', 'budget', 'accounting', 'user', 'mo', 'ics'];
+            return `
+              <select class="user-type w-full p-2 border rounded-lg bg-blue-50" data-id="${row.employee_id}">
+                ${userTypes.map(type => `
+                  <option value="${type}" ${data === type ? 'selected' : ''}>${type}</option>
+                `).join('')}
+              </select>
+            `;
+          },
+        },
+        { data: 'department_name' }, // Changed from department_id to department_name
+        {
+          data: 'created_at',
+          render: function (data) {
+            return new Date(data).toLocaleDateString();
+          },
+        },
+        {
+          data: 'status',
+          render: function (data, type, row) {
+            return `
+              <select class="status w-full p-2 border rounded-lg bg-blue-50" data-id="${row.employee_id}">
+                <option value="0" ${data === 0 ? 'selected' : ''}>Pending</option>
+                <option value="1" ${data === 1 ? 'selected' : ''}>Approved</option>
+                <option value="cancel" ${data === 'cancel' ? 'selected' : ''}>Cancel</option>
+              </select>
+            `;
+          },
+        },
+        {
+          data: null,
+          render: function (data, type, row) {
+            return `
+              <button class="update-btn bg-blue-700 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-blue-800" data-id="${row.employee_id}">
+                Update
+              </button>
+            `;
+          },
+        },
+      ],
+    });
+
+    // Custom search input event
+    $('#search').on('input', function () {
+      table.ajax.reload();
+    });
+
+    // User type filter event
+    $('#filterUserType').on('change', function () {
+      table.ajax.reload();
+    });
+
+    // Handle update button clicks
+    $(document).on('click', '.update-btn', function () {
+      const id = $(this).data('id');
+      const userType = $(`.user-type[data-id="${id}"]`).val();
+      const status = $(`.status[data-id="${id}"]`).val();
+
+      $.ajax({
+        url: `/employees/edit/${id}`,
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ user_type: userType, status: status }),
+        success: function (data) {
+          if (data.success) {
+            showSuccessModal(data.message || 'User updated successfully');
+            table.ajax.reload();
+          } else {
+            showErrorModal(data.message || 'Error updating user');
+          }
+        },
+        error: function (error) {
+          console.error('Error updating user:', error);
+          showErrorModal('An unexpected error occurred while updating user.');
+        },
+      });
+    });
+  });
+</script>
+</body>
+</html>

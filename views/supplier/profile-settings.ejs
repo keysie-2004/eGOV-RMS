@@ -1,0 +1,164 @@
+<!-- views/supplier/profile-settings.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile Settings - Hareneth</title>
+  <link href="/src/table.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png">
+  <style>
+    @media print {
+      body { margin: 0; padding: 0; font-size: 12pt; }
+      .max-w-4xl { width: 100%; max-width: none; }
+      .bg-white { background-color: transparent; }
+      .shadow-md { box-shadow: none; }
+      .p-6 { padding: 0; }
+      .mt-8 { margin-top: 0; }
+      .mb-4 { margin-bottom: 0; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { border: 1px solid #000; padding: 8px; text-align: left; }
+      th { background-color: #f3f4f6; }
+      .no-print { display: none; }
+      .number-cell { text-align: right; font-family: 'Courier New', monospace; }
+      .date-cell { white-space: nowrap; }
+    }
+    .number-cell { text-align: right; font-family: 'Courier New', monospace; }
+    .date-cell { white-space: nowrap; }
+  </style>
+</head>
+<body class="bg-blue-50 font-sans">
+  <!-- Include Sidebar -->
+  <%- include('../partials/supplierSidebar') %>
+
+  <!-- Main Content -->
+  <div class="lg:ml-64 p-4 lg:p-10">
+    <div class="w-full">
+      <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
+        <h1 class="text-2xl font-bold text-blue-700 mb-6">Profile Settings</h1>
+
+        <!-- Profile Update Form -->
+        <div class="mb-8">
+          <h2 class="text-xl font-bold text-blue-700 mb-4">Update Profile</h2>
+          <% if (successMessage) { %>
+            <div class="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <i class="fas fa-check-circle text-green-400"></i>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm text-green-700"><%= successMessage %></p>
+                </div>
+              </div>
+            </div>
+          <% } %>
+          <% if (errorMessage) { %>
+            <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <i class="fas fa-exclamation-circle text-red-400"></i>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm text-red-700"><%= errorMessage %></p>
+                </div>
+              </div>
+            </div>
+          <% } %>
+          <form action="/supplier/profile-settings" method="POST" class="space-y-4">
+            <div>
+              <label for="company_name" class="block text-sm font-medium text-gray-700">Company Name</label>
+              <input type="text" name="company_name" id="company_name" value="<%= supplier.company_name %>" class="block w-full p-3 border rounded-lg bg-blue-50 mt-1 mb-4" required>
+            </div>
+            <div>
+              <label for="contact_person" class="block text-sm font-medium text-gray-700">Contact Person</label>
+              <input type="text" name="contact_person" id="contact_person" value="<%= supplier.contact_person %>" class="block w-full p-3 border rounded-lg bg-blue-50 mt-1 mb-4" required>
+            </div>
+            <div>
+              <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+              <input type="email" name="email" id="email" value="<%= supplier.email %>" class="block w-full p-3 border rounded-lg bg-blue-50 mt-1 mb-4" required>
+            </div>
+            <div>
+              <label for="phone" class="block text-sm font-medium text-gray-700">Phone</label>
+              <input type="text" name="phone" id="phone" value="<%= supplier.phone %>" class="block w-full p-3 border rounded-lg bg-blue-50 mt-1 mb-4" required>
+            </div>
+            <div>
+              <label for="address" class="block text-sm font-medium text-gray-700">Address</label>
+              <textarea name="address" id="address" class="block w-full p-3 border rounded-lg bg-blue-50 mt-1 mb-4" required><%= supplier.address %></textarea>
+            </div>
+            <button type="submit" class="bg-blue-700 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-blue-800">
+              Update Profile
+            </button>
+          </form>
+        </div>
+
+        <!-- Ratings and Comments -->
+        <div class="mt-8">
+          <h2 class="text-xl font-bold text-blue-700 mb-4">Ratings and Comments</h2>
+          <div class="mb-4">
+            <p class="text-sm text-gray-600">Average Rating: <%= typeof supplier.rating === 'number' && !isNaN(supplier.rating) ? supplier.rating.toFixed(2) : 'N/A' %> | Bad Ratings: <%= supplier.bad_rating_count || 0 %></p>
+            <p class="text-sm text-gray-600">Total Ratings: <%= ratings.length %> record(s)</p>
+          </div>
+          <div class="flex space-x-4 mb-4 no-print">
+            <button onclick="printRatings()" class="bg-green-500 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-green-600">
+              <i class="fas fa-print mr-2"></i>Print Ratings
+            </button>
+            <a href="/supplier/profile-settings/ratings-csv" class="bg-yellow-500 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-yellow-600">
+              <i class="fas fa-file-csv mr-2"></i>Export to CSV
+            </a>
+            <a href="/supplier/profile-settings/ratings-pdf" class="bg-red-500 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-red-600">
+              <i class="fas fa-file-pdf mr-2"></i>Export to PDF
+            </a>
+          </div>
+          <% if (ratings && ratings.length > 0) { %>
+            <div class="overflow-x-auto">
+              <table class="min-w-full bg-white border border-gray-300">
+                <thead>
+                  <tr class="bg-blue-100">
+                    <th class="py-2 px-4 border-b text-left">Rating ID</th>
+                    <th class="py-2 px-4 border-b text-left">Bid ID</th>
+                    <th class="py-2 px-4 border-b text-right">Rating</th>
+                    <th class="py-2 px-4 border-b text-left">Comments</th>
+                    <th class="py-2 px-4 border-b text-left">Rated At</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% ratings.forEach(rating => { %>
+                    <tr class="hover:bg-gray-50">
+                      <td class="py-2 px-4 border-b"><%= rating.rating_id %></td>
+                      <td class="py-2 px-4 border-b"><%= rating.bid_id %></td>
+                      <td class="py-2 px-4 border-b number-cell"><%= rating.rating %></td>
+                      <td class="py-2 px-4 border-b"><%= rating.comments || 'N/A' %></td>
+                      <td class="py-2 px-4 border-b date-cell"><%= new Date(rating.rated_at).toLocaleString('en-PH', { dateStyle: 'short', timeStyle: 'short' }) %></td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                </div>
+                <div class="ml-3">
+                  <h3 class="text-sm font-medium text-yellow-800">No ratings found</h3>
+                  <div class="mt-2 text-sm text-yellow-700">
+                    <p>No ratings have been recorded for this supplier.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function printRatings() {
+      window.print();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Hareneth</title>
+  <link href="/src/index.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png"/>
+</head>
+
+<body class="bg-blue-50 font-sans">
+  <div class="flex gap-10">
+    <!-- Include Sidebar -->
+    <%- include('partials/sidebar') %>
+
+    <!-- Main content -->
+    <div class="flex-1 ml-0 lg:ml-64 p-7">
+      <div class="col-start-2 col-span-3 pl-10 pr-10 pb-10">
+        <!-- Error Message -->
+        <% if (typeof errorMessage !== 'undefined') { %>
+          <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-lg" role="alert">
+            <p class="font-bold">Error</p>
+            <p><%= errorMessage %></p>
+          </div>
+        <% } %>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
+          <div class="bg-gradient-to-br from-white to-blue-50 p-5 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300">
+            <div class="flex items-center mb-3">
+              <div class="p-3 bg-blue-100 rounded-full">
+                <i class="fas fa-tasks text-blue-600 text-xl"></i>
+              </div>
+              <span class="ml-3 text-gray-700 font-medium">Pending Requests<% if (!isAdmin) { %> (<%- userDepartment %>)<% } %></span>
+            </div>
+            <div class="text-3xl font-bold text-blue-800">
+              <%= Number(pendingRequests).toLocaleString('en-US') %>
+            </div>
+          </div>
+          <div class="bg-gradient-to-br from-white to-blue-50 p-5 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300">
+            <div class="flex items-center mb-3">
+              <div class="p-3 bg-blue-100 rounded-full">
+                <i class="fas fa-box text-blue-600 text-xl"></i>
+              </div>
+              <span class="ml-3 text-gray-700 font-medium">Property Small (< 5k)<% if (!isAdmin) { %> (<%- userDepartment %>)<% } %></span>
+            </div>
+            <div class="text-3xl font-bold text-blue-800">
+              ₱<%= Number(propertySmall).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+            </div>
+          </div>
+          <div class="bg-gradient-to-br from-white to-blue-50 p-5 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300">
+            <div class="flex items-center mb-3">
+              <div class="p-3 bg-blue-100 rounded-full">
+                <i class="fas fa-wallet text-blue-600 text-xl"></i>
+              </div>
+              <span class="ml-3 text-gray-700 font-medium">ICS (< 50k)<% if (!isAdmin) { %> (<%- userDepartment %>)<% } %></span>
+            </div>
+            <div class="text-3xl font-bold text-blue-800">
+              ₱<%= Number(icsBelow50k).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+            </div>
+          </div>
+          <div class="bg-gradient-to-br from-white to-blue-50 p-5 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300">
+            <div class="flex items-center mb-3">
+              <div class="p-3 bg-blue-100 rounded-full">
+                <i class="fas fa-truck text-blue-600 text-xl"></i>
+              </div>
+              <span class="ml-3 text-gray-700 font-medium">PAR (> 50k)<% if (!isAdmin) { %> (<%- userDepartment %>)<% } %></span>
+            </div>
+            <div class="text-3xl font-bold text-blue-800">
+              ₱<%= Number(parAbove50k).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+            </div>
+          </div>
+          <div class="bg-gradient-to-br from-white to-blue-50 p-5 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300">
+            <div class="flex items-center mb-3">
+              <div class="p-3 bg-blue-100 rounded-full">
+                <i class="fas fa-money-bill text-blue-600 text-xl"></i>
+              </div>
+              <span class="ml-3 text-gray-700 font-medium">Total Spending<% if (!isAdmin) { %> (<%- userDepartment %>)<% } %></span>
+            </div>
+            <div class="text-3xl font-bold text-blue-800">
+              ₱<%= Number(totalSpent).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+            </div>
+          </div>
+          <div class="bg-gradient-to-br from-white to-blue-50 p-5 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300">
+            <div class="flex items-center mb-3">
+              <div class="p-3 bg-blue-100 rounded-full">
+                <i class="fas fa-users text-blue-600 text-xl"></i>
+              </div>
+              <span class="ml-3 text-gray-700 font-medium">Total Employees<% if (!isAdmin) { %> (<%- userDepartment %>)<% } %></span>
+            </div>
+            <div class="text-3xl font-bold text-blue-800">
+              <%= Number(totalEmployees).toLocaleString('en-US') %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Predicted Budget Section -->
+        <div class="bg-white p-6 rounded-xl shadow-sm mb-6 hover:shadow-lg transition-all duration-300">
+          <div class="flex items-center mb-4">
+            <i class="fas fa-chart-pie text-blue-600 text-2xl"></i>
+            <span class="ml-3 text-gray-700 font-medium">
+              Predicted Budget<% if (!isSuperAdmin && userDepartment) { %> for <%- userDepartment %><% } else { %> by Department (Next Year)<% } %>
+            </span>
+          </div>
+          <div class="h-80 mb-6">
+            <canvas id="departmentBudgetChart"></canvas>
+          </div>
+          <% if (isSuperAdmin && predictionsAvailable && filteredDepartments.length > 10) { %>
+            <div class="text-center">
+              <button onclick="openDepartmentModal()" class="text-blue-600 hover:text-blue-800 font-medium bg-blue-100 px-4 py-2 rounded-lg hover:bg-blue-200 transition-colors">
+                View All Departments <i class="fas fa-chevron-down ml-1"></i>
+              </button>
+            </div>
+          <% } %>
+        </div>
+
+        <!-- Department Modal (only for superadmins) -->
+        <% if (isSuperAdmin) { %>
+        <div id="departmentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+          <div class="bg-white rounded-xl shadow-xl w-11/12 md:w-3/4 lg:w-2/3 max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+              <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-blue-700">All Department Budget Predictions</h2>
+                <button onclick="closeDepartmentModal()" class="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100">
+                  <i class="fas fa-times text-xl"></i>
+                </button>
+              </div>
+              <div class="h-96">
+                <canvas id="allDepartmentBudgetChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <% } %>
+
+        <!-- Budget Forecast Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <!-- Yearly Budget Forecast Chart -->
+          <div class="bg-white p-6 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300">
+            <div class="flex items-center mb-4">
+              <i class="fas fa-chart-line text-blue-600 text-2xl"></i>
+              <span class="ml-3 text-gray-700 font-medium">5-Year Budget Forecast<% if (!isAdmin) { %> (<%- userDepartment %>)<% } %></span>
+            </div>
+            <div class="h-64">
+              <canvas id="yearlyForecastChart"></canvas>
+            </div>
+            <div class="mt-4 text-sm text-gray-500">
+              <i class="fas fa-info-circle mr-1"></i>
+              Projected budget needs based on historical spending patterns
+            </div>
+            <% if (formattedYearlyData.data.every(val => val === 0)) { %>
+              <div class="text-center text-gray-500 mt-2">No historical data available for forecast</div>
+            <% } %>
+          </div>
+          
+          <!-- Department Budget Distribution Pie Chart -->
+          <div class="bg-white p-6 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300">
+            <div class="flex items-center mb-4">
+              <i class="fas fa-chart-pie text-blue-600 text-2xl"></i>
+              <span class="ml-3 text-gray-700 font-medium">Department Budget Distribution<% if (!isAdmin) { %> (<%- userDepartment %>)<% } %></span>
+            </div>
+            <div class="h-64">
+              <canvas id="departmentDistributionChart"></canvas>
+            </div>
+            <div class="mt-4 text-sm text-gray-500">
+              <i class="fas fa-info-circle mr-1"></i>
+              Percentage allocation<% if (!isAdmin) { %> for <%- userDepartment %><% } else { %> across major departments<% } %>
+            </div>
+            <% if (formattedDistributionData.data.every(val => val === 0)) { %>
+              <div class="text-center text-gray-500 mt-2">No data available for distribution</div>
+            <% } %>
+          </div>
+        </div>
+
+        <!-- Monthly Spending Trend -->
+        <div class="bg-white p-6 rounded-xl shadow-sm mb-6 hover:shadow-lg transition-all duration-300">
+          <div class="flex items-center mb-4">
+            <i class="fas fa-calendar-alt text-blue-600 text-2xl"></i>
+            <span class="ml-3 text-gray-700 font-medium">Monthly Spending Trend (Current Year)<% if (!isAdmin) { %> (<%- userDepartment %>)<% } %></span>
+          </div>
+          <div class="h-80">
+            <canvas id="monthlyTrendChart"></canvas>
+          </div>
+          <% if (formattedMonthlyData.icsData.every(val => val === 0) && formattedMonthlyData.parData.every(val => val === 0)) { %>
+            <div class="text-center text-gray-500 mt-2">No spending data available for this year</div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Department Modal Functions
+    function openDepartmentModal() {
+      document.getElementById('departmentModal')?.classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+    }
+
+    function closeDepartmentModal() {
+      document.getElementById('departmentModal')?.classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+    }
+
+    document.getElementById('departmentModal')?.addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeDepartmentModal();
+      }
+    });
+
+    // Dynamic data from server
+    const departmentPredictions = <%- JSON.stringify(departmentPredictions || {}) %>;
+    const formattedYearlyData = <%- JSON.stringify(formattedYearlyData || { labels: [], data: [] }) %>;
+    const formattedDistributionData = <%- JSON.stringify(formattedDistributionData || { labels: [], data: [], percentages: [] }) %>;
+    const formattedMonthlyData = <%- JSON.stringify(formattedMonthlyData || { labels: [], icsData: [], parData: [] }) %>;
+    const isSuperAdmin = <%- isSuperAdmin ? 'true' : 'false' %>;
+    const isAdmin = <%- isAdmin ? 'true' : 'false' %>;
+    const userDepartment = <%- JSON.stringify(userDepartment || '') %>;
+
+    // Filter and sort departments
+    const filteredDepartments = Object.entries(departmentPredictions)
+      .filter(([dept, amount]) => amount > 0)
+      .sort((a, b) => b[1] - a[1]);
+    const topDepartments = isSuperAdmin ? filteredDepartments.slice(0, 10) : filteredDepartments.slice(0, 1);
+
+    // Department Budget Chart
+    const departmentBudgetCtx = document.getElementById('departmentBudgetChart').getContext('2d');
+    new Chart(departmentBudgetCtx, {
+      type: 'bar',
+      data: {
+        labels: topDepartments.map(([dept]) => dept),
+        datasets: [{
+          label: 'Predicted Budget (₱)',
+          data: topDepartments.map(([_, amount]) => amount / 1000000),
+          backgroundColor: 'rgba(79, 70, 229, 0.6)',
+          borderColor: '#4F46E5',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return '₱' + (context.raw * 1000000).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45,
+              font: { size: 12 }
+            }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                return '₱' + value + 'M';
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // All Department Budget Chart (Modal)
+    <% if (isSuperAdmin) { %>
+    const allDepartmentBudgetCtx = document.getElementById('allDepartmentBudgetChart').getContext('2d');
+    new Chart(allDepartmentBudgetCtx, {
+      type: 'bar',
+      data: {
+        labels: filteredDepartments.map(([dept]) => dept),
+        datasets: [{
+          label: 'Predicted Budget (₱)',
+          data: filteredDepartments.map(([_, amount]) => amount / 1000000),
+          backgroundColor: 'rgba(79, 70, 229, 0.6)',
+          borderColor: '#4F46E5',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return '₱' + (context.raw * 1000000).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45,
+              font: { size: 12 }
+            }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                return '₱' + value + 'M';
+              }
+            }
+          }
+        }
+      }
+    });
+    <% } %>
+
+    // Yearly Forecast Chart
+    const yearlyForecastCtx = document.getElementById('yearlyForecastChart').getContext('2d');
+    new Chart(yearlyForecastCtx, {
+      type: 'line',
+      data: {
+        labels: formattedYearlyData.labels,
+        datasets: [{
+          label: 'Budget Forecast (in millions)',
+          data: formattedYearlyData.data,
+          borderColor: '#4F46E5',
+          backgroundColor: 'rgba(79, 70, 229, 0.1)',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return '₱' + context.raw.toFixed(2) + 'M';
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: false,
+            ticks: {
+              callback: function(value) {
+                return '₱' + value.toFixed(2) + 'M';
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Department Distribution Pie Chart
+    const departmentDistributionCtx = document.getElementById('departmentDistributionChart').getContext('2d');
+    new Chart(departmentDistributionCtx, {
+      type: 'doughnut',
+      data: {
+        labels: formattedDistributionData.labels,
+        datasets: [{
+          data: formattedDistributionData.data,
+          backgroundColor: isAdmin ? [
+            '#4F46E5',
+            '#10B981',
+            '#F59E0B',
+            '#EF4444',
+            '#6B7280'
+          ] : ['#4F46E5'],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: { font: { size: 14 } }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const value = context.raw;
+                const percentage = formattedDistributionData.percentages[context.dataIndex];
+                return `${context.label}: ₱${(value * 1000000).toLocaleString('en-US', { minimumFractionDigits: 2 })} (${percentage}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Monthly Trend Chart
+    const monthlyTrendCtx = document.getElementById('monthlyTrendChart').getContext('2d');
+    new Chart(monthlyTrendCtx, {
+      type: 'bar',
+      data: {
+        labels: formattedMonthlyData.labels,
+        datasets: [
+          {
+            label: 'ICS Spending',
+            data: formattedMonthlyData.icsData,
+            backgroundColor: 'rgba(79, 70, 229, 0.6)',
+            borderColor: '#4F46E5',
+            borderWidth: 1
+          },
+          {
+            label: 'PAR Spending',
+            data: formattedMonthlyData.parData,
+            backgroundColor: 'rgba(16, 185, 129, 0.6)',
+            borderColor: '#10B981',
+            borderWidth: 1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            stacked: true,
+            ticks: { font: { size: 12 } }
+          },
+          y: {
+            stacked: true,
+            ticks: {
+              callback: function(value) {
+                return '₱' + value.toFixed(2) + 'M';
+              },
+              font: { size: 12 }
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: { font: { size: 14 } }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

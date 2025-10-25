@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Received Bids</title>
+  <link href="/src/table.css" rel="stylesheet"/>
+</head>
+
+<body class="bg-blue-50 font-sans">
+  <!-- Include Sidebar -->
+  <%- include('../partials/sidebar') %>
+
+  <!-- Main Content -->
+  <div class="lg:ml-64 p-7 lg:p-10">
+    <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
+      <h2 class="text-2xl font-bold text-blue-700 mb-6">Received Bids for Approved Biddings</h2>
+
+      <% if (bids.length === 0) { %>
+        <div class="bg-blue-100 text-blue-700 p-4 rounded-lg">
+          No bids received for approved biddings.
+        </div>
+      <% } else { %>
+        <div class="overflow-x-auto">
+          <table class="w-full border-collapse">
+            <thead>
+              <tr class="bg-blue-700 text-white">
+                <th class="p-3 text-left">Bid ID</th>
+                <th class="p-3 text-left">Bidding ID</th>
+                <th class="p-3 text-left">Supplier</th>
+                <th class="p-3 text-left">Submitted At</th>
+                <th class="p-3 text-left">Status</th>
+                <th class="p-3 text-left">Total Amount</th>
+                <th class="p-3 text-left">Notes</th>
+                <th class="p-3 text-left">Received By</th>
+                <th class="p-3 text-left">Rating</th>
+                <th class="p-3 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% bids.forEach(bid => { %>
+                <tr class="border-b">
+                  <td class="p-3"><%= bid.bid_id %></td>
+                  <td class="p-3"><%= bid.bidding_id %></td>
+                  <td class="p-3"><%= bid.company_name %> (<%= bid.contact_person %>)</td>
+                  <td class="p-3"><%= helpers.formatDate(bid.submitted_at) %></td>
+                  <td class="p-3">
+                    <span class="inline-block px-2 py-1 rounded-full text-sm <%= bid.status.toLowerCase() === 'pending' ? 'bg-yellow-100 text-yellow-700' : bid.status.toLowerCase() === 'approved' ? 'bg-green-100 text-green-700' : bid.status.toLowerCase() === 'received' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700' %>">
+                      <%= bid.status.charAt(0).toUpperCase() + bid.status.slice(1) %>
+                    </span>
+                  </td>
+                  <td class="p-3"><%= helpers.formatCurrency(bid.total_amount) %></td>
+                  <td class="p-3"><%= bid.notes || 'N/A' %></td>
+                  <td class="p-3"><%= bid.received_by_name || 'N/A' %></td>
+                  <td class="p-3">
+                    <% if (bid.is_rated) { %>
+                      <div class="rating-stars">
+                        <% for(let i = 1; i <= 5; i++) { %>
+                          <% if (i <= Math.round(bid.rating)) { %>
+                            <i class="fas fa-star"></i>
+                          <% } else { %>
+                            <i class="far fa-star"></i>
+                          <% } %>
+                        <% } %>
+                        <span class="ml-2 text-sm text-gray-600">
+                          (<%= bid.rating_count %> <%= bid.rating_count === 1 ? 'review' : 'reviews' %>)
+                        </span>
+                      </div>
+                    <% } else { %>
+                      <span class="text-gray-500">Not Rated</span>
+                    <% } %>
+                  </td>
+                  <td class="p-3 flex space-x-2">
+                    <!-- View Items button - always show -->
+                    <button class="view-items bg-blue-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-blue-700" 
+                            data-bid-id="<%= bid.bid_id %>" 
+                            data-supplier-name="<%= bid.company_name %>">
+                      View Items
+                    </button>
+                    
+                    <!-- Mark as Received if approved and not received -->
+                    <% if (bid.status === 'approved' && !bid.received_at) { %>
+                      <button class="mark-received bg-green-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-green-700" 
+                              data-bid-id="<%= bid.bid_id %>" 
+                              data-supplier-name="<%= bid.company_name %>">
+                        Mark as Received
+                      </button>
+                    <% } %>
+                    
+                    <!-- Rate Supplier if received but not rated -->
+                    <% if (bid.status === 'approved' && bid.received_at && !bid.is_rated) { %>
+                      <button class="rate-supplier bg-yellow-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-yellow-700" 
+                              data-bid-id="<%= bid.bid_id %>" 
+                              data-supplier-name="<%= bid.company_name %>">
+                        Rate Supplier
+                      </button>
+                    <% } %>
+                    
+                    <!-- Completed state -->
+                    <% if (bid.status === 'approved' && bid.received_at && bid.is_rated) { %>
+                      <span class="text-green-600 px-4 py-2 font-semibold">Completed</span>
+                    <% } %>
+                  </td>
+                </tr>
+                <!-- Bid Items Details -->
+                <tr>
+                  <td colspan="10" class="p-3">
+                    <div class="hidden" id="bidItems<%= bid.bid_id %>">
+                      <h6 class="text-gray-600 font-semibold">Items in Bid:</h6>
+                      <ul class="list-disc pl-5">
+                        <% 
+                          let items = [];
+                          try {
+                            items = bid.items ? (typeof bid.items === 'string' ? JSON.parse(bid.items) : bid.items) : [];
+                          } catch (e) {
+                            console.error('Error parsing bid.items:', e);
+                          }
+                          items.forEach(item => { %>
+                            <li>
+                              Item <%= item.description || 'N/A' %>: 
+                              <%= helpers.formatCurrency(item.unit_price) %> x <%= item.quantity || 0 %> = 
+                              <%= helpers.formatCurrency(item.total_price) %>
+                            </li>
+                        <% }) %>
+                      </ul>
+                    </div>
+                    <a href="#bidItems<%= bid.bid_id %>" 
+                       class="text-blue-700 hover:underline text-sm" 
+                       data-toggle="collapse">
+                      Toggle Items
+                    </a>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+
+      <!-- Receive Items Modal -->
+      <div class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden" id="receiveItemsModal">
+        <div class="bg-white rounded-lg shadow-sm w-full max-w-2xl p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h5 class="text-xl font-bold text-blue-700">Verify Received Items</h5>
+            <button class="text-gray-600 hover:text-gray-800 close-receive-modal">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <form id="receiveItemsForm">
+            <input type="hidden" id="receiveBidId">
+            <div class="mb-4">
+              <table class="w-full border-collapse">
+                <thead>
+                  <tr class="bg-blue-100">
+                    <th class="p-2 text-left">Item</th>
+                    <th class="p-2 text-left">Quantity</th>
+                    <th class="p-2 text-left">Unit Price</th>
+                    <th class="p-2 text-left">Total</th>
+                    <th class="p-2 text-left">
+                      <input type="checkbox" id="selectAllItems" class="form-checkbox">
+                      <label for="selectAllItems">Select All</label>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody id="itemsList">
+                  <!-- Items will be populated here -->
+                </tbody>
+              </table>
+            </div>
+            <div class="flex justify-end">
+              <button type="submit" class="bg-blue-700 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-blue-800" id="confirmReceiptButton" disabled>
+                Confirm Receipt
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Rating Modal -->
+      <div class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden" id="rateSupplierModal">
+        <div class="bg-white rounded-lg shadow-sm w-full max-w-md p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h5 class="text-xl font-bold text-blue-700">Rate Supplier</h5>
+            <button class="text-gray-600 hover:text-gray-800 close-modal">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <form id="rateSupplierForm">
+            <input type="hidden" id="rateBidId">
+            <div class="mb-4">
+              <label class="block text-gray-600 mb-2">Supplier</label>
+              <input type="text" id="supplierName" class="w-full p-3 border rounded-lg bg-blue-50" readonly>
+            </div>
+            <div class="mb-4">
+              <label class="block text-gray-600 mb-2">Rating</label>
+              <div class="flex items-center">
+                <input type="radio" id="star1" name="rating" value="1" class="hidden" required>
+                <label for="star1" class="text-2xl cursor-pointer star-rating" data-rating="1">
+                  <i class="far fa-star text-yellow-400"></i>
+                </label>
+                <input type="radio" id="star2" name="rating" value="2" class="hidden">
+                <label for="star2" class="text-2xl cursor-pointer star-rating" data-rating="2">
+                  <i class="far fa-star text-yellow-400"></i>
+                </label>
+                <input type="radio" id="star3" name="rating" value="3" class="hidden">
+                <label for="star3" class="text-2xl cursor-pointer star-rating" data-rating="3">
+                  <i class="far fa-star text-yellow-400"></i>
+                </label>
+                <input type="radio" id="star4" name="rating" value="4" class="hidden">
+                <label for="star4" class="text-2xl cursor-pointer star-rating" data-rating="4">
+                  <i class="far fa-star text-yellow-400"></i>
+                </label>
+                <input type="radio" id="star5" name="rating" value="5" class="hidden">
+                <label for="star5" class="text-2xl cursor-pointer star-rating" data-rating="5">
+                  <i class="far fa-star text-yellow-400"></i>
+                </label>
+              </div>
+            </div>
+            <div class="mb-4">
+              <label for="comment" class="block text-gray-600 mb-2">Comments (Optional)</label>
+              <textarea id="comment" rows="4" class="w-full p-3 border rounded-lg bg-blue-50"></textarea>
+            </div>
+            <div class="flex justify-end">
+              <button type="submit" class="bg-blue-700 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-blue-800">
+                Submit Rating
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Helper functions for modals
+    function showSuccessModal(message) {
+      alert('Success: ' + message);
+    }
+
+    function showErrorModal(message) {
+      alert('Error: ' + message);
+    }
+
+    // Helper object for formatting
+    const helpers = {
+      formatCurrency: function(amount) {
+        return new Intl.NumberFormat('en-PH', {
+          style: 'currency',
+          currency: 'PHP'
+        }).format(amount || 0);
+      },
+      formatDate: function(dateString) {
+        return dateString ? new Date(dateString).toLocaleString('en-PH', {
+          dateStyle: 'medium',
+          timeStyle: 'short'
+        }) : 'N/A';
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Toggle Items
+      document.querySelectorAll('[data-toggle="collapse"]').forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const target = document.querySelector(link.getAttribute('href'));
+          target.classList.toggle('hidden');
+        });
+      });
+
+      // View Items Button - Fixed to handle both view-only and mark-received scenarios
+      document.querySelectorAll('.view-items').forEach(button => {
+        button.addEventListener('click', async () => {
+          const bidId = button.dataset.bidId;
+          const supplierName = button.dataset.supplierName;
+          
+          console.log('View Items clicked for bidId:', bidId);
+          document.getElementById('receiveBidId').value = bidId;
+
+          // Show loading state
+          const itemsList = document.getElementById('itemsList');
+          itemsList.innerHTML = '<tr><td colspan="5" class="p-2 text-center">Loading items...</td></tr>';
+          document.getElementById('receiveItemsModal').classList.remove('hidden');
+
+          try {
+            const response = await fetch(`/admin/bids/${bidId}/items`);
+            console.log('Response status:', response.status);
+            
+            if (!response.ok) {
+              const errorText = await response.text();
+              console.error('Error response:', errorText);
+              throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+              const text = await response.text();
+              console.error('Non-JSON response:', text);
+              throw new Error('Received non-JSON response from server');
+            }
+
+            const data = await response.json();
+            console.log('Fetched data:', data);
+
+            // Check if data.items exists and is an array
+            const items = Array.isArray(data.items) ? data.items : [];
+
+            if (items.length === 0) {
+              itemsList.innerHTML = '<tr><td colspan="5" class="p-2 text-center text-gray-600">No items found for this bid.</td></tr>';
+            } else {
+              itemsList.innerHTML = items.map(item => `
+                <tr class="border-b">
+                  <td class="p-2">${item.item_description || 'Item ID: ' + item.item_id}</td>
+                  <td class="p-2">${item.quantity || 0} ${item.unit || ''}</td>
+                  <td class="p-2">${helpers.formatCurrency(item.unit_price || 0)}</td>
+                  <td class="p-2">${helpers.formatCurrency(item.total_price || 0)}</td>
+                </tr>
+              `).join('');
+            }
+
+            // Hide confirm button for view-only mode
+            document.getElementById('confirmReceiptButton').style.display = 'none';
+            document.getElementById('selectAllItems').style.display = 'none';
+            document.querySelector('label[for="selectAllItems"]').style.display = 'none';
+
+          } catch (error) {
+            console.error('Fetch error:', error);
+            itemsList.innerHTML = '<tr><td colspan="5" class="p-2 text-center text-red-600">Failed to load items: ' + error.message + '</td></tr>';
+          }
+        });
+      });
+
+      // Mark as Received Button
+      document.querySelectorAll('.mark-received').forEach(button => {
+        button.addEventListener('click', async () => {
+          const bidId = button.dataset.bidId;
+          const supplierName = button.dataset.supplierName;
+          
+          console.log('Mark as Received clicked for bidId:', bidId);
+          document.getElementById('receiveBidId').value = bidId;
+
+          // Show loading state
+          const itemsList = document.getElementById('itemsList');
+          itemsList.innerHTML = '<tr><td colspan="5" class="p-2 text-center">Loading items...</td></tr>';
+          document.getElementById('receiveItemsModal').classList.remove('hidden');
+
+          try {
+            const response = await fetch(`/admin/bids/${bidId}/items`);
+            console.log('Response status:', response.status);
+            
+            if (!response.ok) {
+              throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Fetched data for receiving:', data);
+
+            const items = Array.isArray(data.items) ? data.items : [];
+
+            if (items.length === 0) {
+              itemsList.innerHTML = '<tr><td colspan="5" class="p-2 text-center text-gray-600">No items found for this bid.</td></tr>';
+            } else {
+              itemsList.innerHTML = items.map(item => `
+                <tr class="border-b">
+                  <td class="p-2">${item.item_description || 'Item ID: ' + item.item_id}</td>
+                  <td class="p-2">${item.quantity || 0} ${item.unit || ''}</td>
+                  <td class="p-2">${helpers.formatCurrency(item.unit_price || 0)}</td>
+                  <td class="p-2">${helpers.formatCurrency(item.total_price || 0)}</td>
+                  <td class="p-2">
+                    <input type="checkbox" name="items" value="${item.item_id}" class="form-checkbox">
+                  </td>
+                </tr>
+              `).join('');
+            }
+
+            // Show confirm button and select all for receiving mode
+            document.getElementById('confirmReceiptButton').style.display = 'block';
+            document.getElementById('selectAllItems').style.display = 'inline-block';
+            document.querySelector('label[for="selectAllItems"]').style.display = 'inline-block';
+            document.getElementById('confirmReceiptButton').disabled = true;
+
+          } catch (error) {
+            console.error('Fetch error:', error);
+            itemsList.innerHTML = '<tr><td colspan="5" class="p-2 text-center text-red-600">Failed to load items</td></tr>';
+            showErrorModal('Failed to load items: ' + error.message);
+          }
+        });
+      });
+
+      // Select All Checkbox
+      document.getElementById('selectAllItems').addEventListener('change', (e) => {
+        const checkboxes = document.querySelectorAll('input[name="items"]');
+        checkboxes.forEach(checkbox => {
+          checkbox.checked = e.target.checked;
+        });
+        document.getElementById('confirmReceiptButton').disabled = !e.target.checked && document.querySelectorAll('input[name="items"]:checked').length === 0;
+      });
+
+      // Enable/Disable Confirm Receipt Button
+      document.getElementById('receiveItemsForm').addEventListener('change', () => {
+        const checkboxes = document.querySelectorAll('input[name="items"]:checked');
+        document.getElementById('confirmReceiptButton').disabled = checkboxes.length === 0;
+        document.getElementById('selectAllItems').checked = checkboxes.length === document.querySelectorAll('input[name="items"]').length && checkboxes.length > 0;
+      });
+
+      // Close Receive Items Modal
+      document.querySelector('.close-receive-modal').addEventListener('click', () => {
+        document.getElementById('receiveItemsModal').classList.add('hidden');
+        document.getElementById('confirmReceiptButton').disabled = true;
+      });
+
+      // Submit Received Items Form
+      document.getElementById('receiveItemsForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const bidId = document.getElementById('receiveBidId').value;
+        const checkboxes = document.querySelectorAll('input[name="items"]:checked');
+        const items = Array.from(checkboxes).map(cb => cb.value);
+
+        if (items.length === 0) {
+          showErrorModal('Please select at least one item');
+          return;
+        }
+
+        try {
+          const response = await fetch(`/admin/bids/${bidId}/mark-received`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items })
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to mark as received');
+          }
+
+          const result = await response.json();
+          showSuccessModal('Bid marked as received successfully');
+          document.getElementById('receiveItemsModal').classList.add('hidden');
+
+          // Reload the page to show the Rate Supplier button
+          setTimeout(() => window.location.reload(), 1500);
+        } catch (error) {
+          showErrorModal('Failed to mark as received: ' + error.message);
+        }
+      });
+
+      // Rate Supplier Button
+      document.querySelectorAll('.rate-supplier').forEach(button => {
+        button.addEventListener('click', () => {
+          const bidId = button.dataset.bidId;
+          const supplierName = button.dataset.supplierName;
+
+          document.getElementById('rateBidId').value = bidId;
+          document.getElementById('supplierName').value = supplierName;
+          document.getElementById('rateSupplierModal').classList.remove('hidden');
+        });
+      });
+
+      // Close Rating Modal
+      document.querySelector('.close-modal').addEventListener('click', () => {
+        document.getElementById('rateSupplierModal').classList.add('hidden');
+      });
+
+      // Star Rating Hover Effect
+      document.querySelectorAll('.star-rating').forEach(star => {
+        star.addEventListener('mouseover', () => {
+          const rating = parseInt(star.dataset.rating);
+          const stars = document.querySelectorAll('.star-rating');
+
+          stars.forEach((s, index) => {
+            if (index < rating) {
+              s.querySelector('i').classList.add('text-yellow-400');
+              s.querySelector('i').classList.remove('far');
+              s.querySelector('i').classList.add('fas');
+            }
+          });
+        });
+
+        star.addEventListener('mouseout', () => {
+          const stars = document.querySelectorAll('.star-rating');
+          const checkedRating = document.querySelector('input[name="rating"]:checked');
+
+          stars.forEach(star => {
+            star.querySelector('i').classList.remove('text-yellow-400');
+            star.querySelector('i').classList.add('far');
+            star.querySelector('i').classList.remove('fas');
+          });
+
+          if (checkedRating) {
+            const rating = parseInt(checkedRating.value);
+            stars.forEach((s, index) => {
+              if (index < rating) {
+                s.querySelector('i').classList.add('text-yellow-400');
+                s.querySelector('i').classList.remove('far');
+                s.querySelector('i').classList.add('fas');
+              }
+            });
+          }
+        });
+
+        star.addEventListener('click', () => {
+          const rating = parseInt(star.dataset.rating);
+          const stars = document.querySelectorAll('.star-rating');
+
+          stars.forEach((s, index) => {
+            if (index < rating) {
+              s.querySelector('i').classList.add('text-yellow-400');
+              s.querySelector('i').classList.remove('far');
+              s.querySelector('i').classList.add('fas');
+            } else {
+              s.querySelector('i').classList.remove('text-yellow-400');
+              s.querySelector('i').classList.add('far');
+              s.querySelector('i').classList.remove('fas');
+            }
+          });
+        });
+      });
+
+      // Submit Rating
+      document.getElementById('rateSupplierForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const bidId = document.getElementById('rateBidId').value;
+        const rating = document.querySelector('input[name="rating"]:checked')?.value;
+        const comment = document.getElementById('comment').value;
+
+        if (!rating) {
+          showErrorModal('Please select a rating between 1 and 5');
+          return;
+        }
+
+        try {
+          const response = await fetch(`/admin/bids/${bidId}/rate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rating, comment })
+          });
+          const result = await response.json();
+
+          if (response.ok) {
+            showSuccessModal(result.message || 'Rating submitted successfully');
+            document.getElementById('rateSupplierModal').classList.add('hidden');
+            setTimeout(() => window.location.reload(), 1500);
+          } else {
+            showErrorModal(result.message || 'Failed to submit rating');
+          }
+        } catch (error) {
+          console.error('Error submitting rating:', error);
+          showErrorModal('An unexpected error occurred. Please try again.');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

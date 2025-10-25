@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Predictive Analysis - By Department</title>
+  <link href="/src/table.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+  <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png"/>
+</head>
+<body class="bg-blue-50 font-sans">
+  <!-- Include Sidebar -->
+  <%- include('../partials/sidebar') %>
+
+  <!-- Main Content -->
+  <div class="lg:ml-64 p-7 lg:p-10">
+    <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
+      <h2 class="text-2xl font-bold text-blue-700 mb-6">Predictive Analysis - Department Budget Allocation</h2>
+
+      <!-- Summary Stats -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <div class="flex items-center">
+            <div class="bg-blue-100 p-3 rounded-lg mr-4">
+              <i class="fas fa-crown text-blue-600"></i>
+            </div>
+            <div>
+              <p class="text-sm text-gray-600 font-medium">Highest Budget</p>
+              <% if (sortedDepartments && sortedDepartments.length > 0) { %>
+                <p class="font-bold text-lg text-blue-700"><%= sortedDepartments[0][0] %></p>
+              <% } else { %>
+                <p class="font-bold text-lg text-blue-700">N/A</p>
+              <% } %>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <div class="flex items-center">
+            <div class="bg-blue-100 p-3 rounded-lg mr-4">
+              <i class="fas fa-arrow-trend-up text-blue-600"></i>
+            </div>
+            <div>
+              <p class="text-sm text-gray-600 font-medium">Average Increase</p>
+              <p class="font-bold text-lg text-blue-700">12.5% YoY</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <div class="flex items-center">
+            <div class="bg-blue-100 p-3 rounded-lg mr-4">
+              <i class="fas fa-lightbulb text-blue-600"></i>
+            </div>
+            <div>
+              <p class="text-sm text-gray-600 font-medium">Recommendation</p>
+              <p class="font-bold text-lg text-blue-700">+5% overall budget</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Budget Info -->
+      <div class="mb-6 flex flex-col md:flex-row md:justify-between md:items-center">
+        <div>
+          <p class="text-lg font-semibold text-gray-700">Forecasted budget requirements for FY <%= new Date().getFullYear() + 1 %></p>
+        </div>
+        
+        <div class="mt-4 md:mt-0 flex items-center space-x-3">
+          <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+            <span class="text-gray-700 font-medium">Total Predicted Budget: </span>
+            <span class="font-bold text-blue-700" id="totalPredicted">
+              ₱<%= 
+                totalAmount ? totalAmount.toLocaleString('en-US', { 
+                  minimumFractionDigits: 2, 
+                  maximumFractionDigits: 2 
+                }) : '0.00'
+              %>
+            </span>
+          </div>
+          <button id="exportBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-blue-700 transition-colors">
+            <i class="fas fa-file-export mr-2"></i>
+            Export Report
+          </button>
+        </div>
+      </div>
+
+      <!-- Department Predictions Table -->
+      <% if (sortedDepartments && sortedDepartments.length > 0) { %>
+        <div class="overflow-x-auto">
+          <table class="w-full border-collapse">
+            <thead>
+              <tr class="bg-blue-700 text-white">
+                <th class="p-3 text-left">Department</th>
+                <th class="p-3 text-left">Predicted Budget</th>
+                <th class="p-3 text-left">Percentage</th>
+                <th class="p-3 text-left">Budget Visualization</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% sortedDepartments.forEach(([department, amount]) => { 
+                const percentage = totalAmount > 0 ? (amount / totalAmount * 100).toFixed(1) : 0; %>
+                <tr class="border-b hover:bg-blue-50">
+                  <td class="p-3 font-medium">
+                    <i class="fas fa-building mr-2 text-blue-500"></i>
+                    <%= department %>
+                  </td>
+                  <td class="p-3 font-semibold text-blue-700">
+                    ₱<%= amount.toLocaleString('en-US', { 
+                        minimumFractionDigits: 2, 
+                        maximumFractionDigits: 2 
+                    }) %>
+                  </td>
+                  <td class="p-3">
+                    <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-sm font-medium">
+                      <%= percentage %>%
+                    </span>
+                  </td>
+                  <td class="p-3">
+                    <div class="w-full bg-gray-200 rounded-full h-3">
+                      <div class="bg-blue-600 h-3 rounded-full" 
+                          style="width: <%= maxAmount > 0 ? (amount / maxAmount) * 100 : 0 %>%"></div>
+                    </div>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <div class="text-center py-12">
+          <i class="fas fa-chart-pie text-4xl text-gray-300 mb-4"></i>
+          <h3 class="text-gray-500 text-lg font-medium">No prediction data available</h3>
+          <p class="text-gray-400 mt-1">Please run the prediction model first</p>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="fixed bottom-4 right-4 z-50"></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Export button functionality with loading state
+      document.getElementById('exportBtn').addEventListener('click', async function() {
+        const btn = this;
+        const originalContent = btn.innerHTML;
+        
+        // Set loading state
+        btn.innerHTML = `
+          <i class="fas fa-circle-notch fa-spin mr-2"></i>
+          Exporting...
+        `;
+        btn.disabled = true;
+        btn.classList.remove('hover:bg-blue-700');
+        btn.classList.add('bg-blue-400', 'cursor-not-allowed');
+        
+        try {
+          // Show preparing notification
+          showToast('Preparing your export...', 'info');
+          
+          // Small delay for better UX
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // Generate report
+          await exportReport();
+          
+          // Show success notification
+          showToast('Export completed successfully!', 'success');
+        } catch (error) {
+          console.error('Export failed:', error);
+          showToast('Export failed. Please try again.', 'error');
+        } finally {
+          // Restore button state
+          btn.innerHTML = originalContent;
+          btn.disabled = false;
+          btn.classList.remove('bg-blue-400', 'cursor-not-allowed');
+          btn.classList.add('hover:bg-blue-700');
+        }
+      });
+      
+      function showToast(message, type = 'info') {
+        const colors = {
+          info: 'bg-blue-500',
+          success: 'bg-green-500',
+          error: 'bg-red-500'
+        };
+        
+        const icons = {
+          info: 'fa-info-circle',
+          success: 'fa-check-circle',
+          error: 'fa-exclamation-circle'
+        };
+        
+        const toast = document.createElement('div');
+        toast.className = `${colors[type]} text-white px-4 py-3 rounded-lg shadow-lg flex items-center mb-2 opacity-0 transform translate-y-2 transition-all duration-300`;
+        toast.innerHTML = `
+          <i class="fas ${icons[type]} mr-2"></i>
+          ${message}
+        `;
+        
+        const container = document.getElementById('toastContainer');
+        container.appendChild(toast);
+        
+        // Animate in
+        setTimeout(() => {
+          toast.classList.remove('opacity-0', 'translate-y-2');
+          toast.classList.add('opacity-100', 'translate-y-0');
+        }, 100);
+        
+        // Remove toast after 3 seconds
+        setTimeout(() => {
+          toast.classList.remove('opacity-100', 'translate-y-0');
+          toast.classList.add('opacity-0', 'translate-y-2');
+          setTimeout(() => toast.remove(), 300);
+        }, 3000);
+      }
+      
+      async function exportReport() {
+        const currentDate = new Date().toLocaleDateString();
+        const fiscalYear = new Date().getFullYear() + 1;
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        
+        // Prepare data for export
+        const data = [
+          ['Department Budget Predictions Report'],
+          ['Generated on:', currentDate],
+          ['Fiscal Year:', fiscalYear],
+          ['Prediction Model:', 'ARIMA with seasonal adjustment'],
+          [],
+          ['Department', 'Predicted Amount', 'Percentage of Total']
+        ];
+        
+        // Add department data from table
+        const tableRows = document.querySelectorAll('tbody tr');
+        tableRows.forEach(row => {
+          const cells = row.querySelectorAll('td');
+          if (cells.length >= 3) {
+            const dept = cells[0].textContent.trim().replace(/^\s*\S+\s*/, ''); // Remove icon
+            const amount = cells[1].textContent.trim();
+            const percentage = cells[2].textContent.trim();
+            data.push([dept, amount, percentage]);
+          }
+        });
+        
+        // Add total row
+        data.push([]);
+        data.push(['Total Predicted Budget:', document.getElementById('totalPredicted').textContent.trim(), '100%']);
+        
+        // Create workbook
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Budget Predictions");
+        
+        // Formatting
+        if (!ws['!merges']) ws['!merges'] = [];
+        ws['!merges'].push(
+          { s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }  // Title merge
+        );
+        
+        // Set column widths
+        ws['!cols'] = [{wch: 30}, {wch: 20}, {wch: 15}];
+        
+        // Export the file
+        const fileName = `Budget_Predictions_FY${fiscalYear}_${timestamp}.xlsx`;
+        await XLSX.writeFile(wb, fileName);
+      }
+    });
+  </script>
+</body>
+</html>
