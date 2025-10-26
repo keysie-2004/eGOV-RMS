@@ -349,7 +349,7 @@ exports.getBidDetails = async (req, res) => {
         console.error('Error in getBidDetails:', error);
         res.status(500).render('error', {
             message: 'Failed to load bid details',
-            errorDetails: process.env.NODE_ENV === 'development' ? error.message : null,
+            errorDetails: process.env.NODE_ENV === 'production' ? error.message : null,
             userType: req.user.user_type,
             user: req.user
         });

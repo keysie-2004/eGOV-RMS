@@ -189,7 +189,7 @@ exports.createRequest = async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message || 'Failed to create request',
-      error: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+      error: process.env.NODE_ENV === 'production' ? error.stack : undefined,
     });
   }
 };

@@ -1,5 +1,5 @@
 const db = require('../config/db');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const Employee = require('../models/employeeModel');
 const Department = require('../models/departmentModel');
 const multer = require('multer');
