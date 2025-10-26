@@ -138,29 +138,22 @@
             </div>
           </div>
 
-<!-- Submit Button at bottom right -->
-<div class="flex flex-wrap justify-end gap-3 mt-6">
-  <button type="submit" class="inline-flex items-center justify-center bg-blue-700 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-blue-800">
-    <i class="fas <%= abstract.acceptanceData ? 'fa-sync-alt' : 'fa-save' %> mr-2"></i>
-    <%= abstract.acceptanceData ? 'Update Acceptance' : 'Save Acceptance' %>
-  </button>
-  <% if (abstract.acceptanceData) { %>
-    <button type="button" onclick="printForm()" class="inline-flex items-center justify-center bg-green-600 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-green-700">
-      <i class="fas fa-print mr-2"></i> Print
-    </button>
-    <a href="/purchase-order/<%= abstract.token %>" class="inline-flex items-center justify-center bg-purple-700 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-purple-800">
-      <i class="fas fa-arrow-right mr-2"></i> Next
-    </a>
-  <% } %>
-</div>
-</form>
-
-<!-- Navigation Buttons -->
-<div class="flex flex-wrap justify-end gap-3 pt-6 border-t border-gray-200 mt-6">
-  <a href="/abstract" class="inline-flex items-center justify-center bg-gray-600 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-gray-700">
-    <i class="fas fa-arrow-left mr-2"></i> Previous
-  </a>
-</div>
+        <!-- Submit Button at bottom right -->
+        <div class="flex flex-wrap justify-end gap-3 mt-6">
+          <button type="submit" class="inline-flex items-center justify-center bg-blue-700 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-blue-800">
+            <i class="fas <%= abstract.acceptanceData ? 'fa-sync-alt' : 'fa-save' %> mr-2"></i>
+            <%= abstract.acceptanceData ? 'Update Acceptance' : 'Save Acceptance' %>
+          </button>
+          <% if (abstract.acceptanceData) { %>
+            <button type="button" onclick="printForm()" class="inline-flex items-center justify-center bg-green-600 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-green-700">
+              <i class="fas fa-print mr-2"></i> Print
+            </button>
+            <a href="/purchase-order/<%= abstract.token %>" class="inline-flex items-center justify-center bg-purple-700 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-gray-800">
+              <i class="fas fa-arrow-right mr-2"></i> Next
+            </a>
+          <% } %>
+        </div>
+        </form>
       </div>
     </div>
   </div>
