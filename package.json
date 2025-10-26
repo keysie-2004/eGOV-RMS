@@ -63,10 +63,8 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
     "autoprefixer": "^10.4.21",
     "concurrently": "^9.2.0",
-    "hardhat": "^3.0.0",
     "nodemon": "^3.1.10",
     "postcss": "^8.5.6",
     "sass": "^1.90.0",
