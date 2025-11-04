@@ -67,6 +67,7 @@ getAllApprovedPurchaseRequestsCategorized: (callback) => {
 getApprovedPurchaseRequestsByDepartmentCategorized: (department, callback) => {
     const sql = `
         SELECT pr.*, 
+               d.department_name,  -- ✅ Get department name from departments table
                pri.item_id, pri.item_no, pri.unit, 
                pri.item_description, pri.quantity, 
                pri.unit_cost, pri.total_cost,
@@ -76,8 +77,10 @@ getApprovedPurchaseRequestsByDepartmentCategorized: (department, callback) => {
                EXISTS(SELECT 1 FROM purchase_orders WHERE purchase_orders.pr_id = pr.pr_id) AS po_completed
         FROM purchase_requests pr
         JOIN purchase_request_items pri ON pr.pr_id = pri.pr_id
+        JOIN departments d ON pr.department = d.department_id  -- ✅ Reference departments table
         WHERE pr.status IN ('approved', 'e-sign', 'posted') AND pr.department = ?
     `;
+    
     db.query(sql, [department], (err, results) => {
         if (err) return callback(err, null);
         
@@ -183,65 +186,6 @@ getAllApprovedPurchaseRequestsCategorized: (callback) => {
     });
 },
 
-// For regular users - get items by department categorized
-getApprovedPurchaseRequestsByDepartmentCategorized: (department, callback) => {
-    const sql = `
-        SELECT pr.*, 
-               pri.item_id, pri.item_no, pri.unit, 
-               pri.item_description, pri.quantity, 
-               pri.unit_cost, pri.total_cost,
-               EXISTS(SELECT 1 FROM rfq WHERE rfq.pr_id = pr.pr_id) AS rfq_completed,
-               EXISTS(SELECT 1 FROM abstract WHERE abstract.pr_id = pr.pr_id) AS abstract_completed,
-               EXISTS(SELECT 1 FROM acceptance WHERE acceptance.pr_id = pr.pr_id) AS acceptance_completed,
-               EXISTS(SELECT 1 FROM purchase_orders WHERE purchase_orders.pr_id = pr.pr_id) AS po_completed
-        FROM purchase_requests pr
-        JOIN purchase_request_items pri ON pr.pr_id = pri.pr_id
-        WHERE pr.status = 'approved' AND pr.department = ?
-    `;
-    db.query(sql, [department], (err, results) => {
-        if (err) return callback(err, null);
-        
-        const categorized = {
-            all: [],
-            completed: [],
-            inProgress: []
-        };
-        
-        const requests = results.reduce((acc, row) => {
-            if (!acc[row.pr_id]) {
-                acc[row.pr_id] = {
-                    ...row,
-                    items: []
-                };
-            }
-            acc[row.pr_id].items.push({
-                item_id: row.item_id,
-                item_no: row.item_no,
-                unit: row.unit,
-                item_description: row.item_description,
-                quantity: row.quantity,
-                unit_cost: row.unit_cost,
-                total_cost: row.total_cost
-            });
-            return acc;
-        }, {});
-        
-        const requestList = Object.values(requests);
-        
-        // Categorize the requests
-        requestList.forEach(request => {
-            categorized.all.push(request);
-            
-            if (request.po_completed) {
-                categorized.completed.push(request);
-            } else {
-                categorized.inProgress.push(request);
-            }
-        });
-        
-        callback(null, categorized);
-    });
-},
     //rfq.ejs - showRfqForm
 
     // Fetch purchase request by ID
@@ -572,88 +516,90 @@ getAbstractByPrId: (pr_id, callback) => {
     });
 },
 
-    saveOrUpdateAbstract: (data, callback) => {
-        const { pr_id, date, bacMembers } = data;
-        
-        if (!pr_id || !date) {
-            return callback(new Error('pr_id and date are required'));
-        }
+saveOrUpdateAbstract: async (data, callback) => {
+  const { pr_id, date, bacMembers } = data;
 
-        const mysqlDate = new Date(date).toISOString().split('T')[0];
+  if (!pr_id || !date) {
+    return callback(new Error('pr_id and date are required'));
+  }
 
-        db.beginTransaction(async (err) => {
-            if (err) return callback(err);
+  const mysqlDate = new Date(date).toISOString().split('T')[0];
 
-            try {
-                // 1. Save/update the abstract
-                const abstractResult = await new Promise((resolve, reject) => {
-                    const sql = `
-                        INSERT INTO abstract (pr_id, date)
-                        VALUES (?, ?)
-                        ON DUPLICATE KEY UPDATE date = VALUES(date)
-                    `;
-                    db.query(sql, [pr_id, mysqlDate], (err, results) => {
-                        if (err) reject(err);
-                        else resolve(results);
-                    });
-                });
+  db.getConnection(async (err, connection) => {
+    if (err) return callback(err);
 
-                const abstract_id = abstractResult.insertId || (
-                    await new Promise((resolve, reject) => {
-                        db.query('SELECT abstract_id FROM abstract WHERE pr_id = ?', [pr_id], (err, results) => {
-                            if (err) reject(err);
-                            else resolve(results[0].abstract_id);
-                        });
-                    })
-                );
+    try {
+      await connection.beginTransaction();
 
-                // 2. Delete existing BAC members
-                await new Promise((resolve, reject) => {
-                    db.query('DELETE FROM abstract_bac_members WHERE abstract_id = ?', [abstract_id], (err) => {
-                        if (err) reject(err);
-                        else resolve();
-                    });
-                });
-
-                // 3. Insert new BAC members
-                if (bacMembers && bacMembers.length > 0) {
-                    const values = bacMembers.map(member => [
-                        abstract_id,
-                        member.employee_id,
-                        member.employee_name,
-                        member.position,
-                        member.bac_position
-                    ]);
-
-                    await new Promise((resolve, reject) => {
-                        const sql = `
-                            INSERT INTO abstract_bac_members 
-                            (abstract_id, employee_id, employee_name, position, bac_position)
-                            VALUES ?
-                        `;
-                        db.query(sql, [values], (err) => {
-                            if (err) reject(err);
-                            else resolve();
-                        });
-                    });
-                }
-
-                db.commit((err) => {
-                    if (err) {
-                        db.rollback(() => callback(err));
-                    } else {
-                        callback(null, {
-                            abstract_id,
-                            date: mysqlDate,
-                            bacMembersCount: bacMembers ? bacMembers.length : 0
-                        });
-                    }
-                });
-            } catch (error) {
-                db.rollback(() => callback(error));
-            }
+      // 1. Insert or update abstract
+      const abstractResult = await new Promise((resolve, reject) => {
+        const sql = `
+          INSERT INTO abstract (pr_id, date)
+          VALUES (?, ?)
+          ON DUPLICATE KEY UPDATE date = VALUES(date)
+        `;
+        connection.query(sql, [pr_id, mysqlDate], (err, results) => {
+          if (err) reject(err);
+          else resolve(results);
         });
-    },
+      });
+
+      // 2. Get abstract_id
+      const abstract_id = abstractResult.insertId || (
+        await new Promise((resolve, reject) => {
+          connection.query('SELECT abstract_id FROM abstract WHERE pr_id = ?', [pr_id], (err, results) => {
+            if (err) reject(err);
+            else resolve(results[0].abstract_id);
+          });
+        })
+      );
+
+      // 3. Delete existing BAC members
+      await new Promise((resolve, reject) => {
+        connection.query('DELETE FROM abstract_bac_members WHERE abstract_id = ?', [abstract_id], (err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
+
+      // 4. Insert new BAC members if provided
+      if (bacMembers && bacMembers.length > 0) {
+        const values = bacMembers.map(member => [
+          abstract_id,
+          member.employee_id,
+          member.employee_name,
+          member.position,
+          member.bac_position
+        ]);
+
+        const sql = `
+          INSERT INTO abstract_bac_members 
+          (abstract_id, employee_id, employee_name, position, bac_position)
+          VALUES ?
+        `;
+        await new Promise((resolve, reject) => {
+          connection.query(sql, [values], (err) => {
+            if (err) reject(err);
+            else resolve();
+          });
+        });
+      }
+
+      await connection.commit();
+      connection.release();
+
+      callback(null, {
+        abstract_id,
+        date: mysqlDate,
+        bacMembersCount: bacMembers ? bacMembers.length : 0
+      });
+    } catch (error) {
+      await connection.rollback();
+      connection.release();
+      callback(error);
+    }
+  });
+},
 
 // Get all BAC members from employees table
 getAllBacMembers: (callback) => {
@@ -909,21 +855,24 @@ getSpecificBacMembers: (callback) => {
         });
     },
 
-    getLowestBidderByPrId: (pr_id, callback) => {
-        const sql = `
-            SELECT r.company_name 
-            FROM rfq r
-            JOIN supplier_quotes sq ON r.pr_id = sq.pr_id
-            WHERE r.pr_id = ?
-            GROUP BY r.rfq_id
-            ORDER BY sq.total_cost ASC
-            LIMIT 1
-        `;
-        db.query(sql, [pr_id], (err, results) => {
-            if (err) return callback(err, null);
-            callback(null, results);
-        });
-    },
+        getLowestBidderByPrId: (pr_id, callback) => {
+            const sql = `
+                SELECT 
+                    r.company_name,
+                    sq.supplier_name,
+                    SUM(sq.total_cost) as total_bid
+                FROM rfq r
+                JOIN supplier_quotes sq ON r.pr_id = sq.pr_id AND r.supplier_name = sq.supplier_name
+                WHERE r.pr_id = ?
+                GROUP BY r.supplier_name, r.company_name
+                ORDER BY total_bid ASC
+                LIMIT 1
+            `;
+            db.query(sql, [pr_id], (err, results) => {
+                if (err) return callback(err, null);
+                callback(null, results[0] ? { company_name: results[0].company_name } : null);
+            });
+        },
 
         // Fetch company name from the rfq table
         getCompanyNameByPrId: (pr_id, callback) => {
@@ -953,8 +902,6 @@ getSpecificBacMembers: (callback) => {
     
         //purchase order
 
-// Save purchase order
-// In your rfqModel.js - make sure the savePurchaseOrder function handles null po_id
 savePurchaseOrder: (data, callback) => {
   // First check if a PO exists for this PR
   const checkSql = `SELECT po_id FROM purchase_orders WHERE pr_id = ? LIMIT 1`;
@@ -1105,7 +1052,7 @@ getPurchaseOrderByPrId: (pr_id, callback) => {
           DATE_FORMAT(date_issued, '%Y-%m-%d') as date_issued, 
           mode_of_procurement,
           place_of_delivery, 
-          DATE_FORMAT(date_of_delivery, '%Y-%m-%d') as date_of_delivery, 
+          date_of_delivery,
           delivery_term, 
           payment_term, 
           resolution_no, 

@@ -5,61 +5,98 @@ const jwt = require('jsonwebtoken');
 
 // In rfqController.js
 exports.showRfqPage = async (req, res) => {
-  try {
-    // Ensure user data exists
-    if (!req.user) {
-      console.log('No user found in request');
-      return res.redirect('/homepage');
-    }
+try {
+// ✅ Ensure user data exists
+if (!req.user) {
+console.log('No user found in request');
+return res.redirect('/homepage');
+}
 
-    const user = {
-      user_id: req.user.user_id,
-      employee_name: req.user.employee_name,
-      user_type: req.user.user_type,
-      department_id: req.user.department_id,
-      department: req.user.department || req.user.department_name,
-    };
+// ✅ Extract user info
+const user = {
+  user_id: req.user.user_id,
+  employee_name: req.user.employee_name,
+  user_type: req.user.user_type,
+  department_id: req.user.department_id,
+  department_name: req.user.department_name || req.user.department,
+};
 
-    const isAdmin = user.user_type === 'admin' || user.user_type === 'superadmin';
+console.log('User data:', user);
 
-    const categorizedItems = await new Promise((resolve, reject) => {
-      if (isAdmin) {
-        rfqModel.getAllApprovedPurchaseRequestsCategorized((err, results) => {
-          if (err) reject(err);
-          else resolve(results);
-        });
+const isAdmin = user.user_type === 'admin' || user.user_type === 'superadmin';
+let categorizedItems;
+
+if (isAdmin) {
+  // ✅ Admin or Superadmin: Fetch all RFQs
+  console.log('Fetching all RFQs for admin/superadmin');
+  categorizedItems = await new Promise((resolve, reject) => {
+    rfqModel.getAllApprovedPurchaseRequestsCategorized((err, results) => {
+      if (err) {
+        console.error('Error fetching all RFQs:', err);
+        reject(err);
       } else {
-        const department = user.department || user.department_name;
-        if (!department) {
-          console.error('No department found for user:', user);
-          return reject(new Error('User department not found'));
-        }
-
-        rfqModel.getApprovedPurchaseRequestsByDepartmentCategorized(department, (err, results) => {
-          if (err) reject(err);
-          else resolve(results);
-        });
+        console.log(`Fetched ${results.all.length} RFQs for admin`);
+        resolve(results);
       }
     });
+  });
 
-    // Add tokens to all items in each category
-    const addTokens = (items) => items.map(item => ({
-      ...item,
-      token: generateToken(item.pr_id),
-    }));
+} else {
+  // ✅ Regular user: Fetch by department_id
+  const department = user.department_id;
 
-    res.render('rfq', {
-      allItems: addTokens(categorizedItems.all),
-      completedItems: addTokens(categorizedItems.completed),
-      inProgressItems: addTokens(categorizedItems.inProgress),
-      user,
-      activeTab: req.query.tab || 'all' // Default to showing all items
+  if (!department) {
+    console.error('No department found for user:', user);
+    return res.status(400).render('error', {
+      message: 'User department not found. Please contact the administrator.',
+      user
     });
-
-  } catch (error) {
-    console.error('Error fetching approved purchase requests:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
   }
+
+  console.log(`Fetching RFQs for department_id: ${department}`);
+
+  categorizedItems = await new Promise((resolve, reject) => {
+    rfqModel.getApprovedPurchaseRequestsByDepartmentCategorized(department, (err, results) => {
+      if (err) {
+        console.error('Error fetching department RFQs:', err);
+        reject(err);
+      } else {
+        console.log(`Fetched ${results.all.length} RFQs for department ${department}`);
+        resolve(results);
+      }
+    });
+  });
+}
+
+// ✅ Add JWT token for each item
+const addTokens = (items) =>
+  items.map((item) => ({
+    ...item,
+    token: generateToken(item.pr_id),
+  }));
+
+// ✅ Optional: Debug output to confirm data
+console.log('Sample categorized items:', categorizedItems.all.map(r => ({
+  pr_id: r.pr_id,
+  department_name: r.department_name
+})));
+
+// ✅ Render the page
+res.render('rfq', {
+  allItems: addTokens(categorizedItems.all),
+  completedItems: addTokens(categorizedItems.completed),
+  inProgressItems: addTokens(categorizedItems.inProgress),
+  user,
+  activeTab: req.query.tab || 'all',
+});
+
+
+
+
+} catch (error) {
+console.error('Error fetching approved purchase requests:', error);
+res.status(500).json({ success: false, message: 'Server error' });
+}
 };
 
 //rfqForm.ejs
@@ -737,7 +774,7 @@ exports.showAcceptance = async (req, res) => {
     try {
         const pr_id = decodeToken(token);
 
-        const [purchaseRequest, items, supplierQuotes, acceptanceData, bacMembers, lowestQuotes] = await Promise.all([
+        const [purchaseRequest, items, supplierQuotes, acceptanceData, bacMembers, lowestQuotes, lowestBidder] = await Promise.all([
             new Promise((resolve, reject) => {
                 rfqModel.getPurchaseRequestById(pr_id, (err, results) => {
                     if (err) reject(err);
@@ -774,6 +811,12 @@ exports.showAcceptance = async (req, res) => {
                     else resolve(results);
                 });
             }),
+            new Promise((resolve, reject) => {
+                rfqModel.getLowestBidderByPrId(pr_id, (err, results) => {
+                    if (err) reject(err);
+                    else resolve(results);
+                });
+            }),
         ]);
 
         if (!purchaseRequest) {
@@ -783,29 +826,30 @@ exports.showAcceptance = async (req, res) => {
             });
         }
 
-        // Get the names of all lowest bidders (for display purposes)
-        const lowestBidders = [...new Set(lowestQuotes.map(quote => quote.supplier_name))];
-        const lowestBidderDisplay = lowestBidders.length > 0 
-            ? lowestBidders.join(', ') 
-            : 'N/A';
+        // Calculate total from lowest quotes
+        const total = lowestQuotes.reduce((sum, quote) => sum + parseFloat(quote.total_cost), 0);
+
+        // Map items with lowest quotes and company names
+        const itemsWithDetails = items.map(item => {
+            const lowestQuote = lowestQuotes.find(q => q.item_id === item.item_id);
+            return {
+                ...item,
+                supplier_name: lowestQuote ? lowestQuote.supplier_name : 'N/A',
+                unit_price: lowestQuote ? lowestQuote.unit_cost : 'N/A',
+                total_price: lowestQuote ? lowestQuote.total_cost : 'N/A',
+                philgeps_reg_no: lowestQuote ? lowestQuote.philgeps_reg_no : 'N/A'
+            };
+        });
+
+        // Get company name for lowest bidder
+        const lowestBidderDisplay = lowestBidder ? lowestBidder.company_name : 'N/A';
 
         const abstract = {
             pr_id: purchaseRequest.pr_id,
             project_description: purchaseRequest.purpose,
             department: purchaseRequest.department,
-            items: items.map(item => {
-                const lowestQuote = lowestQuotes.find(q => q.item_id === item.item_id);
-                const supplierQuote = supplierQuotes.find(sq => sq.item_id === item.item_id);
-                
-                return {
-                    ...item,
-                    supplier_name: lowestQuote ? lowestQuote.supplier_name : 'N/A',
-                    unit_price: lowestQuote ? lowestQuote.unit_cost : 'N/A',
-                    total_price: lowestQuote ? lowestQuote.total_cost : 'N/A',
-                    philgeps_reg_no: lowestQuote ? lowestQuote.philgeps_reg_no : 'N/A'
-                };
-            }),
-            total: purchaseRequest.total,
+            items: itemsWithDetails,
+            total: total.toFixed(2), // Use calculated total from lowest quotes
             acceptanceData: acceptanceData ? {
                 ...acceptanceData,
                 date: formatDateForDisplay(acceptanceData.date)
