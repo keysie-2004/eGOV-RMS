@@ -516,89 +516,103 @@ getAbstractByPrId: (pr_id, callback) => {
     });
 },
 
-saveOrUpdateAbstract: async (data, callback) => {
-  const { pr_id, date, bacMembers } = data;
+saveOrUpdateAbstract: (data, callback) => {
+    const { pr_id, date, bacMembers } = data;
 
-  if (!pr_id || !date) {
-    return callback(new Error('pr_id and date are required'));
-  }
-
-  const mysqlDate = new Date(date).toISOString().split('T')[0];
-
-  db.getConnection(async (err, connection) => {
-    if (err) return callback(err);
-
-    try {
-      await connection.beginTransaction();
-
-      // 1. Insert or update abstract
-      const abstractResult = await new Promise((resolve, reject) => {
-        const sql = `
-          INSERT INTO abstract (pr_id, date)
-          VALUES (?, ?)
-          ON DUPLICATE KEY UPDATE date = VALUES(date)
-        `;
-        connection.query(sql, [pr_id, mysqlDate], (err, results) => {
-          if (err) reject(err);
-          else resolve(results);
-        });
-      });
-
-      // 2. Get abstract_id
-      const abstract_id = abstractResult.insertId || (
-        await new Promise((resolve, reject) => {
-          connection.query('SELECT abstract_id FROM abstract WHERE pr_id = ?', [pr_id], (err, results) => {
-            if (err) reject(err);
-            else resolve(results[0].abstract_id);
-          });
-        })
-      );
-
-      // 3. Delete existing BAC members
-      await new Promise((resolve, reject) => {
-        connection.query('DELETE FROM abstract_bac_members WHERE abstract_id = ?', [abstract_id], (err) => {
-          if (err) reject(err);
-          else resolve();
-        });
-      });
-
-      // 4. Insert new BAC members if provided
-      if (bacMembers && bacMembers.length > 0) {
-        const values = bacMembers.map(member => [
-          abstract_id,
-          member.employee_id,
-          member.employee_name,
-          member.position,
-          member.bac_position
-        ]);
-
-        const sql = `
-          INSERT INTO abstract_bac_members 
-          (abstract_id, employee_id, employee_name, position, bac_position)
-          VALUES ?
-        `;
-        await new Promise((resolve, reject) => {
-          connection.query(sql, [values], (err) => {
-            if (err) reject(err);
-            else resolve();
-          });
-        });
-      }
-
-      await connection.commit();
-      connection.release();
-
-      callback(null, {
-        abstract_id,
-        date: mysqlDate,
-        bacMembersCount: bacMembers ? bacMembers.length : 0
-      });
-    } catch (error) {
-      await connection.rollback();
-      connection.release();
-      callback(error);
+    if (!pr_id || !date) {
+        return callback(new Error('pr_id and date are required'));
     }
-  });
+
+    const mysqlDate = new Date(date).toISOString().split('T')[0];
+
+    // Get a connection from the pool
+    db.getConnection((err, connection) => {
+        if (err) return callback(err);
+
+        connection.beginTransaction(async (err) => {
+            if (err) {
+                connection.release();
+                return callback(err);
+            }
+
+            try {
+                // 1. Save/update abstract
+                const abstractResult = await new Promise((resolve, reject) => {
+                    const sql = `
+                        INSERT INTO abstract (pr_id, date)
+                        VALUES (?, ?)
+                        ON DUPLICATE KEY UPDATE date = VALUES(date)
+                    `;
+                    connection.query(sql, [pr_id, mysqlDate], (err, results) => {
+                        if (err) reject(err);
+                        else resolve(results);
+                    });
+                });
+
+                const abstract_id = abstractResult.insertId || (
+                    await new Promise((resolve, reject) => {
+                        connection.query('SELECT abstract_id FROM abstract WHERE pr_id = ?', [pr_id], (err, results) => {
+                            if (err) reject(err);
+                            else resolve(results[0].abstract_id);
+                        });
+                    })
+                );
+
+                // 2. Delete old BAC members
+                await new Promise((resolve, reject) => {
+                    connection.query('DELETE FROM abstract_bac_members WHERE abstract_id = ?', [abstract_id], (err) => {
+                        if (err) reject(err);
+                        else resolve();
+                    });
+                });
+
+                // 3. Insert new BAC members
+                if (bacMembers && bacMembers.length > 0) {
+                    const values = bacMembers.map(member => [
+                        abstract_id,
+                        member.employee_id,
+                        member.employee_name,
+                        member.position,
+                        member.bac_position
+                    ]);
+
+                    await new Promise((resolve, reject) => {
+                        const sql = `
+                            INSERT INTO abstract_bac_members 
+                            (abstract_id, employee_id, employee_name, position, bac_position)
+                            VALUES ?
+                        `;
+                        connection.query(sql, [values], (err) => {
+                            if (err) reject(err);
+                            else resolve();
+                        });
+                    });
+                }
+
+                // Commit transaction
+                connection.commit((err) => {
+                    if (err) {
+                        connection.rollback(() => {
+                            connection.release();
+                            callback(err);
+                        });
+                    } else {
+                        connection.release();
+                        callback(null, {
+                            abstract_id,
+                            date: mysqlDate,
+                            bacMembersCount: bacMembers ? bacMembers.length : 0
+                        });
+                    }
+                });
+            } catch (error) {
+                connection.rollback(() => {
+                    connection.release();
+                    callback(error);
+                });
+            }
+        });
+    });
 },
 
 // Get all BAC members from employees table
