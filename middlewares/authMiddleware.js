@@ -86,7 +86,7 @@ const authenticateSupplier = (req, res, next) => {
     }
 
     try {
-        const jwtSecret = process.env.JWT_SECRET || 'hareneth';
+        const jwtSecret = process.env.JWT_SECRET || 'eGOV-RMS';
         const decoded = jwt.verify(token, jwtSecret);
         
         console.log('Decoded supplier token:', decoded);

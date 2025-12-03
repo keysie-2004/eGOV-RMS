@@ -32,7 +32,7 @@ app.use(express.json()); // Parse JSON payloads
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded payloads
 app.use(cookieParser());
 app.use(session({
-  secret: 'hareneth',
+  secret: 'eGOV-RMS',
   resave: false,
   saveUninitialized: true,
   cookie: { secure: false } // Set to true if using HTTPS

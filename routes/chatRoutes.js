@@ -236,7 +236,7 @@ NOTE: Predictions include a 5% annual inflation adjustment based on historical s
                     temperature: 0.3,
                     max_tokens: 1888,
                     chat_history: chatHistory,
-                     preamble: `You are an AI assistant for Hareneth's management system. 
+                     preamble: `You are an AI assistant for eGOV-RMS's management system. 
                 Always respond using markdown formatting for better readability.
                 Important rules:
                 - Format tables with clear headers

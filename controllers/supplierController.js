@@ -170,7 +170,7 @@ const supplierController = {
                 });
             }
             
-            const jwtSecret = process.env.JWT_SECRET || 'hareneth';
+            const jwtSecret = process.env.JWT_SECRET || 'eGOV-RMS';
             const token = jwt.sign(
                 { 
                     id: supplier.supplier_id, 

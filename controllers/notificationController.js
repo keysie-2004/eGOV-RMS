@@ -63,7 +63,7 @@ exports.requestFollowUp = async (req, res) => {
     });
 
     const mailOptions = {
-      from: `"Hareneth Procurement" <${process.env.EMAIL_USER}>`,
+      from: `"eGOV-RMS Procurement" <${process.env.EMAIL_USER}>`,
       to: bacMembers.map(member => member.email).join(','),
       subject: `Follow-up Request for PR ID: ${pr_id}`,
       html: `
@@ -78,7 +78,7 @@ exports.requestFollowUp = async (req, res) => {
           <li>Date Requested: ${new Date(request.date_requested).toLocaleDateString()}</li>
         </ul>
         <p>Please review the request and provide any necessary updates or comments.</p>
-        <p>Thank you,<br>Hareneth Procurement System</p>
+        <p>Thank you,<br>eGOV-RMS Procurement System</p>
       `
     };
 
@@ -158,7 +158,7 @@ exports.requestFollowUp = async (req, res) => {
     });
 
     const mailOptions = {
-      from: `"Hareneth Procurement" <${process.env.EMAIL_USER}>`,
+      from: `"eGOV-RMS Procurement" <${process.env.EMAIL_USER}>`,
       to: bacMembers.map(member => member.email).join(','),
       subject: `Follow-up Request for PR ID: ${pr_id}`,
       html: `
@@ -173,7 +173,7 @@ exports.requestFollowUp = async (req, res) => {
           <li>Date Requested: ${new Date(request.date_requested).toLocaleDateString()}</li>
         </ul>
         <p>Please review the request and provide any necessary updates or comments.</p>
-        <p>Thank you,<br>Hareneth Procurement System</p>
+        <p>Thank you,<br>eGOV-RMS Procurement System</p>
       `
     };
 

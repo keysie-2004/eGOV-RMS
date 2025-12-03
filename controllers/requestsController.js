@@ -544,7 +544,7 @@ async function sendDeclinedEmail(request, requesterEmail) {
 
         // Email options
         const mailOptions = {
-            from: `"Hareneth Procurement" <${process.env.EMAIL_USER}>`,
+            from: `"eGOV-RMS Procurement" <${process.env.EMAIL_USER}>`,
             to: requesterEmail,
             subject: `SPPMP Required for PR ID: ${request.pr_id}`,
             html: `
@@ -552,7 +552,7 @@ async function sendDeclinedEmail(request, requesterEmail) {
                 <p>Your procurement request (PR ID: ${request.pr_id}) has been declined because the total amount exceeds ₱800,000.</p>
                 <p>Please prepare and submit a Supplemental Project Procurement Management Plan (SPPMP) to proceed.</p>
                 <p>Thank you.</p>
-                <p>- Hareneth Procurement Team</p>
+                <p>- eGOV-RMS Procurement Team</p>
             `
         };
 
