@@ -772,6 +772,26 @@ getSupplierQuotesWithCompanyNamesByPrId: (pr_id, callback) => {
     });
 },
 
+getEndUserByPrId: (pr_id, callback) => {
+    const sql = `
+SELECT 
+    e.employee_id,
+    e.employee_name,
+    e.position
+FROM 
+    purchase_requests pr
+INNER JOIN 
+    employees e ON pr.requested_by = e.employee_name
+WHERE 
+    pr.pr_id = ?;
+
+    `;
+    db.query(sql, [pr_id], (err, results) => {
+        if (err) return callback(err, null);
+        callback(null, results[0]);
+    });
+},
+
 // Get specific BAC members from employees table
 getSpecificBacMembers: (callback) => {
     const sql = `

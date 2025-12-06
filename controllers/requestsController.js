@@ -79,7 +79,29 @@ exports.createRequest = async (req, res) => {
 
     const { items, cash_availability, approved_by, ...requestData } = req.body;
 
-    // Calculate total cost of items
+    // ──────────────────────────────────────────────────────────────
+    // 1. Fetch department name from DB (most reliable source)
+    // ──────────────────────────────────────────────────────────────
+    const deptResult = await new Promise((resolve, reject) => {
+      const sql = `SELECT department_name FROM departments WHERE department_id = ?`;
+      db.query(sql, [user.department_id], (err, results) => {
+        if (err) return reject(err);
+        resolve(results[0]); // will be undefined if not found
+      });
+    });
+
+    if (!deptResult || !deptResult.department_name) {
+      return res.status(400).json({
+        success: false,
+        message: 'Department not found or invalid department_id',
+      });
+    }
+
+    const departmentName = deptResult.department_name;
+
+    // ──────────────────────────────────────────────────────────────
+    // 2. Calculate total cost
+    // ──────────────────────────────────────────────────────────────
     const total = items.reduce((sum, item) => {
       const itemCost = parseFloat(item.total_cost) || 0;
       if (isNaN(itemCost)) {
@@ -88,17 +110,18 @@ exports.createRequest = async (req, res) => {
       return sum + itemCost;
     }, 0);
 
-    // Fetch the department's remaining budget
-    const budgetQuery = `
-      SELECT remaining_budget 
-      FROM department_budgets 
-      WHERE department_id = ?
-    `;
+    // ──────────────────────────────────────────────────────────────
+    // 3. Check remaining budget
+    // ──────────────────────────────────────────────────────────────
     const [budgetResult] = await new Promise((resolve, reject) => {
-      db.query(budgetQuery, [user.department_id], (err, results) => {
-        if (err) return reject(err);
-        resolve(results);
-      });
+      db.query(
+        `SELECT remaining_budget FROM department_budgets WHERE department_id = ?`,
+        [user.department_id],
+        (err, results) => {
+          if (err) return reject(err);
+          resolve(results);
+        }
+      );
     });
 
     if (!budgetResult) {
@@ -116,11 +139,13 @@ exports.createRequest = async (req, res) => {
       });
     }
 
-    // Proceed with creating the request
+    // ──────────────────────────────────────────────────────────────
+    // 4. Create the Purchase Request (save department NAME)
+    // ──────────────────────────────────────────────────────────────
     const newRequest = {
       lgu: requestData.lgu || 'Calapan City',
       fund: requestData.fund,
-      department: user.department_id,
+      department: departmentName,                    // ← Now saving the NAME
       section: requestData.section,
       fpp: requestData.fpp,
       date_requested: requestData.date_requested || new Date().toISOString().split('T')[0],
@@ -141,7 +166,9 @@ exports.createRequest = async (req, res) => {
 
     const pr_id = requestResult.insertId;
 
-    // Insert items
+    // ──────────────────────────────────────────────────────────────
+    // 5. Insert items
+    // ──────────────────────────────────────────────────────────────
     await Promise.all(
       items.map((item, index) => {
         const newItem = {
@@ -162,19 +189,23 @@ exports.createRequest = async (req, res) => {
       })
     );
 
-    // Update the remaining budget
-    const updateBudgetQuery = `
-      UPDATE department_budgets 
-      SET remaining_budget = remaining_budget - ? 
-      WHERE department_id = ?
-    `;
+    // ──────────────────────────────────────────────────────────────
+    // 6. Deduct from department budget
+    // ──────────────────────────────────────────────────────────────
     await new Promise((resolve, reject) => {
-      db.query(updateBudgetQuery, [total, user.department_id], (err, result) => {
-        if (err) return reject(err);
-        resolve(result);
-      });
+      db.query(
+        `UPDATE department_budgets SET remaining_budget = remaining_budget - ? WHERE department_id = ?`,
+        [total, user.department_id],
+        (err, result) => {
+          if (err) return reject(err);
+          resolve(result);
+        }
+      );
     });
 
+    // ──────────────────────────────────────────────────────────────
+    // 7. Success response
+    // ──────────────────────────────────────────────────────────────
     res.status(201).json({
       success: true,
       message: 'Request created successfully',
@@ -184,12 +215,12 @@ exports.createRequest = async (req, res) => {
         items,
       },
     });
+
   } catch (error) {
     console.error('Error creating request:', error);
     res.status(500).json({
       success: false,
       message: error.message || 'Failed to create request',
-      error: process.env.NODE_ENV === 'production' ? error.stack : undefined,
     });
   }
 };

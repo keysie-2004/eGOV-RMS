@@ -11,11 +11,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png"/>
   </head>
-
 <body class="bg-blue-50 font-sans">
   <!-- Include Sidebar -->
   <%- include('partials/sidebar') %>
-
   <!-- Main Content -->
   <div class="lg:ml-64 p-7 lg:p-10">
     <div class="w-full">
@@ -29,7 +27,6 @@
           <span class="text-blue-600 font-medium">Certificate of Acceptance</span>
         </div>
       </div>
-
       <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
         <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-6 pb-4 border-b border-gray-100 gap-4">
           <h2 class="text-2xl font-bold text-blue-700 flex items-center">
@@ -39,7 +36,6 @@
             <i class="fas fa-clock mr-1"></i> Form Status: <%= abstract.acceptanceData ? 'Saved' : 'Pending' %>
           </div>
         </div>
-
         <!-- Project Description -->
         <div class="mb-6 bg-blue-50 p-5 rounded-lg border-l-4 border-blue-500">
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -53,16 +49,14 @@
             </div>
           </div>
         </div>
-
         <!-- Items Table -->
         <div class="mb-6 overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
           <table class="w-full border-collapse min-w-full">
             <thead>
-              <tr class="bg-blue-600 text-white">                
+              <tr class="bg-blue-600 text-white">
                 <th class="p-3 text-left font-semibold border-r border-blue-500">Qty</th>
                 <th class="p-3 text-left font-semibold border-r border-blue-500">Unit</th>
                 <th class="p-3 text-left font-semibold border-r border-blue-500">Item Description</th>
-                <th class="p-3 text-left font-semibold border-r border-blue-500">Supplier Name</th>
                 <th class="p-3 text-left font-semibold border-r border-blue-500">Unit Price</th>
                 <th class="p-3 text-left font-semibold">Total Price</th>
               </tr>
@@ -73,7 +67,6 @@
                   <td class="p-3 border-t border-r border-gray-200 font-medium"><%= item.quantity %></td>
                   <td class="p-3 border-t border-r border-gray-200"><%= item.unit %></td>
                   <td class="p-3 border-t border-r border-gray-200"><%= item.item_description %></td>
-                  <td class="p-3 border-t border-r border-gray-200 font-medium text-blue-700"><%= item.supplier_name %></td>
                   <td class="p-3 border-t border-r border-gray-200 text-right font-medium"><%= item.unit_price %></td>
                   <td class="p-3 border-t border-gray-200 text-right font-bold text-blue-700"><%= item.total_price %></td>
                 </tr>
@@ -81,7 +74,6 @@
             </tbody>
           </table>
         </div>
-
         <!-- Total -->
         <div class="bg-blue-50 p-4 rounded-lg mb-6 border border-blue-200">
           <div class="text-right">
@@ -89,66 +81,96 @@
             <span class="text-2xl font-bold text-blue-700"><%= abstract.total %></span>
           </div>
         </div>
-
         <!-- PHILGEPS Reg. No. and Date Form -->
         <form id="acceptanceForm" enctype="multipart/form-data" onsubmit="saveAcceptance(event)">
           <h3 class="text-2xl font-bold text-blue-700 mb-6">Acceptance Details</h3>
-          
+         
           <!-- Hidden input for pr_id -->
           <input type="hidden" name="pr_id" value="<%= abstract.pr_id %>">
-
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <div>
               <label class="block text-gray-600 mb-2">PHILGEPS Registration Number</label>
-              <input type="text" name="philgeps_reg_no" 
-                     class="w-full p-3 border rounded-lg bg-blue-50" 
-                     value="<%= abstract.acceptanceData ? abstract.acceptanceData.philgeps_reg_no : '' %>" 
+              <input type="text" name="philgeps_reg_no"
+                     class="w-full p-3 border rounded-lg bg-blue-50"
+                     value="<%= abstract.acceptanceData ? abstract.acceptanceData.philgeps_reg_no : '' %>"
                      placeholder="Enter PHILGEPS registration number"
                      required>
             </div>
             <div>
               <label class="block text-gray-600 mb-2">Date</label>
-              <input type="date" name="date" 
-                     class="w-full p-3 border rounded-lg bg-blue-50" 
-                     value="<%= abstract.acceptanceData ? abstract.acceptanceData.date : '' %>" 
+              <input type="date" name="date"
+                     class="w-full p-3 border rounded-lg bg-blue-50"
+                     value="<%= abstract.acceptanceData ? abstract.acceptanceData.date : '' %>"
                      required>
             </div>
           </div>
-
-          <!-- BAC Members Section -->
-          <div class="mb-6">
-            <h3 class="text-xl font-bold text-blue-700 mb-6 flex items-center">
-              <i class="fas fa-users mr-2"></i> BAC Members
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <% abstract.bacMembers.forEach((member) => { %>
-                <div class="bg-blue-50 p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all">
-                  <div class="flex items-center">
-                    <div class="h-12 w-12 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-blue-600 mr-3 flex-shrink-0">
-                      <i class="fas fa-user"></i>
-                    </div>
-                    <div class="min-w-0 flex-1">
-                      <p class="font-semibold text-gray-800 truncate"><%= member.employee_name %></p>
-                      <p class="text-gray-500 text-sm truncate"><%= member.position %></p>
-                      <p class="text-sm text-blue-600 font-medium mt-1"><%= member.bac_position %></p>
-                    </div>
-                  </div>
-                </div>
-              <% }) %>
-            </div>
+<!-- BAC Members Section -->
+<div class="mb-6">
+  <h3 class="text-xl font-bold text-blue-700 mb-6 flex items-center">
+    <i class="fas fa-users mr-2"></i> BAC Members
+  </h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <% abstract.bacMembers.forEach((member) => { %>
+      <div class="bg-blue-50 p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all">
+        <div class="flex items-center">
+          <div class="h-12 w-12 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-blue-600 mr-3 flex-shrink-0">
+            <i class="fas fa-user"></i>
           </div>
+          <div class="min-w-0 flex-1">
+            <p class="font-semibold text-gray-800 truncate"><%= member.employee_name %></p>
+            <p class="text-gray-500 text-sm truncate"><%= member.position %></p>
+            <p class="text-sm text-blue-600 font-medium mt-1"><%= member.bac_position %></p>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+</div>
 
+<!-- End User Section -->
+<% if (abstract.endUser) { %>
+  <div class="mb-6 mt-6">
+    <h3 class="text-xl font-bold text-blue-700 mb-6 flex items-center">
+      <i class="fas fa-user-check mr-2"></i> End User
+    </h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="bg-green-50 p-4 rounded-lg border border-green-200 hover:border-green-300 hover:shadow-md transition-all">
+        <div class="flex items-center">
+          <div class="h-12 w-12 rounded-full bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center text-green-600 mr-3 flex-shrink-0">
+            <i class="fas fa-user-tie"></i>
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="font-semibold text-gray-800 truncate"><%= abstract.endUser.employee_name %></p>
+            <p class="text-gray-500 text-sm truncate"><%= abstract.endUser.position %></p>
+            <p class="text-sm text-green-600 font-medium mt-1">Requested By</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<% } else { %>
+  <div class="mb-6 mt-6">
+    <h3 class="text-xl font-bold text-blue-700 mb-6 flex items-center">
+      <i class="fas fa-user-check mr-2"></i> End User
+    </h3>
+    <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+      <p class="text-yellow-700">
+        <i class="fas fa-exclamation-triangle mr-2"></i>
+        No end user information available
+      </p>
+    </div>
+  </div>
+<% } %>
           <div class="flex flex-wrap justify-end gap-4">
             <button type="submit" class="flex items-center bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all shadow-sm">
               <i class="fas <%= abstract.acceptanceData ? 'fa-sync-alt' : 'fa-save' %> mr-2"></i>
               <%= abstract.acceptanceData ? 'Update Acceptance' : 'Save Acceptance' %>
             </button>
-
             <% if (abstract.acceptanceData) { %>
               <button type="button" onclick="printForm()" class="flex items-center bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-all shadow-sm">
                 <i class="fas fa-print mr-2"></i> Print
               </button>
-              
+             
             <a href="/purchase-order/<%= abstract.token %>" class="purple-button">
                 <i class="fas fa-arrow-right mr-2"></i> Next
             </a>
@@ -158,32 +180,31 @@
       </div>
     </div>
   </div>
-
 <!-- Printable Content (Hidden) - Exact Format Matching Document -->
 <div id="printableContent" class="hidden">
-  <div class="certificate-document">
+  <div class="certificate-document" style="font-size:12px;">
     <!-- Header -->
     <div class="certificate-title">CERTIFICATE OF ACCEPTANCE OF PRICES IN THE REQUEST FOR QUOTATION</div>
     <div class="certificate-subtitle">BIDS & AWARDS COMMITTEE</div>
-    <div class="certificate-subtitle">CITY GOVERNMENT OF CALAPAN</div>
-    
+    <div class="certificate-subtitle" style="font-size: 13px; font-weight: bold;">CITY GOVERNMENT OF CALAPAN</div>
+   
     <!-- Body Text -->
     <div class="certificate-body">
-      We the undersigned members of the Committee on Award, after careful deliberation on several prices quoted 
-      in the shopping/bidding for the <u><%= abstract.project_description %></u> as can be seen in the herein attached 
-      abstract of prices, hereby unanimously decide to accept the bids itemized there under for being the lowest calculated 
+      We the undersigned members of the Committee on Award, after careful deliberation on several prices quoted
+      in the shopping/bidding for the <u><%= abstract.project_description %></u> as can be seen in the herein attached
+      abstract of prices, hereby unanimously decide to accept the bids itemized there under for being the lowest calculated
       responsive bid to the government and awarding the same to the respective bidders.
     </div>
-    
+   
     <div class="certificate-body" style="font-weight: bold;">
       The Items Awarded to: <u><%= abstract.lowest_bidder || '________________________________' %></u>
     </div>
-    
+   
     <!-- PHILGEPS Registration -->
     <div class="philgeps-line">
       PHILGEPS Reg. No.: <u><%= abstract.acceptanceData ? abstract.acceptanceData.philgeps_reg_no : '________________________________' %></u>
     </div>
-    
+   
     <!-- Items Table - Exact format with proper spacing -->
     <table class="certificate-table">
       <thead>
@@ -206,10 +227,11 @@
             <td style="text-align: right;"><%= item.total_price %></td>
           </tr>
         <% }) %>
-        
-        <!-- Empty rows to match document format (approximately 15-20 total rows) -->
-        <% const emptyRowsNeeded = Math.max(0, 20 - abstract.items.length); %>
-        <% for(let i = 0; i < emptyRowsNeeded; i++) { %>
+       
+        <!-- Empty rows to match document format (32 rows per page) -->
+        <% const itemsPerPage = 30; %>
+        <% const totalRows = Math.max(itemsPerPage, Math.ceil(abstract.items.length / itemsPerPage) * itemsPerPage); %>
+        <% for(let i = abstract.items.length; i < totalRows; i++) { %>
           <tr style="height: 18px;">
             <td>&nbsp;</td>
             <td>&nbsp;</td>
@@ -220,47 +242,64 @@
         <% } %>
       </tbody>
     </table>
-    
+   
     <!-- Total Amount -->
     <div class="total-amount">
       <%= abstract.total || '0.00' %>
     </div>
-    
+   
     <!-- Witness Statement -->
     <div class="witness-line">
-      IN WITNESS WHEREOF, we hereby affix our signatures this 
-      <u><%= abstract.acceptanceData ? new Date(abstract.acceptanceData.date).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'}) : '________________________________' %></u> 
+      IN WITNESS WHEREOF, we hereby affix our signatures this
+      <u><%= abstract.acceptanceData ? new Date(abstract.acceptanceData.date).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'}) : '________________________________' %></u>
       in the City of Calapan.
     </div>
+   
+
+<!-- BAC Members Signatures (3 columns, 2 rows) with End User in Row 2, Column 3 -->
+<div class="signature-section">
+  <%
+    const regularMembers = abstract.bacMembers.filter(member => member.bac_position !== 'City Mayor' && member.bac_position !== 'Approved by');
+    const cityMayor = abstract.bacMembers.find(member => member.bac_position === 'City Mayor' || member.bac_position === 'Approved by');
     
-    <!-- BAC Members Signatures (3 columns, 2 rows) -->
-    <div class="signature-section">
-      <% 
-        const regularMembers = abstract.bacMembers.filter(member => member.bac_position !== 'City Mayor' && member.bac_position !== 'Approved by');
-        const cityMayor = abstract.bacMembers.find(member => member.bac_position === 'City Mayor' || member.bac_position === 'Approved by');
-        
-        // Display regular members (6 members in 2 rows of 3)
-        regularMembers.forEach((member, index) => {
-      %>
-        <div class="signature-block">
-          <div class="signature-line"></div>
-          <div class="signature-name"><%= member.employee_name %></div>
-          <div class="signature-title"><%= member.position %></div>
-          <div class="signature-title">BAC Member</div>
-        </div>
-      <% }) %>
+    // Display first 5 BAC members
+    regularMembers.slice(0, 5).forEach((member, index) => {
+  %>
+    <div class="signature-block">
+      <div class="signature-line"></div>
+      <div class="signature-name"><%= member.employee_name %></div>
+      <div class="signature-title"><%= member.position %></div>
+      <div class="signature-title"><%= member.bac_position %></div>
     </div>
-    
-    <!-- City Mayor - Approved by (centered at bottom) -->
-    <% if (cityMayor) { %>
-      <div class="approval-section">
-        <div style="font-size: 9px; margin-bottom: 5px;">Approved by:</div>
-        <div class="approval-line"></div>
-        <div class="signature-name"><%= cityMayor.employee_name %></div>
-        <div class="signature-title">City Mayor</div>
-      </div>
-    <% } %>
-    
+  <% }) %>
+  
+  <!-- End User in Row 2, Column 3 (6th position) -->
+  <% if (abstract.endUser) { %>
+    <div class="signature-block">
+      <div class="signature-line"></div>
+      <div class="signature-name"><%= abstract.endUser.employee_name %></div>
+      <div class="signature-title"><%= abstract.endUser.position %></div>
+      <div class="signature-title">End User</div>
+    </div>
+  <% } else { %>
+    <div class="signature-block">
+      <div class="signature-line"></div>
+      <div class="signature-name">&nbsp;</div>
+      <div class="signature-title">&nbsp;</div>
+      <div class="signature-title">&nbsp;</div>
+    </div>
+  <% } %>
+</div>
+
+<!-- City Mayor - Approved by (centered at bottom) -->
+<% if (cityMayor) { %>
+  <div class="approval-section">
+    <div style="font-size: 9px; margin-bottom: 5px;">Approved by:</div>
+    <div class="approval-line"></div>
+    <div class="signature-name"><%= cityMayor.employee_name %></div>
+    <div class="signature-title"><%= cityMayor.position %></div>
+  </div>
+<% } %>   
     <!-- Award Date at bottom -->
     <div style="position: absolute; bottom: 10px; left: 15px; font-size: 7px;">
       Award 2021 = 0
@@ -268,24 +307,22 @@
   </div>
 </div>
 
-  <!-- JavaScript -->
 <script>
   async function saveAcceptance(event) {
     event.preventDefault();
     const form = document.getElementById('acceptanceForm');
     const formData = new URLSearchParams();
-    
+   
     // Manually extract and append fields (ensures clean serialization)
     formData.append('pr_id', form.querySelector('input[name="pr_id"]').value);
     formData.append('philgeps_reg_no', form.querySelector('input[name="philgeps_reg_no"]').value);
     formData.append('date', form.querySelector('input[name="date"]').value);
-    
+   
     // Show saving indicator
     const submitBtn = event.submitter;
     const originalText = submitBtn.innerHTML;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Saving...';
     submitBtn.disabled = true;
-
     try {
       const response = await fetch('/save-acceptance', {
         method: 'POST',
@@ -294,11 +331,9 @@
         },
         body: formData
       });
-
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-
       const result = await response.json();
       if (result.success) {
         // Show success notification
@@ -320,14 +355,14 @@
       submitBtn.disabled = false;
     }
   }
-  
+ 
     function showNotification(title, message, type) {
       // Create notification element
       const notification = document.createElement('div');
       notification.className = `fixed top-4 right-4 flex items-center p-4 rounded-lg shadow-lg text-white ${
         type === 'success' ? 'bg-green-500' : 'bg-red-500'
       } z-50 animate-fade-in`;
-      
+     
       notification.innerHTML = `
         <div class="mr-3">
           <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} text-xl"></i>
@@ -340,19 +375,18 @@
           <i class="fas fa-times"></i>
         </button>
       `;
-      
+     
       document.body.appendChild(notification);
-      
+     
       // Remove after 5 seconds
       setTimeout(() => {
         notification.remove();
       }, 5000);
     }
-
-    function printForm() {
+function printForm() {
       const printWindow = window.open('', '_blank');
       const content = document.getElementById('printableContent').innerHTML;
-      
+     
       printWindow.document.write(`
         <!DOCTYPE html>
         <html>
@@ -360,129 +394,188 @@
           <title>Certificate of Acceptance</title>
           <style>
             @media print {
-              body { 
+              body {
                 font-family: Arial, sans-serif;
                 margin: 0;
                 padding: 0;
-                line-height: 1.2;
+                margin-top: 0 !important;
+                margin-bottom: 0 !important;
               }
               @page {
-                size: letter;
-                margin: 0.5in;
+                size: 8.5in 13in;
+                margin: 0.75in 0.75in 0.75in 0.75in;
+                margin-top: 0 !important;
+                margin-bottom: 0 !important;
+
               }
+                      .end-user-section {
+          margin: 25px 0;
+          text-align: center;
+          clear: both;
+          page-break-inside: avoid;
+        }
+        
+        .end-user-block {
+          display: inline-block;
+          width: 40%;
+          text-align: center;
+        }
+                  .signature-section {
+          margin-top: 20px;
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: space-between;
+          clear: both; /* Add this to prevent overlap */
+        }
+        
               .certificate-document {
                 border: none !important;
-                padding: 15px 25px 15px 15px !important;
+                padding: 0 !important;
                 font-family: Arial, sans-serif;
                 background: white;
-                max-width: none;
-                min-height: auto;
+                width: 100%;
+                height: 100%;
+                box-sizing: border-box;
+              }
+              table {
+                page-break-inside: avoid;
+              }
+              tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
               }
             }
-            body { 
+            body {
               font-family: Arial, sans-serif;
               margin: 0;
-              padding: 20px;
-              line-height: 1.2;
+              padding: 0;
+              font-size: 11px;
             }
             .certificate-document {
               font-family: Arial, sans-serif;
               background: white;
-              padding: 15px 25px 15px 15px;
+              padding: 0;
               margin: 0 auto;
-              max-width: 8.5in;
+              width: 7in;
               box-sizing: border-box;
+              font-size: 11px;
             }
             .certificate-title {
-              font-size: 12px;
+              font-size: 14px;
               font-weight: bold;
               text-align: center;
-              line-height: 1.1;
-              margin: 5px 0 2px 0;
+              line-height: 1.3;
+              margin: 0 0 8px 0;
+              padding: 0;
             }
             .certificate-subtitle {
-              font-size: 11px;
+              font-size: 13px;
               font-weight: bold;
               text-align: center;
-              line-height: 1.1;
-              margin: 1px 0;
+              line-height: 1.3;
+              margin: 4px 0;
+              padding: 0;
+            }
+            .certificate-subtitle[style*="font-size: 13px"] {
+              font-size: 14px !important;
+              font-weight: bold;
+              margin: 4px 0 20px 0;
             }
             .certificate-body {
-              font-size: 9px;
-              line-height: 1.3;
+              font-size: 11px;
+              line-height: 1.5;
               text-align: justify;
-              margin: 8px 0;
+              margin: 15px 0;
             }
             .certificate-table {
               width: 100%;
               border-collapse: collapse;
-              margin: 5px 0;
-              font-size: 8px;
+              margin: 15px 0;
+              font-size: 11px;
+              table-layout: fixed;
             }
             .certificate-table th,
             .certificate-table td {
               border: 1px solid black;
-              padding: 2px;
+              padding: 4px;
               vertical-align: top;
+              font-size: 11px;
             }
             .certificate-table th {
               background-color: white;
               font-weight: bold;
               text-align: center;
+              font-size: 11px;
             }
+            .certificate-table thead th:nth-child(1) { width: 8%; }
+            .certificate-table thead th:nth-child(2) { width: 12%; }
+            .certificate-table thead th:nth-child(3) { width: 40%; }
+            .certificate-table thead th:nth-child(4) { width: 20%; }
+            .certificate-table thead th:nth-child(5) { width: 20%; }
             .signature-section {
-              margin-top: 8px;
+              margin-top: 20px;
               display: flex;
               flex-wrap: wrap;
               justify-content: space-between;
             }
             .signature-block {
               width: 30%;
-              margin-bottom: 8px;
+              margin-bottom: 25px;
               text-align: center;
+              font-size: 11px;
             }
             .signature-line {
               border-bottom: 1px solid black;
-              height: 15px;
-              margin-bottom: 2px;
+              height: 25px;
+              margin-bottom: 3px;
               width: 85%;
               margin-left: auto;
               margin-right: auto;
             }
             .signature-name {
-              font-size: 8px;
+              font-size: 11px;
               font-weight: bold;
-              margin: 1px 0;
+              margin: 2px 0;
             }
             .signature-title {
-              font-size: 7px;
-              margin: 0;
+              font-size: 11px;
+              margin: 1px 0;
             }
             .approval-section {
               text-align: center;
-              margin-top: 10px;
+              margin-top: 25px;
             }
             .approval-line {
               border-bottom: 1px solid black;
-              height: 15px;
-              margin-bottom: 2px;
+              height: 25px;
+              margin-bottom: 3px;
               width: 50%;
               margin-left: auto;
               margin-right: auto;
             }
             .philgeps-line {
-              font-size: 9px;
-              margin: 5px 0;
+              font-size: 11px;
+              margin: 12px 0;
             }
             .witness-line {
-              font-size: 9px;
-              margin: 5px 0;
+              font-size: 11px;
+              margin: 15px 0;
             }
             .total-amount {
               text-align: right;
-              font-size: 9px;
-              margin: 2px 0;
+              font-size: 11px;
+              margin: 8px 0;
               font-weight: bold;
+              padding-right: 5px;
+            }
+            tbody {
+              display: table-row-group;
+            }
+            tr {
+              height: 18px;
+            }
+            thead tr {
+              height: 22px;
             }
           </style>
         </head>
@@ -492,8 +585,8 @@
             window.addEventListener('load', function() {
               setTimeout(function() {
                 window.print();
-                setTimeout(function() { 
-                  window.close(); 
+                setTimeout(function() {
+                  window.close();
                 }, 500);
               }, 500);
             });
@@ -501,9 +594,9 @@
         </body>
         </html>
       `);
-      
+     
       printWindow.document.close();
-      
+     
       // Show notification
       showNotification('Print', 'Print dialog opened', 'success');
     }

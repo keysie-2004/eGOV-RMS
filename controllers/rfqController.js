@@ -774,7 +774,7 @@ exports.showAcceptance = async (req, res) => {
     try {
         const pr_id = decodeToken(token);
 
-        const [purchaseRequest, items, supplierQuotes, acceptanceData, bacMembers, lowestQuotes, lowestBidder] = await Promise.all([
+        const [purchaseRequest, items, supplierQuotes, acceptanceData, bacMembers, lowestQuotes, lowestBidder, endUser] = await Promise.all([
             new Promise((resolve, reject) => {
                 rfqModel.getPurchaseRequestById(pr_id, (err, results) => {
                     if (err) reject(err);
@@ -817,6 +817,13 @@ exports.showAcceptance = async (req, res) => {
                     else resolve(results);
                 });
             }),
+            // Add the end user promise
+            new Promise((resolve, reject) => {
+                rfqModel.getEndUserByPrId(pr_id, (err, results) => {
+                    if (err) reject(err);
+                    else resolve(results);
+                });
+            }),
         ]);
 
         if (!purchaseRequest) {
@@ -849,14 +856,15 @@ exports.showAcceptance = async (req, res) => {
             project_description: purchaseRequest.purpose,
             department: purchaseRequest.department,
             items: itemsWithDetails,
-            total: total.toFixed(2), // Use calculated total from lowest quotes
+            total: total.toFixed(2),
             acceptanceData: acceptanceData ? {
                 ...acceptanceData,
                 date: formatDateForDisplay(acceptanceData.date)
             } : null,
             bacMembers: bacMembers,
             lowest_bidder: lowestBidderDisplay,
-            lowest_quotes: lowestQuotes
+            lowest_quotes: lowestQuotes,
+            endUser: endUser // Add end user to abstract
         };
 
         const abstractWithToken = {
