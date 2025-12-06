@@ -29,8 +29,8 @@
             </div>
             <div>
               <label class="block text-gray-600 mb-2">Department</label>
-              <input type="text" class="w-full p-3 border rounded-lg bg-blue-50" value="<%= purchaseRequest.department %>" readonly>
-            </div>
+<input type="text" class="w-full p-3 border rounded-lg bg-blue-50" 
+       value="<%= purchaseRequest.department_name || purchaseRequest.department || 'N/A' %>" readonly>            </div>
             <div>
               <label class="block text-gray-600 mb-2">Project Description</label>
               <input type="text" class="w-full p-3 border rounded-lg bg-blue-50" value="<%= purchaseRequest.purpose %>" readonly>
@@ -58,17 +58,22 @@
               </h3>
             </div>
             
-          <form id="supplier<%= supplierIndex + 1 %>Form" onsubmit="saveQuotes(event, 'supplier<%= supplierIndex + 1 %>')" class="p-5">
-            <input type="-hidden" name="pr_id" value="<%= purchaseRequest.pr_id %>">
-            <input type="hidden" name="supplier_name" value="<%= supplier %>">
-            <input type="hidden" name="total_items" value="<%= items.length %>">
-            <!-- Add requestor and BAC Secretariat details -->
-            <input type="hidden" name="requestor_name" value="<%= requestorAndBac.requestor_name || '' %>">
-            <input type="hidden" name="requestor_position" value="<%= requestorAndBac.requestor_position || '' %>">
-            <input type="hidden" name="bac_secretariat_name" value="<%= requestorAndBac.bac_secretariat_name || '' %>">
-            <input type="hidden" name="bac_secretariat_position" value="<%= requestorAndBac.bac_secretariat_position || '' %>">
+<form id="supplier<%= supplierIndex + 1 %>Form" onsubmit="saveQuotes(event, 'supplier<%= supplierIndex + 1 %>')" class="p-5">
+    <input type="hidden" name="pr_id" value="<%= purchaseRequest.pr_id %>">
+    <input type="hidden" name="supplier_name" value="<%= supplier %>">
+    <input type="hidden" name="total_items" value="<%= items.length %>">
 
-              <!-- Supplier Info -->
+    <!-- Existing -->
+    <input type="hidden" name="requestor_name" value="<%= requestorAndBac.requestor_name || '' %>">
+    <input type="hidden" name="requestor_position" value="<%= requestorAndBac.requestor_position || '' %>">
+    <input type="hidden" name="bac_secretariat_name" value="<%= requestorAndBac.bac_secretariat_name || '' %>">
+    <input type="hidden" name="bac_secretariat_position" value="<%= requestorAndBac.bac_secretariat_position || '' %>">
+
+    <!-- NEW: BAC Chairperson -->
+    <input type="hidden" name="bac_chairperson_name" value="<%= requestorAndBac.bac_chairperson_name || '' %>">
+    <input type="hidden" name="bac_chairperson_position" value="<%= requestorAndBac.bac_chairperson_position || '' %>">
+
+    <!-- Supplier Info -->
               <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 <div>
                   <label class="block text-gray-600 mb-2"><i class="fas fa-building text-gray-400 mr-2"></i>Company Name</label>

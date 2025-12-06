@@ -189,16 +189,20 @@ getAllApprovedPurchaseRequestsCategorized: (callback) => {
     //rfq.ejs - showRfqForm
 
     // Fetch purchase request by ID
-    getPurchaseRequestById: (pr_id, callback) => {
-        const sql = `
-            SELECT * FROM purchase_requests
-            WHERE pr_id = ?
-        `;
-        db.query(sql, [pr_id], (err, results) => {
-            if (err) return callback(err, null);
-            callback(null, results[0]); // Return the first row
-        });
-    },
+getPurchaseRequestById: (pr_id, callback) => {
+    const sql = `
+        SELECT 
+            pr.*,
+            d.department_name AS department_name
+        FROM purchase_requests pr
+        LEFT JOIN departments d ON pr.department = d.department_id
+        WHERE pr.pr_id = ?
+    `;
+    db.query(sql, [pr_id], (err, results) => {
+        if (err) return callback(err, null);
+        callback(null, results[0]); // Still returns one row
+    });
+},
 
     // Fetch items by PR ID
     getItemsByPrId: (pr_id, callback) => {
@@ -473,7 +477,7 @@ getAllApprovedPurchaseRequestsCategorized: (callback) => {
     });
   },
 
-// Fetch requestor and BAC Secretariat details by PR ID
+// In your model (rfqModel or wherever getRequestorAndBacSecretariat is defined)
 getRequestorAndBacSecretariat: (pr_id, callback) => {
     const sql = `
         SELECT
@@ -482,20 +486,38 @@ getRequestorAndBacSecretariat: (pr_id, callback) => {
             e1.position AS requestor_position,
             e2.employee_name AS bac_secretariat_name,
             e2.position AS bac_secretariat_position,
+            e3.employee_name AS bac_chairperson_name,
+            e3.position AS bac_chairperson_position,
             CONCAT(e2.employee_name, ' (', e2.position, ', ', e2.bac_position, ')') AS bac_head
         FROM purchase_requests pr
-        -- Match requestor by NAME
+        -- Requestor
         LEFT JOIN employees e1 
             ON LOWER(TRIM(e1.employee_name)) = LOWER(TRIM(pr.requested_by))
-        -- Always fetch the Head - BAC Secretariat
+        -- Head - BAC Secretariat
         LEFT JOIN (
             SELECT employee_id, employee_name, position, bac_position
             FROM employees
             WHERE LOWER(bac_position) LIKE '%head%'
-              AND LOWER(bac_position) LIKE '%bac secretariat%'
+              AND LOWER(bac_position) LIKE '%head, bac - secretariat%'
             ORDER BY updated_at DESC
             LIMIT 1
         ) AS e2 ON 1=1
+        -- BAC Chairperson (or Vice-Chair if Chairperson not available)
+        LEFT JOIN (
+            SELECT employee_id, employee_name, position, bac_position
+            FROM employees
+            WHERE LOWER(bac_position) LIKE '%chairperson%' 
+               OR LOWER(bac_position) LIKE '%chairman%'
+               OR LOWER(bac_position) LIKE '%vice-chairperson%'
+            ORDER BY 
+                CASE 
+                    WHEN LOWER(bac_position) LIKE '%chairperson%' THEN 1
+                    WHEN LOWER(bac_position) LIKE '%chairman%' THEN 1
+                    ELSE 2 
+                END,
+                updated_at DESC
+            LIMIT 1
+        ) AS e3 ON 1=1
         WHERE pr.pr_id = ?;
     `;
 

@@ -14,7 +14,9 @@ function printForm(supplier) {
     const requestorPosition = form.querySelector('input[name="requestor_position"]').value || 'Unknown';
     const bacSecretariatName = form.querySelector('input[name="bac_secretariat_name"]').value || 'Unknown';
     const bacSecretariatPosition = form.querySelector('input[name="bac_secretariat_position"]').value || 'Unknown';
-    
+    // Inside printForm() function, after getting other values, add:
+const bacChairpersonName = form.querySelector('input[name="bac_chairperson_name"]').value || '__________________';
+const bacChairpersonPosition = form.querySelector('input[name="bac_chairperson_position"]').value || 'BAC Chairperson';
     // Format dates
     const formattedDateSent = dateSent ? new Date(dateSent).toLocaleDateString() : '';
     const formattedDate = date ? new Date(date).toLocaleDateString() : '';
@@ -357,22 +359,22 @@ function printForm(supplier) {
         // Process items for the current page
         for (let index = startIndex; index < endIndex; index++) {
             const itemIdInput = form.querySelector(`input[name="item_id_${index}"]`);
-            if (!itemIdInput) continue; // Skip if item doesn't exist
-            
+            if (!itemIdInput) continue;
+
             const tableRow = tableRows[index];
-            if (!tableRow) continue; // Skip if table row doesn't exist
-            
-            // Get data from table cells and form inputs
-            const itemNo = startIndex + tableRow.cells[0].textContent.trim();
+            if (!tableRow) continue;
+
+            // Correct: Sequential item number starting from 1
+            const itemNo = index + 1;
+
             const description = tableRow.cells[1].textContent.trim();
             const unit = tableRow.cells[3].textContent.trim();
-            
-            // Get values from form inputs
+
             const quantity = form.querySelector(`input[name="quantity_${index}"]`)?.value || '';
             const brand = form.querySelector(`input[name="brand_${index}"]`)?.value || '';
             const unitCost = form.querySelector(`input[name="unit_cost_${index}"]`)?.value || '0';
             const totalCost = form.querySelector(`input[name="total_cost_${index}"]`)?.value || '0';
-            
+
             itemsRows += `
                 <tr class="table-row">
                     <td style="text-align: center;">${itemNo}</td>
@@ -385,7 +387,7 @@ function printForm(supplier) {
                 </tr>
             `;
         }
-        
+
         // Add empty rows to fill up to 32 rows on the current page
         for (let i = endIndex - startIndex; i < itemsPerPage; i++) {
             itemsRows += `
@@ -432,10 +434,9 @@ function printForm(supplier) {
                 </div>
 
                 <div class="signature-right">
-                    <p>${requestorName.toUpperCase()}</p>
-                    <p>${requestorPosition}</p>
+                    <p>${bacChairpersonName.toUpperCase()}</p>
+                    <p>${bacChairpersonPosition} / BAC Chairperson</p>
                 </div>
-
                 <div class="notes-section">
                     <p>NOTE:</p>
                     <ol>
