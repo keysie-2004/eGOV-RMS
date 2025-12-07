@@ -33,35 +33,39 @@ class ICSModel {
         }
     }
 
-    static async updateScanStatus(id, scanType, date, condition_code = null) {
-        try {
-            let query = 'UPDATE ics SET ';
-            const params = [];
-            if (scanType === 'first') {
-                query += 'first_scan_date = ?, scan_status = "First Scan Completed"';
-                params.push(date);
-            } else {
-                query += 'second_scan_date = ?, scan_status = "Second Scan Completed"';
-                params.push(date);
-            }
-            if (condition_code) {
-                query += ', condition_code = ?';
-                params.push(condition_code);
-            }
-            query += ' WHERE id = ? AND (status IS NULL OR status != "archived")';
-            params.push(id);
-
-            const result = await db.query(query, params);
-            if (result.affectedRows === 0) {
-                throw new Error('Item not found or is archived');
-            }
-
-            await this.calculateScanPercentage();
-            return true;
-        } catch (error) {
-            throw error;
+static async updateScanStatus(id, scanType, date, condition_code = null) {
+    try {
+        let query = 'UPDATE ics SET ';
+        const params = [];
+        
+        if (scanType === 'first') {
+            query += 'first_scan_date = ?, scan_status = "First Scan"'; // Shortened
+            params.push(date);
+        } else {
+            query += 'second_scan_date = ?, scan_status = "Second Scan"'; // Shortened
+            params.push(date);
         }
+        
+        if (condition_code) {
+            query += ', condition_code = ?';
+            params.push(condition_code);
+        }
+        
+        query += ' WHERE id = ? AND (status IS NULL OR status != "archived")';
+        params.push(id);
+        
+        const result = await db.query(query, params);
+        
+        if (result.affectedRows === 0) {
+            throw new Error('Item not found or is archived');
+        }
+        
+        await this.calculateScanPercentage();
+        return true;
+    } catch (error) {
+        throw error;
     }
+}
 
     static async calculateScanPercentage() {
         try {
