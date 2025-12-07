@@ -18,70 +18,83 @@ class ICSController {
         }
     }
 
-    static async handleScan(req, res) {
-        try {
-            const { qrCode, scanType, condition_code } = req.body;
-            if (!['first', 'second'].includes(scanType)) {
-                return res.status(400).json({ success: false, message: 'Invalid scan type' });
-            }
-            
-            const now = new Date();
-            const currentMonth = now.getMonth() + 1;
-            const validFirstScan = currentMonth >= 1 && currentMonth <= 6;
-            const validSecondScan = currentMonth >= 7 && currentMonth <= 12;
-            
-            if ((scanType === 'first' && !validFirstScan) || (scanType === 'second' && !validSecondScan)) {
-                return res.status(400).json({
-                    success: false,
-                    message: `Scan type "${scanType}" is not valid for the current month (${currentMonth})`
-                });
-            }
-
-            const item = await ICSModel.getItemByQRCode(qrCode);
-            if (!item) {
-                return res.status(404).json({ success: false, message: 'Item not found' });
-            }
-
-            if (item.unit_of_value <= 50000) {
+static async handleScan(req, res) {
+    try {
+        const { qrCode, scanType, condition_code } = req.body;
+        
+        if (!['first', 'second'].includes(scanType)) {
+            return res.status(400).json({ success: false, message: 'Invalid scan type' });
+        }
+        
+        // Validate condition_code (should be 1-4)
+        if (condition_code) {
+            const conditionInt = parseInt(condition_code);
+            if (isNaN(conditionInt) || conditionInt < 1 || conditionInt > 4) {
                 return res.status(400).json({ 
                     success: false, 
-                    message: 'Scanning is only allowed for items with value above ₱50,000' 
+                    message: 'Invalid condition code. Must be 1-4 (1=Serviceable, 2=Unserviceable, 3=Donation, 4=For Monitoring)' 
                 });
             }
-
-            if ((scanType === 'first' && item.first_scan_date) ||
-                (scanType === 'second' && item.second_scan_date)) {
-                return res.status(400).json({
-                    success: false,
-                    message: `Item already scanned for ${scanType} scan period`
-                });
-            }
-
-            if (item.status === 'archived') {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Cannot scan archived item'
-                });
-            }
-
-            const scanDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
-            await ICSModel.updateScanStatus(item.id, scanType, scanDate, condition_code);
-            
-            const updatedItem = await ICSModel.getItemById(item.id);
-            res.json({
-                success: true,
-                message: 'Scan successful',
-                item: updatedItem
-            });
-        } catch (error) {
-            console.error('Error handling scan:', error);
-            res.status(500).json({ 
-                success: false, 
-                message: 'Internal Server Error',
-                error: error.message 
+        }
+        
+        const now = new Date();
+        const currentMonth = now.getMonth() + 1;
+        const validFirstScan = currentMonth >= 1 && currentMonth <= 6;
+        const validSecondScan = currentMonth >= 7 && currentMonth <= 12;
+        
+        if ((scanType === 'first' && !validFirstScan) || (scanType === 'second' && !validSecondScan)) {
+            return res.status(400).json({
+                success: false,
+                message: `Scan type "${scanType}" is not valid for the current month (${currentMonth})`
             });
         }
+        
+        const item = await ICSModel.getItemByQRCode(qrCode);
+        
+        if (!item) {
+            return res.status(404).json({ success: false, message: 'Item not found' });
+        }
+        
+        if (item.unit_of_value <= 50000) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Scanning is only allowed for items with value above ₱50,000' 
+            });
+        }
+        
+        if ((scanType === 'first' && item.first_scan_date) ||
+            (scanType === 'second' && item.second_scan_date)) {
+            return res.status(400).json({
+                success: false,
+                message: `Item already scanned for ${scanType} scan period`
+            });
+        }
+        
+        if (item.status === 'archived') {
+            return res.status(400).json({
+                success: false,
+                message: 'Cannot scan archived item'
+            });
+        }
+        
+        const scanDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
+        await ICSModel.updateScanStatus(item.id, scanType, scanDate, condition_code);
+        
+        const updatedItem = await ICSModel.getItemById(item.id);
+        res.json({
+            success: true,
+            message: 'Scan successful',
+            item: updatedItem
+        });
+    } catch (error) {
+        console.error('Error handling scan:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Internal Server Error',
+            error: error.message 
+        });
     }
+}
 
     static async getStatistics(req, res) {
         try {

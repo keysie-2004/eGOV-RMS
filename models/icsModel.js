@@ -39,16 +39,21 @@ static async updateScanStatus(id, scanType, date, condition_code = null) {
         const params = [];
         
         if (scanType === 'first') {
-            query += 'first_scan_date = ?, scan_status = "First Scan"'; // Shortened
+            query += 'first_scan_date = ?, scan_status = "First Scan"';
             params.push(date);
         } else {
-            query += 'second_scan_date = ?, scan_status = "Second Scan"'; // Shortened
+            // Second scan means completed
+            query += 'second_scan_date = ?, scan_status = "Completed"';
             params.push(date);
         }
         
+        // Validate and add condition_code if provided
         if (condition_code) {
-            query += ', condition_code = ?';
-            params.push(condition_code);
+            const conditionInt = parseInt(condition_code);
+            if (conditionInt >= 1 && conditionInt <= 4) {
+                query += ', condition_code = ?';
+                params.push(conditionInt);
+            }
         }
         
         query += ' WHERE id = ? AND (status IS NULL OR status != "archived")';

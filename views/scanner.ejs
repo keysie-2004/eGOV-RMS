@@ -84,19 +84,20 @@
                         <button id="stopCameraBtn" class="btn btn-secondary w-100 py-2 mt-2" style="display: none;">Stop Camera</button>
                     </div>
                     
-                    <div class="condition-form" id="conditionForm">
-                        <div class="form-group mb-3">
-                            <label for="conditionCode" class="form-label">Update Condition:</label>
-                            <select id="conditionCode" class="form-select">
-                                <option value="">No Change</option>
-                                <option value="Good">Good</option>
-                                <option value="Fair">Fair</option>
-                                <option value="Poor">Poor</option>
-                            </select>
-                        </div>
-                        <button id="submitScanBtn" class="btn btn-primary w-100 py-2">Submit Scan</button>
-                    </div>
-                    
+<div class="condition-form" id="conditionForm">
+    <div class="form-group mb-3">
+        <label for="conditionCode" class="form-label">Update Condition:</label>
+        <select id="conditionCode" class="form-select">
+            <option value="">No Change</option>
+            <option value="1">Serviceable</option>
+            <option value="2">Unserviceable</option>
+            <option value="3">Donation</option>
+            <option value="4">For Monitoring</option>
+        </select>
+    </div>
+    <button id="submitScanBtn" class="btn btn-primary w-100 py-2">Submit Scan</button>
+</div>
+
                     <div id="scanResult" class="mt-3 alert" style="display: none;"></div>
                     
                     <div id="itemDetails" class="item-details">
@@ -177,282 +178,271 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     
-    <script>
-        $(document).ready(function() {
-            let stream = null;
-            let scanning = false;
-            let lastScanned = null;
+<script>
+    $(document).ready(function() {
+        let stream = null;
+        let scanning = false;
+        let lastScanned = null;
 
-            // Load initial statistics
-            updateStatistics();
+        // Condition code mapping
+        const conditionMap = {
+            1: 'Serviceable',
+            2: 'Unserviceable',
+            3: 'Donation',
+            4: 'For Monitoring'
+        };
+
+        // Load initial statistics
+        updateStatistics();
+        
+        // Set scan type based on current month
+        const month = new Date().getMonth() + 1;
+        if (month >= 7) {
+            $('#scanType').val('second');
+        } else {
+            $('#scanType').val('first');
+        }
+        
+        // Start camera
+        $('#startCameraBtn').click(function() {
+            startCamera();
+        });
+
+        // Stop camera
+        $('#stopCameraBtn').click(function() {
+            stopCamera();
+        });
+
+        // Handle scan submission
+        $('#submitScanBtn').click(function() {
+            const qrCode = lastScanned;
+            const scanType = $('#scanType').val();
+            const conditionCode = $('#conditionCode').val();
             
-            // Set scan type based on current month
-            const month = new Date().getMonth() + 1;
-            if (month >= 7) {
-                $('#scanType').val('second');
-            } else {
-                $('#scanType').val('first');
+            if (!qrCode) {
+                showScanResult('No QR code scanned', 'danger');
+                return;
             }
-            
-            // Start camera
-            $('#startCameraBtn').click(function() {
+
+            const data = { qrCode, scanType };
+            if (conditionCode) {
+                data.condition_code = parseInt(conditionCode); // Convert to integer
+            }
+
+            $.post('/scan', data, function(response) {
+                if (response.success) {
+                    showScanResult('Scan successful!', 'success');
+                    showItemDetails(response.item);
+                    updateStatistics();
+                    $('#conditionForm').hide();
+                    $('#conditionCode').val('');
+                    lastScanned = null;
+                } else {
+                    showScanResult(response.message, 'danger');
+                }
+            }).fail(function(xhr) {
+                showScanResult(xhr.responseJSON?.message || 'Error processing scan', 'danger');
+            }).always(function() {
                 startCamera();
             });
-
-            // Stop camera
-            $('#stopCameraBtn').click(function() {
-                stopCamera();
-            });
-
-            // Handle scan submission
-            $('#submitScanBtn').click(function() {
-                const qrCode = lastScanned;
-                const scanType = $('#scanType').val();
-                const conditionCode = $('#conditionCode').val();
-                
-                if (!qrCode) {
-                    showScanResult('No QR code scanned', 'danger');
-                    return;
-                }
-
-                // Fetch item details to validate unit_of_value
-                $.get(`/item/${qrCode}`, function(response) {
-                    if (!response.success || !response.item) {
-                        showScanResult(response.message || 'Item not found', 'danger');
-                        return;
-                    }
-
-                    const item = response.item;
-                    if (item.unit_of_value <= 50000) {
-                        showScanResult('Scanning is only allowed for items with value above ₱50,000', 'danger');
-                        $('#conditionForm').hide();
-                        $('#conditionCode').val('');
-                        lastScanned = null;
-                        startCamera();
-                        return;
-                    }
-
-                    const data = { qrCode, scanType };
-                    if (conditionCode) {
-                        data.condition_code = conditionCode;
-                    }
-
-                    $.post('/scan', data, function(response) {
-                        if (response.success) {
-                            showScanResult('Scan successful!', 'success');
-                            showItemDetails(response.item);
-                            updateStatistics();
-                            $('#conditionForm').hide();
-                            $('#conditionCode').val('');
-                            lastScanned = null;
-                        } else {
-                            showScanResult(response.message, 'danger');
-                        }
-                    }).fail(function(xhr) {
-                        showScanResult(xhr.responseJSON?.message || 'Error processing scan', 'danger');
-                    }).always(function() {
-                        startCamera();
-                    });
-                }).fail(function(xhr) {
-                    showScanResult(xhr.responseJSON?.message || 'Error fetching item details', 'danger');
-                    startCamera();
-                });
-            });
-
-            function startCamera() {
-                navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'environment' } // Prefer rear camera
-                }).then(function(mediaStream) {
-                    stream = mediaStream;
-                    const video = document.getElementById('video');
-                    video.srcObject = stream;
-                    video.play();
-                    $('#startCameraBtn').hide();
-                    $('#stopCameraBtn').show();
-                    scanning = true;
-                    scanQRCode();
-                }).catch(function(err) {
-                    showScanResult('Error accessing camera: ' + err.message, 'danger');
-                });
-            }
-
-            function stopCamera() {
-                if (stream) {
-                    stream.getTracks().forEach(track => track.stop());
-                    stream = null;
-                }
-                const video = document.getElementById('video');
-                video.srcObject = null;
-                $('#startCameraBtn').show();
-                $('#stopCameraBtn').hide();
-                scanning = false;
-            }
-
-            function scanQRCode() {
-                if (!scanning) return;
-
-                const video = document.getElementById('video');
-                const canvas = document.createElement('canvas');
-                const context = canvas.getContext('2d');
-
-                function tick() {
-                    if (video.readyState === video.HAVE_ENOUGH_DATA && scanning) {
-                        canvas.height = video.videoHeight;
-                        canvas.width = video.videoWidth;
-                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-                        const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                            inversionAttempts: 'dontInvert'
-                        });
-
-                        if (code && code.data) {
-                            try {
-                                const qrData = JSON.parse(code.data);
-                                if (qrData.id && lastScanned !== qrData.id) {
-                                    lastScanned = qrData.id;
-                                    // Fetch item details to validate unit_of_value
-                                    $.get(`/item/${qrData.id}`, function(response) {
-                                        if (!response.success || !response.item) {
-                                            showScanResult(response.message || 'Item not found', 'danger');
-                                            startCamera();
-                                            return;
-                                        }
-                                        const item = response.item;
-                                        if (item.unit_of_value <= 50000) {
-                                            showScanResult('Scanning is only allowed for items with value above ₱50,000', 'danger');
-                                            lastScanned = null;
-                                            startCamera();
-                                            return;
-                                        }
-                                        showScanResult('QR code detected!', 'success');
-                                        showItemDetails(item);
-                                        $('#conditionForm').show();
-                                        stopCamera();
-                                    }).fail(function(xhr) {
-                                        showScanResult(xhr.responseJSON?.message || 'Error fetching item details', 'danger');
-                                        startCamera();
-                                    });
-                                }
-                            } catch (e) {
-                                showScanResult('Invalid QR code format', 'warning');
-                                startCamera();
-                            }
-                        }
-                    }
-                    if (scanning) {
-                        requestAnimationFrame(tick);
-                    }
-                }
-
-                requestAnimationFrame(tick);
-            }
-
-            function showScanResult(message, type) {
-                const $result = $('#scanResult');
-                $result.removeClass('alert-success alert-danger alert-warning')
-                      .addClass(`alert-${type}`)
-                      .text(message)
-                      .show();
-                
-                setTimeout(() => {
-                    $result.fadeOut();
-                }, 3000);
-            }
-            
-            function showItemDetails(item) {
-                $('#detail-property_no').text(item.property_no || 'N/A');
-                $('#detail-description').text(item.description || 'N/A');
-                $('#detail-dept').text(item.dept || 'Unknown');
-                $('#detail-qty').text(item.qty || 'N/A');
-                $('#detail-unit_of_value').text(item.unit_of_value ? `₱${parseFloat(item.unit_of_value).toLocaleString()}` : 'N/A');
-                $('#detail-condition_code').text(item.condition_code || 'N/A');
-                $('#detail-first_scan_date').text(item.first_scan_date || 'Not scanned');
-                $('#detail-second_scan_date').text(item.second_scan_date || 'Not scanned');
-                
-                $('#itemDetails').show();
-            }
-            
-            function updateStatistics() {
-                $.get('/statistics', function(response) {
-                    if (response.success) {
-                        const stats = response.statistics;
-                        
-                        // Update overall progress
-                        const overallPercentage = stats.total > 0 ? (stats.completeScan / stats.total * 100).toFixed(1) : 0;
-                        $('#overallProgress').css('width', `${overallPercentage}%`)
-                                             .text(`${overallPercentage}%`);
-                        
-                        $('#totalItems').text(stats.total);
-                        $('#completeScans').text(stats.completeScan);
-                        
-                        // Update department progress
-                        let deptHtml = '';
-                        stats.departments.forEach(dept => {
-                            const deptPercentage = dept.total > 0 ? (dept.complete_scan / dept.total * 100).toFixed(1) : 0;
-                            deptHtml += `
-                                <div class="dept-progress">
-                                    <div class="d-flex justify-content-between">
-                                        <span>${dept.dept || 'Unknown'}</span>
-                                        <span>${dept.complete_scan}/${dept.total} (${deptPercentage}%)</span>
-                                    </div>
-                                    <div class="progress">
-                                        <div class="progress-bar" role="progressbar" 
-                                             style="width: ${deptPercentage}%"></div>
-                                    </div>
-                                </div>
-                            `;
-                        });
-                        $('#deptProgress').html(deptHtml);
-                        
-                        // Update chart
-                        updateChart(stats);
-                    }
-                });
-            }
-            
-            let scanChart = null;
-            
-            function updateChart(stats) {
-                const ctx = document.getElementById('scanChart').getContext('2d');
-                
-                if (scanChart) {
-                    scanChart.destroy();
-                }
-                
-                scanChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: ['First Scan', 'Second Scan', 'Complete Scan'],
-                        datasets: [{
-                            label: 'Number of Items',
-                            data: [stats.firstScan, stats.secondScan, stats.completeScan],
-                            backgroundColor: [
-                                'rgba(54, 162, 235, 0.7)',
-                                'rgba(255, 206, 86, 0.7)',
-                                'rgba(75, 192, 192, 0.7)'
-                            ],
-                            borderColor: [
-                                'rgba(54, 162, 235, 1)',
-                                'rgba(255, 206, 86, 1)',
-                                'rgba(75, 192, 192, 1)'
-                            ],
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    precision: 0
-                                }
-                            }
-                        }
-                    }
-                });
-            }
         });
-    </script>
-</body>
-</html>
+
+        function startCamera() {
+            navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment' }
+            }).then(function(mediaStream) {
+                stream = mediaStream;
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                video.play();
+                $('#startCameraBtn').hide();
+                $('#stopCameraBtn').show();
+                scanning = true;
+                scanQRCode();
+            }).catch(function(err) {
+                showScanResult('Error accessing camera: ' + err.message, 'danger');
+            });
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            const video = document.getElementById('video');
+            video.srcObject = null;
+            $('#startCameraBtn').show();
+            $('#stopCameraBtn').hide();
+            scanning = false;
+        }
+
+        function scanQRCode() {
+            if (!scanning) return;
+
+            const video = document.getElementById('video');
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+
+            function tick() {
+                if (video.readyState === video.HAVE_ENOUGH_DATA && scanning) {
+                    canvas.height = video.videoHeight;
+                    canvas.width = video.videoWidth;
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                        inversionAttempts: 'dontInvert'
+                    });
+
+                    if (code && code.data) {
+                        try {
+                            const qrData = JSON.parse(code.data);
+                            if (qrData.id && lastScanned !== qrData.id) {
+                                lastScanned = qrData.id;
+                                $.get(`/item/${qrData.id}`, function(response) {
+                                    if (!response.success || !response.item) {
+                                        showScanResult(response.message || 'Item not found', 'danger');
+                                        startCamera();
+                                        return;
+                                    }
+                                    const item = response.item;
+                                    if (parseFloat(item.unit_of_value.replace(/[^0-9.]/g, '')) <= 50000) {
+                                        showScanResult('Scanning is only allowed for items with value above ₱50,000', 'danger');
+                                        lastScanned = null;
+                                        startCamera();
+                                        return;
+                                    }
+                                    showScanResult('QR code detected!', 'success');
+                                    showItemDetails(item);
+                                    $('#conditionForm').show();
+                                    stopCamera();
+                                }).fail(function(xhr) {
+                                    showScanResult(xhr.responseJSON?.message || 'Error fetching item details', 'danger');
+                                    startCamera();
+                                });
+                            }
+                        } catch (e) {
+                            showScanResult('Invalid QR code format', 'warning');
+                            startCamera();
+                        }
+                    }
+                }
+                if (scanning) {
+                    requestAnimationFrame(tick);
+                }
+            }
+
+            requestAnimationFrame(tick);
+        }
+
+        function showScanResult(message, type) {
+            const $result = $('#scanResult');
+            $result.removeClass('alert-success alert-danger alert-warning')
+                  .addClass(`alert-${type}`)
+                  .text(message)
+                  .show();
+            
+            setTimeout(() => {
+                $result.fadeOut();
+            }, 3000);
+        }
+        
+        function showItemDetails(item) {
+            $('#detail-property_no').text(item.property_no || 'N/A');
+            $('#detail-description').text(item.description || 'N/A');
+            $('#detail-dept').text(item.dept || 'Unknown');
+            $('#detail-qty').text(item.qty || 'N/A');
+            $('#detail-unit_of_value').text(item.unit_of_value || 'N/A');
+            
+            // Display condition name instead of code
+            const conditionCode = parseInt(item.condition_code);
+            const conditionName = conditionMap[conditionCode] || item.condition_code || 'N/A';
+            $('#detail-condition_code').text(conditionName);
+            
+            $('#detail-first_scan_date').text(item.first_scan_date || 'Not scanned');
+            $('#detail-second_scan_date').text(item.second_scan_date || 'Not scanned');
+            
+            $('#itemDetails').show();
+        }
+        
+        function updateStatistics() {
+            $.get('/statistics', function(response) {
+                if (response.success) {
+                    const stats = response.statistics;
+                    
+                    // Update overall progress
+                    const overallPercentage = stats.total > 0 ? (stats.completeScan / stats.total * 100).toFixed(1) : 0;
+                    $('#overallProgress').css('width', `${overallPercentage}%`)
+                                         .text(`${overallPercentage}%`);
+                    
+                    $('#totalItems').text(stats.total);
+                    $('#completeScans').text(stats.completeScan);
+                    
+                    // Update department progress
+                    let deptHtml = '';
+                    stats.departments.forEach(dept => {
+                        const deptPercentage = dept.total > 0 ? (dept.complete_scan / dept.total * 100).toFixed(1) : 0;
+                        deptHtml += `
+                            <div class="dept-progress">
+                                <div class="d-flex justify-content-between">
+                                    <span>${dept.dept || 'Unknown'}</span>
+                                    <span>${dept.complete_scan}/${dept.total} (${deptPercentage}%)</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar" role="progressbar" 
+                                         style="width: ${deptPercentage}%"></div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    $('#deptProgress').html(deptHtml);
+                    
+                    // Update chart
+                    updateChart(stats);
+                }
+            });
+        }
+        
+        let scanChart = null;
+        
+        function updateChart(stats) {
+            const ctx = document.getElementById('scanChart').getContext('2d');
+            
+            if (scanChart) {
+                scanChart.destroy();
+            }
+            
+            scanChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['First Scan', 'Second Scan', 'Complete Scan'],
+                    datasets: [{
+                        label: 'Number of Items',
+                        data: [stats.firstScan, stats.secondScan, stats.completeScan],
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(75, 192, 192, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
