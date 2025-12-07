@@ -355,20 +355,23 @@
           </div>
 
           <!-- Form Actions -->
-          <div class="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4 no-print">
-            <a href="/inspection-form/<%= report.pr_info.pr_id %>" 
-               class="bg-gray-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-sm hover:bg-gray-600 text-sm sm:text-base text-center">
-              Cancel
-            </a>
-            <button type="button" onclick="printReport()" 
-                    class="bg-green-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-sm hover:bg-green-700 text-sm sm:text-base">
-              Print Report
-            </button>
-            <button type="submit" class="bg-blue-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-sm hover:bg-blue-800 text-sm sm:text-base">
-              <%= typeof editMode !== 'undefined' ? (editMode ? 'Update' : 'Save') : 'Save' %> Report
-            </button>
-          </div>
-        </form>
+<!-- Form Actions - Fixed Layout -->
+<div class="flex flex-wrap justify-end gap-2 sm:gap-4 mt-8 pt-6 border-t border-gray-200 no-print">
+  <a href="/inspection-form/<%= report.pr_info.pr_id %>" 
+     class="inline-flex items-center justify-center bg-gray-500 hover:bg-gray-600 text-white font-medium px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg shadow-sm transition-colors duration-200 text-sm sm:text-base min-w-[120px]">
+    Cancel
+  </a>
+  <button type="button" onclick="printReport()" 
+          class="inline-flex items-center justify-center bg-green-600 hover:bg-green-700 text-white font-medium px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg shadow-sm transition-colors duration-200 text-sm sm:text-base min-w-[140px]">
+    <i class="fas fa-print mr-2"></i>
+    Print Report
+  </button>
+  <button type="submit" 
+          class="inline-flex items-center justify-center bg-blue-700 hover:bg-blue-800 text-white font-medium px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg shadow-sm transition-colors duration-200 text-sm sm:text-base min-w-[140px]">
+    <i class="fas fa-save mr-2"></i>
+    <%= typeof editMode !== 'undefined' ? (editMode ? 'Update' : 'Save') : 'Save' %> Report
+  </button>
+</div>
         <% } else { %>
           <div class="bg-red-100 p-4 rounded text-red-800 text-sm sm:text-base">
             Error: Invalid report data. Please try again or contact support.

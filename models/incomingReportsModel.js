@@ -1,9 +1,10 @@
 const db = require('../config/db');
 
 class IncomingReportsModel {
-    static async fetchAndUpdateIncomingReports() {
+    static async fetchAndUpdateIncomingReports(userId = null, userName = null) {
         try {
-            await this.updateReportDataFromSources();
+            // Pass user info to the update method
+            await this.updateReportDataFromSources(userId, userName);
             
             const query = `
                 SELECT ir.*, 
@@ -21,8 +22,11 @@ class IncomingReportsModel {
         }
     }
     
-    static async updateReportDataFromSources() {
+    static async updateReportDataFromSources(userId = null, userName = null) {
         try {
+            // Determine who is updating (logged-in user or system)
+            const updatedBy = userName || userId || 'system';
+            
             const updateQuery = `
                 INSERT INTO incoming_reports (
                     pr_id, 
@@ -30,7 +34,9 @@ class IncomingReportsModel {
                     amount, 
                     supplier, 
                     created_at, 
-                    updated_at
+                    updated_at,
+                    updated_by,
+                    status  
                 )
                 SELECT 
                     insp.pr_id,
@@ -41,9 +47,11 @@ class IncomingReportsModel {
                         JOIN purchase_orders po ON poi.po_id = po.po_id
                         WHERE po.pr_id = insp.pr_id
                     ), 0) AS amount,
-                    po.company_name AS supplier,
+                    COALESCE(po.company_name, 'N/A') AS supplier,
                     NOW() AS created_at,
-                    NOW() AS updated_at
+                    NOW() AS updated_at,
+                    ? AS updated_by,
+                    'active' AS status
                 FROM 
                     inspection_reports insp
                 JOIN 
@@ -56,10 +64,11 @@ class IncomingReportsModel {
                     department = VALUES(department),
                     amount = VALUES(amount),
                     supplier = VALUES(supplier),
-                    updated_at = NOW()
+                    updated_at = NOW(),
+                    updated_by = ?
             `;
             
-            await db.query(updateQuery);
+            await db.query(updateQuery, [updatedBy, updatedBy]);
         } catch (error) {
             throw error;
         }
@@ -128,7 +137,7 @@ class IncomingReportsModel {
         }
     }
 
-    static async syncICSData() {
+    static async syncICSData(updated_by = 'system') {
         try {
             console.log('Starting ICS data sync...');
             
@@ -160,6 +169,8 @@ class IncomingReportsModel {
                 const icsData = await this.fetchICSData(pr_id);
                 
                 if (icsData) {
+                    // Add updated_by to ICS data if you have that field
+                    icsData.updated_by = updated_by;
                     await this.insertICSData(icsData);
                     console.log(`Successfully inserted ICS data for PR ${pr_id}`);
                     insertedCount++;
@@ -173,7 +184,8 @@ class IncomingReportsModel {
                 success: true, 
                 message: 'ICS data synced successfully',
                 inserted: insertedCount,
-                skipped: skippedCount
+                skipped: skippedCount,
+                updated_by: updated_by
             };
         } catch (error) {
             console.error('Error syncing ICS data:', error);
@@ -181,7 +193,7 @@ class IncomingReportsModel {
         }
     }
 
-    static async syncSingleICSData(incoming_id) {
+    static async syncSingleICSData(incoming_id, updated_by = 'system') {
         try {
             console.log(`Starting ICS data sync for incoming_id: ${incoming_id}`);
             
@@ -210,13 +222,16 @@ class IncomingReportsModel {
                 throw new Error(`No valid data found for PR ${pr_id}`);
             }
             
+            // Add updated_by to ICS data if you have that field
+            icsData.updated_by = updated_by;
             await this.insertICSData(icsData);
             console.log(`Successfully synced ICS data for PR ${pr_id}`);
             
             return { 
                 success: true, 
                 message: `ICS data synced successfully for PR ${pr_id}`,
-                incoming_id
+                incoming_id,
+                updated_by
             };
         } catch (error) {
             console.error(`Error syncing ICS data for incoming_id ${incoming_id}:`, error);
@@ -265,7 +280,7 @@ class IncomingReportsModel {
             return {
                 pr_id: pr_id,
                 dept: prData.department || '',
-                department_id: deptData.department_id || null, // Include department_id from departments table
+                department_id: deptData.department_id || null,
                 com_name: prData.department || '',
                 property_no: poData[0]?.stock_property_no || '',
                 description: prData.description || '',

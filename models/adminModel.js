@@ -219,52 +219,45 @@ static async getSupplierDetails(id) {
         return { success: true };
     }
 
-    static async getBidDetails(bidId) {
-        const [bid] = await db.query(`
-            SELECT 
-                sb.*,
-                s.company_name,
-                s.contact_person,
-                s.email,
-                s.phone,
-                b.pr_id,
-                pr.purpose,
-                pr.total AS pr_total
-            FROM supplier_bids sb
-            JOIN suppliers s ON sb.supplier_id = s.supplier_id
-            JOIN biddings b ON sb.bidding_id = b.bidding_id
-            JOIN purchase_requests pr ON b.pr_id = pr.pr_id
-            WHERE sb.bid_id = ?
-        `, [bidId]);
+static async getBidDetails(bidId) {
+    const [bid] = await db.query(`
+        SELECT 
+            sb.*,
+            s.company_name,
+            s.contact_person,
+            s.email,
+            s.phone,
+            b.pr_id,
+            pr.purpose,
+            pr.total AS pr_total
+        FROM supplier_bids sb
+        JOIN suppliers s ON sb.supplier_id = s.supplier_id
+        JOIN biddings b ON sb.bidding_id = b.bidding_id
+        JOIN purchase_requests pr ON b.pr_id = pr.pr_id
+        WHERE sb.bid_id = ?
+    `, [bidId]);
 
-        const items = await db.query(`
-            SELECT 
-                pr.pr_id,
-                pr_items.item_id AS requested_item_id,
-                pr_items.item_description,
-                pr_items.quantity AS requested_quantity,
-                pr_items.unit_cost AS requested_unit_cost,
-                sb.bid_id,
-                bi.item_id AS supplier_item_id,
-                bi.quantity AS supplier_quantity,
-                bi.unit_price AS supplier_unit_price,
-                bi.total_price AS supplier_total_price
-            FROM 
-                purchase_requests pr
-            JOIN 
-                purchase_request_items pr_items ON pr.pr_id = pr_items.pr_id
-            JOIN 
-                biddings b ON pr.pr_id = b.pr_id
-            JOIN 
-                supplier_bids sb ON b.bidding_id = sb.bidding_id
-            JOIN 
-                bid_items bi ON sb.bid_id = bi.bid_id
-            WHERE 
-                sb.bid_id = ?
-        `, [bidId]);
+    const items = await db.query(`
+        SELECT 
+            bi.item_id AS supplier_item_id,
+            pri.item_description,
+            pri.quantity AS requested_quantity,
+            pri.unit_cost AS requested_unit_cost,
+            bi.quantity AS supplier_quantity,
+            bi.unit_price AS supplier_unit_price,
+            bi.total_price AS supplier_total_price,
+            pri.item_no AS requested_item_id
+        FROM bid_items bi
+        JOIN supplier_bids sb ON bi.bid_id = sb.bid_id
+        JOIN biddings b ON sb.bidding_id = b.bidding_id
+        JOIN purchase_request_items pri ON pri.pr_id = b.pr_id 
+            AND pri.item_no = bi.item_id
+        WHERE bi.bid_id = ?
+        ORDER BY bi.item_id
+    `, [bidId]);
 
-        return { bid, items };
-    }
+    return { bid, items };
+}
 
 static async getSupplierHistory(supplierId) {
     const [supplier] = await db.query(`

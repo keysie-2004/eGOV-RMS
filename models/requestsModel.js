@@ -159,58 +159,98 @@ const RequestsModel = {
     });
   },
 
-  archive: (pr_id, callback) => {
-    const sql = `UPDATE purchase_requests SET is_archived = 1 WHERE pr_id = ?`;
-    db.query(sql, [pr_id], (err, result) => {
-      if (err) return callback(err, null);
-      callback(null, result);
-    });
-  },
+archive: (pr_id, callback) => {
+  const sql = `UPDATE purchase_requests SET is_archived = 1 WHERE pr_id = ?`;
+  db.query(sql, [pr_id], (err, result) => {
+    if (err) return callback(err, null);
+    callback(null, result);
+  });
+},
 
-  getByIdWithItems: (pr_id, callback) => {
-    const sql = `
-      SELECT 
-        pr.*, 
-        pri.item_no, pri.unit, pri.item_description, pri.quantity, pri.unit_cost, pri.total_cost,
-        db.budget_amount, db.remaining_budget, d.department_name
-      FROM purchase_requests pr
-      LEFT JOIN purchase_request_items pri ON pr.pr_id = pri.pr_id
-      LEFT JOIN departments d ON pr.department = d.department_id
-      LEFT JOIN department_budgets db ON d.department_id = db.department_id
-      WHERE pr.pr_id = ?
-    `;
-    db.query(sql, [pr_id], (err, results) => {
+renderAddRequestForm: (req, res) => {
+  const user = req.user;
+  if (!user) {
+    return res.redirect('/login');
+  }
+
+  // Fetch cash availability (City Treasurer)
+  const cashAvailabilityQuery = `
+    SELECT employee_name 
+    FROM employees 
+    WHERE bac_position LIKE '%Cash Availability%' 
+    LIMIT 1
+  `;
+
+  // Fetch approved by (City Mayor)
+  const approvedByQuery = `
+    SELECT employee_name 
+    FROM employees 
+    WHERE bac_position LIKE '%Approved by%' 
+    LIMIT 1
+  `;
+
+  // Fetch active FPP codes
+  const eppCodesQuery = `
+    SELECT epp_code, epp_name 
+    FROM epp_code 
+    WHERE is_archived = 0
+  `;
+
+  // Fetch budget information for the user's department
+  const budgetQuery = `
+    SELECT 
+      db.budget_amount, 
+      db.remaining_budget, 
+      d.department_name
+    FROM department_budgets db
+    JOIN departments d ON db.department_id = d.department_id
+    WHERE d.department_id = ?
+    LIMIT 1
+  `;
+
+  db.query(cashAvailabilityQuery, (err, cashResults) => {
+    if (err) {
+      console.error('Error fetching cash availability:', err);
+      return res.status(500).render('error', { message: 'Error fetching cash availability' });
+    }
+
+    db.query(approvedByQuery, (err, approvedResults) => {
       if (err) {
-        console.error('Error fetching request with items and budget:', err);
-        return callback(err, null);
+        console.error('Error fetching approved by:', err);
+        return res.status(500).render('error', { message: 'Error fetching approved by' });
       }
 
-      if (results.length === 0) {
-        return callback(null, null);
-      }
-
-      const request = {
-        ...results[0],
-        items: results
-          .filter(row => row.item_no)
-          .map(row => ({
-            item_no: row.item_no,
-            unit: row.unit,
-            item_description: row.item_description,
-            quantity: row.quantity,
-            unit_cost: row.unit_cost,
-            total_cost: row.total_cost
-          })),
-        budget: {
-          budget_amount: results[0].budget_amount ? parseFloat(results[0].budget_amount) : 0,
-          remaining_budget: results[0].remaining_budget ? parseFloat(results[0].remaining_budget) : 0,
-          department_name: results[0].department_name || null
+      db.query(eppCodesQuery, (err, eppCodes) => {
+        if (err) {
+          console.error('Error fetching FPP codes:', err);
+          return res.status(500).render('error', { message: 'Error fetching FPP codes' });
         }
-      };
 
-      callback(null, request);
+        // Fetch budget information based on user's department
+        db.query(budgetQuery, [user.department], (err, budgetResults) => {
+          if (err) {
+            console.error('Error fetching budget information:', err);
+            // Continue rendering without budget info instead of failing
+          }
+
+          const budget = budgetResults && budgetResults.length > 0 ? {
+            budget_amount: parseFloat(budgetResults[0].budget_amount || 0),
+            remaining_budget: parseFloat(budgetResults[0].remaining_budget || 0),
+            department_name: budgetResults[0].department_name || null
+          } : null;
+
+          res.render('add-requests', {
+            user: user,
+            cashAvailability: cashResults[0]?.employee_name || '',
+            approvedBy: approvedResults[0]?.employee_name || '',
+            eppCodes: eppCodes || [],
+            budget: budget
+          });
+        });
+      });
     });
-  },
+  });
+},
 
   getArchived: (callback) => {
     const sql = `SELECT * FROM purchase_requests WHERE is_archived = 1`;

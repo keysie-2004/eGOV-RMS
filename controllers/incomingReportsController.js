@@ -3,18 +3,23 @@ const IncomingReportsModel = require('../models/incomingReportsModel');
 class IncomingReportsController {
     static async displayIncomingReports(req, res) {
         try {
-            const reports = await IncomingReportsModel.fetchAndUpdateIncomingReports();
+            // Get user info from the authenticated user
+            const userId = req.user?.employee_id || req.user?.id;
+            const userName = req.user?.employee_name || req.user?.username;
+            
+            // Pass user info to fetch and update reports
+            const reports = await IncomingReportsModel.fetchAndUpdateIncomingReports(userId, userName);
             
             // Check for sync results in flash messages
             const successMsg = req.flash('success');
-            const syncResult = req.flash('syncResult')[0]; // Get sync result if exists
+            const syncResult = req.flash('syncResult')[0];
             
             res.render('incoming-reports', { 
                 reports,
                 user: req.user,
                 success: successMsg,
                 error: req.flash('error'),
-                syncResult: syncResult ? JSON.parse(syncResult) : null // Parse the sync result
+                syncResult: syncResult ? JSON.parse(syncResult) : null
             });
         } catch (error) {
             console.error('Error displaying incoming reports:', error);
@@ -26,7 +31,7 @@ class IncomingReportsController {
     static async updateReport(req, res) {
         try {
             const { incoming_id, particulars, transaction, date } = req.body;
-            const updated_by = req.user.employee_name; // Get from authenticated user
+            const updated_by = req.user.employee_name || req.user.username;
             
             await IncomingReportsModel.updateIncomingReport({
                 incoming_id,
@@ -48,7 +53,7 @@ class IncomingReportsController {
     static async archiveReport(req, res) {
         try {
             const { incoming_id } = req.params;
-            const updated_by = req.user.employee_name; // Use employee_name from the authenticated user
+            const updated_by = req.user.employee_name || req.user.username;
             
             await IncomingReportsModel.archiveIncomingReport(incoming_id, updated_by);
             
@@ -64,7 +69,7 @@ class IncomingReportsController {
     static async unarchiveReport(req, res) {
         try {
             const { incoming_id } = req.params;
-            const updated_by = req.user.employee_name;
+            const updated_by = req.user.employee_name || req.user.username;
             
             await IncomingReportsModel.unarchiveIncomingReport(incoming_id, updated_by);
             
@@ -79,7 +84,8 @@ class IncomingReportsController {
 
     static async syncICSData(req, res) {
         try {
-            const result = await IncomingReportsModel.syncICSData();
+            const updated_by = req.user.employee_name || req.user.username;
+            const result = await IncomingReportsModel.syncICSData(updated_by);
             
             req.flash('syncResult', JSON.stringify(result));
             req.flash('success', 'ICS data synced successfully');
@@ -95,8 +101,9 @@ class IncomingReportsController {
     static async syncSingleICSData(req, res) {
         try {
             const { incoming_id } = req.params;
+            const updated_by = req.user.employee_name || req.user.username;
             
-            const result = await IncomingReportsModel.syncSingleICSData(incoming_id);
+            const result = await IncomingReportsModel.syncSingleICSData(incoming_id, updated_by);
             
             req.flash('success', `ICS data synced successfully for report ${incoming_id}`);
             res.redirect('/incoming-reports');

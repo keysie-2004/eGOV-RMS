@@ -25,49 +25,49 @@ const inspectionModel = {
     });
   },
 
-  getInspectionData: (pr_id, callback) => {
-    const sql = `
-      SELECT 
-        pr.pr_id, 
-        ir.requisitioning_office,
-        ir.po_no,
-        ir.po_date,
-        ir.fund,
-        ir.air_no,
-        ir.air_date,
-        ir.invoice_no,
-        ir.invoice_date,
-        ir.date_received,
-        ir.acceptance_status,
-        ir.notes,
-        ir.date_inspected,
-        po.po_id,
-        po.company_name AS supplier,
-        poi.stock_property_no,
-        poi.item_description,
-        poi.unit,
-        poi.quantity,
-        COALESCE(sig1.employee_name, 'ROMMEL P. MASONGSONG') AS inspector_name,
-        COALESCE(sig1.position, 'Asst. City General Services Officer') AS inspector_position,
-        COALESCE(sig2.employee_name, 'DARWIN C. LOPEZ') AS receiver_name,
-        COALESCE(sig2.position, 'Inspection Officer') AS receiver_position
-      FROM purchase_requests pr
-      LEFT JOIN inspection_reports ir ON pr.pr_id = ir.pr_id
-      LEFT JOIN purchase_orders po ON pr.pr_id = po.pr_id
-      LEFT JOIN purchase_order_items poi ON po.po_id = poi.po_id
-      LEFT JOIN signatures sig1 ON sig1.id = 9
-      LEFT JOIN signatures sig2 ON sig2.id = 10
-      WHERE pr.pr_id = ?
-    `;
-    
-    db.query(sql, [pr_id], (err, results) => {
-      if (err) {
-        console.error('SQL Error:', err);
-        return callback(err);
-      }
-      callback(null, results);
-    });
-  },
+getInspectionData: (pr_id, callback) => {
+  const sql = `
+    SELECT 
+      pr.pr_id, 
+      ir.requisitioning_office,
+      ir.po_no,
+      ir.po_date,
+      ir.fund,
+      ir.air_no,
+      ir.air_date,
+      ir.invoice_no,
+      ir.invoice_date,
+      ir.date_received,
+      ir.acceptance_status,
+      ir.notes,
+      ir.date_inspected,
+      po.po_id,
+      po.company_name AS supplier,
+      poi.stock_property_no,
+      poi.item_description,
+      poi.unit,
+      poi.quantity,
+      emp1.employee_name AS inspector_name,
+      emp1.position AS inspector_position,
+      emp2.employee_name AS receiver_name,
+      emp2.position AS receiver_position
+    FROM purchase_requests pr
+    LEFT JOIN inspection_reports ir ON pr.pr_id = ir.pr_id
+    LEFT JOIN purchase_orders po ON pr.pr_id = po.pr_id
+    LEFT JOIN purchase_order_items poi ON po.po_id = poi.po_id
+    LEFT JOIN employees emp1 ON emp1.position = 'City General Services Officer' AND emp1.status = 1
+    LEFT JOIN employees emp2 ON emp2.position = 'Supervising Administrative Officer' AND emp2.status = 1
+    WHERE pr.pr_id = ?
+  `;
+  
+  db.query(sql, [pr_id], (err, results) => {
+    if (err) {
+      console.error('SQL Error:', err);
+      return callback(err);
+    }
+    callback(null, results);
+  });
+},
 
   saveInspectionReport: (data, callback) => {
     console.log('Model received data:', data);

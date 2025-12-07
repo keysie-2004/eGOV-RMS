@@ -30,6 +30,20 @@ exports.renderAddRequestForm = (req, res) => {
     WHERE is_archived = 0
   `;
 
+  // Fetch budget information for the employee's department
+  // Join using department_name since pr.department stores department name
+  const budgetQuery = `
+    SELECT 
+      db.budget_amount, 
+      db.remaining_budget, 
+      d.department_name,
+      d.department_id
+    FROM department_budgets db
+    JOIN departments d ON db.department_id = d.department_id
+    WHERE d.department_id = ?
+    LIMIT 1
+  `;
+
   db.query(cashAvailabilityQuery, (err, cashResults) => {
     if (err) {
       console.error('Error fetching cash availability:', err);
@@ -48,18 +62,32 @@ exports.renderAddRequestForm = (req, res) => {
           return res.status(500).render('error', { message: 'Error fetching FPP codes' });
         }
 
-        res.render('add-requests', {
-          user: user,
-          cashAvailability: cashResults[0]?.employee_name || '',
-          approvedBy: approvedResults[0]?.employee_name || '',
-          eppCodes: eppCodes || [],
-          budget: null // Budget information removed
+        // Fetch budget information based on employee's department_id
+        db.query(budgetQuery, [user.department_id], (err, budgetResults) => {
+          if (err) {
+            console.error('Error fetching budget information:', err);
+            // Continue rendering without budget info instead of failing
+          }
+
+          const budget = budgetResults && budgetResults.length > 0 ? {
+            budget_amount: parseFloat(budgetResults[0].budget_amount || 0),
+            remaining_budget: parseFloat(budgetResults[0].remaining_budget || 0),
+            department_name: budgetResults[0].department_name || null,
+            department_id: budgetResults[0].department_id || null
+          } : null;
+
+          res.render('add-requests', {
+            user: user,
+            cashAvailability: cashResults[0]?.employee_name || '',
+            approvedBy: approvedResults[0]?.employee_name || '',
+            eppCodes: eppCodes || [],
+            budget: budget
+          });
         });
       });
     });
   });
 };
-
 exports.createRequest = async (req, res) => {
   try {
     const user = req.user;
@@ -284,9 +312,11 @@ exports.getRequests = (req, res) => {
             return res.status(500).render('error', { message: 'Internal Server Error' });
         }
 
-        // Group items by pr_id and include QR code for e-sign requests
-        const groupedRequests = results.reduce((acc, row) => {
-            if (!acc[row.pr_id]) {
+        // Group items by pr_id using Map to preserve insertion order
+        const groupedRequestsMap = new Map();
+        
+        results.forEach(row => {
+            if (!groupedRequestsMap.has(row.pr_id)) {
                 let parsedComments = {};
                 if (row.comments) {
                     try {
@@ -305,7 +335,7 @@ exports.getRequests = (req, res) => {
                     }
                 }
 
-                acc[row.pr_id] = {
+                groupedRequestsMap.set(row.pr_id, {
                     pr_id: row.pr_id,
                     lgu: row.lgu,
                     fund: row.fund,
@@ -323,11 +353,11 @@ exports.getRequests = (req, res) => {
                     qr_code: row.status === 'e-sign' ? row.qr_code : null,
                     comments: parsedComments,
                     items: []
-                };
+                });
             }
 
             if (row.item_no) {
-                acc[row.pr_id].items.push({
+                groupedRequestsMap.get(row.pr_id).items.push({
                     item_no: row.item_no,
                     unit: row.unit,
                     item_description: row.item_description,
@@ -336,16 +366,60 @@ exports.getRequests = (req, res) => {
                     total_cost: row.total_cost
                 });
             }
-            return acc;
-        }, {});
+        });
 
-        res.render('requests', {
-            user,
-            requests: Object.values(groupedRequests),
-            currentStatus: statusFilter,
-            showArchived,
-            statusOptions: validStatuses,
-            budget: null // Budget information removed
+        // Convert Map to array (preserves insertion order which is DESC from SQL)
+        const groupedRequests = Array.from(groupedRequestsMap.values());
+
+        // Fetch budget information based on user type
+        let budgetQuery;
+        let budgetParams;
+
+        if (user.user_type === 'superadmin') {
+            // Superadmin gets total budget across all departments
+            budgetQuery = `
+                SELECT 
+                    SUM(budget_amount) as budget_amount, 
+                    SUM(remaining_budget) as remaining_budget,
+                    'All Departments' as department_name
+                FROM department_budgets
+            `;
+            budgetParams = [];
+        } else {
+            // Regular users get their department's budget
+            budgetQuery = `
+                SELECT 
+                    db.budget_amount, 
+                    db.remaining_budget, 
+                    d.department_name
+                FROM department_budgets db
+                JOIN departments d ON db.department_id = d.department_id
+                WHERE db.department_id = ?
+                LIMIT 1
+            `;
+            budgetParams = [user.department_id];
+        }
+
+        db.query(budgetQuery, budgetParams, (err, budgetResults) => {
+            if (err) {
+                console.error('Error fetching budget information:', err);
+                // Continue rendering without budget info instead of failing
+            }
+
+            const budget = budgetResults && budgetResults.length > 0 ? {
+                budget_amount: parseFloat(budgetResults[0].budget_amount || 0),
+                remaining_budget: parseFloat(budgetResults[0].remaining_budget || 0),
+                department_name: budgetResults[0].department_name || null
+            } : null;
+
+            res.render('requests', {
+                user,
+                requests: groupedRequests,
+                currentStatus: statusFilter,
+                showArchived,
+                statusOptions: validStatuses,
+                budget: budget
+            });
         });
     });
 };

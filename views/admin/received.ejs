@@ -4,7 +4,56 @@
   <meta charset="utf-8"/>
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
   <title>Received Bids</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <link href="/src/table.css" rel="stylesheet"/>
+  <style>
+    /* Custom scrollbar for modals */
+    .modal-scrollable {
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    
+    .modal-scrollable::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    .modal-scrollable::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+    
+    .modal-scrollable::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+    }
+    
+    .modal-scrollable::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+    
+    /* Table container inside modal */
+    .modal-table-container {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .modal-table-container table {
+      min-width: 100%;
+    }
+    
+    /* Modal content wrapper */
+    .modal-content-wrapper {
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Fix modal positioning for scroll */
+    .modal-container {
+      max-height: 90vh;
+      margin: 1rem;
+    }
+  </style>
 </head>
 
 <body class="bg-blue-50 font-sans">
@@ -139,96 +188,120 @@
 
       <!-- Receive Items Modal -->
       <div class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden" id="receiveItemsModal">
-        <div class="bg-white rounded-lg shadow-sm w-full max-w-2xl p-6">
-          <div class="flex justify-between items-center mb-4">
-            <h5 class="text-xl font-bold text-blue-700">Verify Received Items</h5>
-            <button class="text-gray-600 hover:text-gray-800 close-receive-modal">
-              <i class="fas fa-times"></i>
-            </button>
+        <div class="modal-container w-full max-w-2xl">
+          <div class="bg-white rounded-lg shadow-sm modal-content-wrapper">
+            <div class="flex-shrink-0 p-6 border-b">
+              <div class="flex justify-between items-center">
+                <h5 class="text-xl font-bold text-blue-700">Verify Received Items</h5>
+                <button class="text-gray-600 hover:text-gray-800 close-receive-modal">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+            
+            <div class="modal-scrollable p-6">
+              <form id="receiveItemsForm">
+                <input type="hidden" id="receiveBidId">
+                <div class="mb-4">
+                  <div class="modal-table-container">
+                    <table class="w-full border-collapse">
+                      <thead>
+                        <tr class="bg-blue-100 sticky top-0">
+                          <th class="p-2 text-left">Item</th>
+                          <th class="p-2 text-left">Quantity</th>
+                          <th class="p-2 text-left">Unit Price</th>
+                          <th class="p-2 text-left">Total</th>
+                          <th class="p-2 text-left">
+                            <input type="checkbox" id="selectAllItems" class="form-checkbox">
+                            <label for="selectAllItems">Select All</label>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody id="itemsList">
+                        <!-- Items will be populated here -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </form>
+            </div>
+            
+            <div class="flex-shrink-0 p-6 border-t">
+              <div class="flex justify-end">
+                <button type="submit" class="bg-blue-700 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-blue-800" id="confirmReceiptButton" disabled>
+                  Confirm Receipt
+                </button>
+              </div>
+            </div>
           </div>
-          <form id="receiveItemsForm">
-            <input type="hidden" id="receiveBidId">
-            <div class="mb-4">
-              <table class="w-full border-collapse">
-                <thead>
-                  <tr class="bg-blue-100">
-                    <th class="p-2 text-left">Item</th>
-                    <th class="p-2 text-left">Quantity</th>
-                    <th class="p-2 text-left">Unit Price</th>
-                    <th class="p-2 text-left">Total</th>
-                    <th class="p-2 text-left">
-                      <input type="checkbox" id="selectAllItems" class="form-checkbox">
-                      <label for="selectAllItems">Select All</label>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody id="itemsList">
-                  <!-- Items will be populated here -->
-                </tbody>
-              </table>
-            </div>
-            <div class="flex justify-end">
-              <button type="submit" class="bg-blue-700 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-blue-800" id="confirmReceiptButton" disabled>
-                Confirm Receipt
-              </button>
-            </div>
-          </form>
         </div>
       </div>
 
-      <!-- Rating Modal -->
-      <div class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden" id="rateSupplierModal">
-        <div class="bg-white rounded-lg shadow-sm w-full max-w-md p-6">
-          <div class="flex justify-between items-center mb-4">
-            <h5 class="text-xl font-bold text-blue-700">Rate Supplier</h5>
-            <button class="text-gray-600 hover:text-gray-800 close-modal">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-          <form id="rateSupplierForm">
-            <input type="hidden" id="rateBidId">
-            <div class="mb-4">
-              <label class="block text-gray-600 mb-2">Supplier</label>
-              <input type="text" id="supplierName" class="w-full p-3 border rounded-lg bg-blue-50" readonly>
-            </div>
-            <div class="mb-4">
-              <label class="block text-gray-600 mb-2">Rating</label>
-              <div class="flex items-center">
-                <input type="radio" id="star1" name="rating" value="1" class="hidden" required>
-                <label for="star1" class="text-2xl cursor-pointer star-rating" data-rating="1">
-                  <i class="far fa-star text-yellow-400"></i>
-                </label>
-                <input type="radio" id="star2" name="rating" value="2" class="hidden">
-                <label for="star2" class="text-2xl cursor-pointer star-rating" data-rating="2">
-                  <i class="far fa-star text-yellow-400"></i>
-                </label>
-                <input type="radio" id="star3" name="rating" value="3" class="hidden">
-                <label for="star3" class="text-2xl cursor-pointer star-rating" data-rating="3">
-                  <i class="far fa-star text-yellow-400"></i>
-                </label>
-                <input type="radio" id="star4" name="rating" value="4" class="hidden">
-                <label for="star4" class="text-2xl cursor-pointer star-rating" data-rating="4">
-                  <i class="far fa-star text-yellow-400"></i>
-                </label>
-                <input type="radio" id="star5" name="rating" value="5" class="hidden">
-                <label for="star5" class="text-2xl cursor-pointer star-rating" data-rating="5">
-                  <i class="far fa-star text-yellow-400"></i>
-                </label>
-              </div>
-            </div>
-            <div class="mb-4">
-              <label for="comment" class="block text-gray-600 mb-2">Comments (Optional)</label>
-              <textarea id="comment" rows="4" class="w-full p-3 border rounded-lg bg-blue-50"></textarea>
-            </div>
-            <div class="flex justify-end">
-              <button type="submit" class="bg-blue-700 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-blue-800">
-                Submit Rating
-              </button>
-            </div>
-          </form>
+<!-- Rating Modal -->
+<div class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden" id="rateSupplierModal">
+  <div class="modal-container w-full max-w-md">
+    <div class="bg-white rounded-lg shadow-sm modal-content-wrapper">
+      <div class="flex-shrink-0 p-6 border-b">
+        <div class="flex justify-between items-center">
+          <h5 class="text-xl font-bold text-blue-700">Rate Supplier</h5>
+          <button type="button" class="text-gray-600 hover:text-gray-800 close-modal">
+            <i class="fas fa-times"></i>
+          </button>
         </div>
       </div>
+      
+      <form id="rateSupplierForm">
+        <div class="modal-scrollable p-6">
+          <input type="hidden" id="rateBidId">
+          <div class="mb-4">
+            <label class="block text-gray-600 mb-2">Supplier</label>
+            <input type="text" id="supplierName" class="w-full p-3 border rounded-lg bg-blue-50" readonly>
+          </div>
+          <div class="mb-4">
+            <label class="block text-gray-600 mb-2">Rating <span class="text-red-500">*</span></label>
+            <div class="flex items-center">
+              <input type="radio" id="star1" name="rating" value="1" class="hidden" required>
+              <label for="star1" class="text-2xl cursor-pointer star-rating" data-rating="1">
+                <i class="far fa-star text-yellow-400"></i>
+              </label>
+              <input type="radio" id="star2" name="rating" value="2" class="hidden">
+              <label for="star2" class="text-2xl cursor-pointer star-rating" data-rating="2">
+                <i class="far fa-star text-yellow-400"></i>
+              </label>
+              <input type="radio" id="star3" name="rating" value="3" class="hidden">
+              <label for="star3" class="text-2xl cursor-pointer star-rating" data-rating="3">
+                <i class="far fa-star text-yellow-400"></i>
+              </label>
+              <input type="radio" id="star4" name="rating" value="4" class="hidden">
+              <label for="star4" class="text-2xl cursor-pointer star-rating" data-rating="4">
+                <i class="far fa-star text-yellow-400"></i>
+              </label>
+              <input type="radio" id="star5" name="rating" value="5" class="hidden">
+              <label for="star5" class="text-2xl cursor-pointer star-rating" data-rating="5">
+                <i class="far fa-star text-yellow-400"></i>
+              </label>
+            </div>
+          </div>
+          <div class="mb-4">
+            <label for="comment" class="block text-gray-600 mb-2">Comments (Optional)</label>
+            <textarea id="comment" rows="4" class="w-full p-3 border rounded-lg bg-blue-50"></textarea>
+          </div>
+        </div>
+        
+        <div class="flex-shrink-0 p-6 border-t">
+          <div class="flex justify-end space-x-2">
+            <button type="button" class="bg-gray-500 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-gray-600 close-modal">
+              Cancel
+            </button>
+            <button type="submit" class="bg-blue-700 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-blue-800">
+              Submit Rating
+            </button>
+          </div>
+        </div>
+      </form>
     </div>
+  </div>
+</div>
   </div>
 
   <script>
@@ -409,7 +482,7 @@
       });
 
       // Submit Received Items Form
-      document.getElementById('receiveItemsForm').addEventListener('submit', async (e) => {
+      document.getElementById('confirmReceiptButton').addEventListener('click', async (e) => {
         e.preventDefault();
         const bidId = document.getElementById('receiveBidId').value;
         const checkboxes = document.querySelectorAll('input[name="items"]:checked');
