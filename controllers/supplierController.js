@@ -73,7 +73,6 @@ const supplierController = {
                     recentBids = bids.slice(0, 5);
                 }
 
-                // Fetch open purchase requests where supplier hasn't bid
                 // Fixed query to properly find available biddings
                 const postedQuery = `
                     SELECT DISTINCT
@@ -233,93 +232,90 @@ const supplierController = {
     },
 
     // Handle registration
-    register: async (req, res) => {
-        try {
-            const { 
-                company_name, 
-                contact_person, 
-                email, 
-                phone, 
-                address, 
-                tax_id, 
-                business_permit, 
-                password 
-            } = req.body;
-            
-            console.log('Registration attempt for:', email);
-            
-            // Check if supplier already exists
-            const existingSupplier = await Supplier.findByEmail(email);
-            if (existingSupplier) {
-                console.log('Email already registered:', email);
-                return res.status(400).json({ 
-                    success: false, 
-                    message: 'Email already registered' 
-                });
-            }
-            
-            // Hash password
-            const hashedPassword = await bcrypt.hash(password, 10);
-            
-            // Handle file upload
-            let permitFilePath = '';
-            if (req.files && req.files.permit_file) {
-                const permitFile = req.files.permit_file;
-                const ext = path.extname(permitFile.name);
-                const filename = `permit_${Date.now()}${ext}`;
-                permitFilePath = path.join('public/uploads', 'suppliers', 'permits', filename);
-                
-                await permitFile.mv(permitFilePath);
-                permitFilePath = permitFilePath.replace('public', '');
-            }
+// Handle registration - FIXED FOR MULTER
+register: async (req, res) => {
+    try {
+        const { 
+            company_name, 
+            contact_person, 
+            email, 
+            phone, 
+            address, 
+            tax_id, 
+            business_permit, 
+            password 
+        } = req.body;
+        
+        console.log('Registration attempt for:', email);
 
-            // Handle profile image upload
-            let profileImagePath = '';
-            if (req.files && req.files.profile_image) {
-                const profileImage = req.files.profile_image;
-                const ext = path.extname(profileImage.name);
-                const filename = `profile_${Date.now()}${ext}`;
-                profileImagePath = path.join('public/uploads', 'suppliers', 'profiles', filename);
-                
-                await profileImage.mv(profileImagePath);
-                profileImagePath = profileImagePath.replace('public', '');
-            }
-            
-            // Create supplier
-            const result = await Supplier.register({
-                company_name,
-                contact_person,
-                email,
-                phone,
-                address,
-                tax_id,
-                business_permit,
-                permit_file: permitFilePath,
-                profile_image: profileImagePath,
-                password: hashedPassword
-            });
-            
-            if (!result.success) {
-                console.error('Registration failed:', result.error);
-                return res.status(500).json({ 
-                    success: false, 
-                    message: result.error 
-                });
-            }
-            
-            console.log('Supplier registered successfully:', email);
-            res.json({ 
-                success: true, 
-                message: 'Supplier registered successfully. Waiting for approval.' 
-            });
-        } catch (error) {
-            console.error('Supplier registration error:', error);
-            res.status(500).json({ 
+        // Check if supplier already exists
+        const existingSupplier = await Supplier.findByEmail(email);
+        if (existingSupplier) {
+            return res.status(400).json({ 
                 success: false, 
-                message: 'Internal server error' 
+                message: 'Email already registered' 
             });
         }
-    },
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Handle file uploads - MULTER VERSION
+        let permitFilePath = '';
+        let profileImagePath = '';
+
+        // permit_file is REQUIRED
+        if (!req.files || !req.files.permit_file || !req.files.permit_file[0]) {
+            return res.status(400).json({
+                success: false,
+                message: 'Business permit file is required'
+            });
+        }
+
+        const permitFile = req.files.permit_file[0];
+        permitFilePath = `/uploads/suppliers/permits/${permitFile.filename}`;
+
+        // profile_image is OPTIONAL
+        if (req.files && req.files.profile_image && req.files.profile_image[0]) {
+            const profileFile = req.files.profile_image[0];
+            profileImagePath = `/uploads/suppliers/profiles/${profileFile.filename}`;
+        }
+
+        // Create supplier
+        const result = await Supplier.register({
+            company_name,
+            contact_person,
+            email,
+            phone,
+            address,
+            tax_id,
+            business_permit,
+            permit_file: permitFilePath,
+            profile_image: profileImagePath,
+            password: hashedPassword
+        });
+        
+        if (!result.success) {
+            return res.status(500).json({ 
+                success: false, 
+                message: result.error || 'Registration failed'
+            });
+        }
+        
+        console.log('Supplier registered successfully:', email);
+        res.json({ 
+            success: true, 
+            message: 'Registration successful! Your account is pending approval. You will receive an email once approved.'
+        });
+
+    } catch (error) {
+        console.error('Supplier registration error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Internal server error'
+        });
+    }
+},
 
     // Logout
     logout: (req, res) => {

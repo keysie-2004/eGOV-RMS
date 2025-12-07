@@ -48,19 +48,19 @@
           <div class="form-step active" id="step1">
             <div class="mb-4">
               <label class="block text-gray-700 mb-2">Company Name *</label>
-              <input type="text" name="company_name" class="w-full p-3 border rounded-lg bg-blue-50"  >
+              <input type="text" name="company_name" class="w-full p-3 border rounded-lg bg-blue-50" required>
             </div>
             <div class="mb-4">
               <label class="block text-gray-700 mb-2">Tax Identification Number *</label>
-              <input type="text" name="tax_id" class="w-full p-3 border rounded-lg bg-blue-50"  >
+              <input type="text" name="tax_id" class="w-full p-3 border rounded-lg bg-blue-50" required>
             </div>
             <div class="mb-4">
               <label class="block text-gray-700 mb-2">Business Permit Number *</label>
-              <input type="text" name="business_permit" class="w-full p-3 border rounded-lg bg-blue-50"  >
+              <input type="text" name="business_permit" class="w-full p-3 border rounded-lg bg-blue-50" required>
             </div>
             <div class="mb-4">
               <label class="block text-gray-700 mb-2">Business Permit File (PDF/Image) *</label>
-              <input type="file" name="permit_file" class="w-full p-3 border rounded-lg bg-blue-50" accept=".pdf,.jpg,.jpeg,.png"  >
+              <input type="file" name="permit_file" class="w-full p-3 border rounded-lg bg-blue-50" accept=".pdf,.jpg,.jpeg,.png" required>
             </div>
             <div class="flex justify-end">
               <button type="button" onclick="nextStep(1, 2)" class="px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition duration-300">
@@ -73,19 +73,19 @@
           <div class="form-step" id="step2">
             <div class="mb-4">
               <label class="block text-gray-700 mb-2">Contact Person *</label>
-              <input type="text" name="contact_person" class="w-full p-3 border rounded-lg bg-blue-50"  >
+              <input type="text" name="contact_person" class="w-full p-3 border rounded-lg bg-blue-50" required>
             </div>
             <div class="mb-4">
               <label class="block text-gray-700 mb-2">Email *</label>
-              <input type="email" name="email" class="w-full p-3 border rounded-lg bg-blue-50"  >
+              <input type="email" name="email" class="w-full p-3 border rounded-lg bg-blue-50" required>
             </div>
             <div class="mb-4">
               <label class="block text-gray-700 mb-2">Phone Number *</label>
-              <input type="tel" name="phone" class="w-full p-3 border rounded-lg bg-blue-50"  >
+              <input type="tel" name="phone" class="w-full p-3 border rounded-lg bg-blue-50" required>
             </div>
             <div class="mb-4">
               <label class="block text-gray-700 mb-2">Business Address *</label>
-              <textarea name="address" class="w-full p-3 border rounded-lg bg-blue-50" rows="3"  ></textarea>
+              <textarea name="address" class="w-full p-3 border rounded-lg bg-blue-50" rows="3" required></textarea>
             </div>
             <div class="flex justify-between">
               <button type="button" onclick="prevStep(2, 1)" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition duration-300">
@@ -101,18 +101,18 @@
           <div class="form-step" id="step3">
             <div class="mb-4">
               <label class="block text-gray-700 mb-2">Password *</label>
-              <input type="password" name="password" id="password" class="w-full p-3 border rounded-lg bg-blue-50"  >
+              <input type="password" name="password" id="password" class="w-full p-3 border rounded-lg bg-blue-50" required>
             </div>
             <div class="mb-4">
               <label class="block text-gray-700 mb-2">Confirm Password *</label>
-              <input type="password" name="confirm_password" id="confirm_password" class="w-full p-3 border rounded-lg bg-blue-50"  >
+              <input type="password" name="confirm_password" id="confirm_password" class="w-full p-3 border rounded-lg bg-blue-50" required>
             </div>
             <div class="mb-4">
               <label class="block text-gray-700 mb-2">Profile Picture (Optional)</label>
               <input type="file" name="profile_image" class="w-full p-3 border rounded-lg bg-blue-50" accept=".jpg,.jpeg,.png">
             </div>
             <div class="mb-4 flex items-start">
-              <input type="checkbox" name="terms" id="terms" class="mt-1 mr-2"  >
+              <input type="checkbox" name="terms" id="terms" class="mt-1 mr-2" required>
               <label for="terms" class="text-gray-700">I agree to the <a href="#" class="text-blue-700 hover:underline">Terms and Conditions</a> and <a href="#" class="text-blue-700 hover:underline">Privacy Policy</a> *</label>
             </div>
             <div class="flex justify-between">
@@ -195,7 +195,7 @@
       // Validate current step before proceeding
       let valid = true;
       const currentStep = document.getElementById(`step${current}`);
-      const inputs = currentStep.querySelectorAll('input[ ], textarea[ ]');
+      const inputs = currentStep.querySelectorAll('input[required], textarea[required]');
       
       inputs.forEach(input => {
         if (!input.value.trim()) {
@@ -218,7 +218,7 @@
       }
 
       if (!valid) {
-        showError('Please fill in all   fields');
+        showError('Please fill in all required fields');
         return;
       }
 

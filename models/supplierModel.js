@@ -1,32 +1,36 @@
 const db = require('../config/db');
 
 const Supplier = {
-    // Register a new supplier
-    register: async (supplierData) => {
-        const query = `
-            INSERT INTO suppliers 
-            (company_name, contact_person, email, phone, address, tax_id, business_permit, password)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-        const values = [
-            supplierData.company_name,
-            supplierData.contact_person,
-            supplierData.email,
-            supplierData.phone,
-            supplierData.address,
-            supplierData.tax_id,
-            supplierData.business_permit,
-            supplierData.password
-        ];
-        
-        try {
-            const result = await db.query(query, values);
-            return { success: true, supplierId: result.insertId };
-        } catch (error) {
-            console.error('Error registering supplier:', error);
-            return { success: false, error: error.message };
-        }
-    },
+// Replace the register method in supplierModel.js
+
+register: async (supplierData) => {
+    const query = `
+        INSERT INTO suppliers 
+        (company_name, contact_person, email, phone, address, tax_id, 
+         business_permit, permit_file, profile_image, password)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    const values = [
+        supplierData.company_name,
+        supplierData.contact_person,
+        supplierData.email,
+        supplierData.phone,
+        supplierData.address,
+        supplierData.tax_id,
+        supplierData.business_permit,
+        supplierData.permit_file || null,      // File path for permit
+        supplierData.profile_image || null,    // File path for profile image
+        supplierData.password
+    ];
+    
+    try {
+        const result = await db.query(query, values);
+        return { success: true, supplierId: result.insertId };
+    } catch (error) {
+        console.error('Error registering supplier:', error);
+        return { success: false, error: error.message };
+    }
+},
 
     // Find supplier by email
     findByEmail: async (email) => {
