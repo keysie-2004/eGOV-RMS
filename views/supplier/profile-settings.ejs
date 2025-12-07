@@ -4,11 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Profile Settings - eGOV-RMS</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Add these CSS imports -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link href="/src/table.css" rel="stylesheet"/>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
   <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png">
-  <style>
+    <style>
     @media print {
       body { margin: 0; padding: 0; font-size: 12pt; }
       .max-w-4xl { width: 100%; max-width: none; }
@@ -28,14 +30,14 @@
     .date-cell { white-space: nowrap; }
   </style>
 </head>
-<body class="bg-gray-100">
+<body class="bg-blue-50 font-sans">
   <!-- Include Sidebar -->
   <%- include('../partials/supplierSidebar') %>
 
   <!-- Main Content -->
-  <div class="md:ml-64 p-4 md:p-8">
+  <div class="lg:ml-64 p-4 lg:p-10">
     <div class="w-full">
-      <div class="bg-white p-6 rounded-lg shadow-sm">
+      <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
         <h1 class="text-2xl font-bold text-blue-700 mb-6">Profile Settings</h1>
 
         <!-- Profile Update Form -->
@@ -68,25 +70,25 @@
           <form action="/supplier/profile-settings" method="POST" class="space-y-4">
             <div>
               <label for="company_name" class="block text-sm font-medium text-gray-700">Company Name</label>
-              <input type="text" name="company_name" id="company_name" value="<%= supplier.company_name %>" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+              <input type="text" name="company_name" id="company_name" value="<%= supplier.company_name %>" class="block w-full p-3 border rounded-lg bg-blue-50 mt-1 mb-4" required>
             </div>
             <div>
               <label for="contact_person" class="block text-sm font-medium text-gray-700">Contact Person</label>
-              <input type="text" name="contact_person" id="contact_person" value="<%= supplier.contact_person %>" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+              <input type="text" name="contact_person" id="contact_person" value="<%= supplier.contact_person %>" class="block w-full p-3 border rounded-lg bg-blue-50 mt-1 mb-4" required>
             </div>
             <div>
               <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-              <input type="email" name="email" id="email" value="<%= supplier.email %>" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+              <input type="email" name="email" id="email" value="<%= supplier.email %>" class="block w-full p-3 border rounded-lg bg-blue-50 mt-1 mb-4" required>
             </div>
             <div>
               <label for="phone" class="block text-sm font-medium text-gray-700">Phone</label>
-              <input type="text" name="phone" id="phone" value="<%= supplier.phone %>" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+              <input type="text" name="phone" id="phone" value="<%= supplier.phone %>" class="block w-full p-3 border rounded-lg bg-blue-50 mt-1 mb-4" required>
             </div>
             <div>
               <label for="address" class="block text-sm font-medium text-gray-700">Address</label>
-              <textarea name="address" id="address" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required><%= supplier.address %></textarea>
+              <textarea name="address" id="address" class="block w-full p-3 border rounded-lg bg-blue-50 mt-1 mb-4" required><%= supplier.address %></textarea>
             </div>
-            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <button type="submit" class="bg-blue-700 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-blue-800">
               Update Profile
             </button>
           </form>
@@ -100,36 +102,36 @@
             <p class="text-sm text-gray-600">Total Ratings: <%= ratings.length %> record(s)</p>
           </div>
           <div class="flex space-x-4 mb-4 no-print">
-            <button onclick="printRatings()" class="bg-green-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-green-600">
+            <button onclick="printRatings()" class="bg-green-500 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-green-600">
               <i class="fas fa-print mr-2"></i>Print Ratings
             </button>
-            <a href="/supplier/profile-settings/ratings-csv" class="bg-yellow-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-yellow-600">
+            <a href="/supplier/profile-settings/ratings-csv" class="bg-yellow-500 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-yellow-600">
               <i class="fas fa-file-csv mr-2"></i>Export to CSV
             </a>
-            <a href="/supplier/profile-settings/ratings-pdf" class="bg-red-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-red-600">
+            <a href="/supplier/profile-settings/ratings-pdf" class="bg-red-500 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-red-600">
               <i class="fas fa-file-pdf mr-2"></i>Export to PDF
             </a>
           </div>
           <% if (ratings && ratings.length > 0) { %>
-            <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating ID</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bid ID</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comments</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rated At</th>
+            <div class="overflow-x-auto">
+              <table class="min-w-full bg-white border border-gray-300">
+                <thead>
+                  <tr class="bg-blue-100">
+                    <th class="py-2 px-4 border-b text-left">Rating ID</th>
+                    <th class="py-2 px-4 border-b text-left">Bid ID</th>
+                    <th class="py-2 px-4 border-b text-right">Rating</th>
+                    <th class="py-2 px-4 border-b text-left">Comments</th>
+                    <th class="py-2 px-4 border-b text-left">Rated At</th>
                   </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody>
                   <% ratings.forEach(rating => { %>
                     <tr class="hover:bg-gray-50">
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= rating.rating_id %></td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= rating.bid_id %></td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 number-cell"><%= rating.rating %></td>
-                      <td class="px-6 py-4 text-sm text-gray-500"><%= rating.comments || 'N/A' %></td>
-                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 date-cell"><%= new Date(rating.rated_at).toLocaleString('en-PH', { dateStyle: 'short', timeStyle: 'short' }) %></td>
+                      <td class="py-2 px-4 border-b"><%= rating.rating_id %></td>
+                      <td class="py-2 px-4 border-b"><%= rating.bid_id %></td>
+                      <td class="py-2 px-4 border-b number-cell"><%= rating.rating %></td>
+                      <td class="py-2 px-4 border-b"><%= rating.comments || 'N/A' %></td>
+                      <td class="py-2 px-4 border-b date-cell"><%= new Date(rating.rated_at).toLocaleString('en-PH', { dateStyle: 'short', timeStyle: 'short' }) %></td>
                     </tr>
                   <% }); %>
                 </tbody>
@@ -154,6 +156,9 @@
       </div>
     </div>
   </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <script src="/src/script.js"></script>
 
   <script>
     function printRatings() {

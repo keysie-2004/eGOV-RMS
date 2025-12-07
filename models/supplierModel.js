@@ -469,137 +469,86 @@ awardBid: async (biddingId, bidId) => {
     },
 
     // Get bids by supplier
-        getSupplierBids: async (supplierId, statusFilter = 'all') => {
-            try {
-                let query = `
-                    SELECT 
-                        sb.*, 
-                        b.deadline, 
-                        pr.purpose, 
-                        pr.status AS pr_status,
-                        b.status AS bidding_status, 
-                        pr.pr_id, 
-                        pr.lgu, 
-                        pr.department,
-                        pr.date_requested, 
-                        pr.requested_by, 
-                        pr.total AS pr_total,
-                        e.employee_name AS requested_by_name
-                    FROM supplier_bids sb
-                    JOIN biddings b ON sb.bidding_id = b.bidding_id
-                    JOIN purchase_requests pr ON b.pr_id = pr.pr_id
-                    LEFT JOIN employees e ON pr.requested_by = e.employee_id
-                    WHERE sb.supplier_id = ?
-                `;
-                let queryParams = [supplierId];
-
-                // Apply status filter
-                if (statusFilter !== 'all') {
-                    const validStatuses = ['pending', 'approved', 'declined', 'closed', 'awarded'];
-                    if (validStatuses.includes(statusFilter)) {
-                        if (['closed', 'awarded'].includes(statusFilter)) {
-                            query += ` AND b.status = ?`;
-                        } else {
-                            query += ` AND sb.status = ?`;
-                        }
-                        queryParams.push(statusFilter);
-                    }
-                }
-
-                query += ` ORDER BY sb.submitted_at DESC`;
-
-                const bids = await db.query(query, queryParams);
-
-                // Fetch items for each bid
-                const itemsQuery = `
-                    SELECT 
-                        bi.*, 
-                        pri.item_description, 
-                        pri.unit, 
-                        pri.item_no,
-                        pri.unit_cost AS estimated_unit_cost
-                    FROM bid_items bi
-                    JOIN purchase_request_items pri ON bi.item_id = pri.item_id
-                    WHERE bi.bid_id = ?
-                `;
-
-                for (let bid of bids) {
-                    const items = await db.query(itemsQuery, [bid.bid_id]);
-                    bid.items = items;
-                }
-
-                return bids;
-            } catch (error) {
-                console.error('Error fetching supplier bids:', error);
-                throw error;
-            }
-        }, 
-        
-        getSupplierBids: async (supplierId, statusFilter = 'all') => {
+getSupplierBids: async (supplierId, statusFilter = 'all') => {
     try {
-      let query = `
-        SELECT 
-          sb.*, 
-          b.deadline, 
-          pr.purpose, 
-          pr.status AS pr_status,
-          b.status AS bidding_status, 
-          pr.pr_id, 
-          pr.lgu, 
-          pr.department,
-          pr.date_requested, 
-          pr.requested_by, 
-          pr.total AS pr_total,
-          e.employee_name AS requested_by_name
-        FROM supplier_bids sb
-        JOIN biddings b ON sb.bidding_id = b.bidding_id
-        JOIN purchase_requests pr ON b.pr_id = pr.pr_id
-        LEFT JOIN employees e ON pr.requested_by = e.employee_id
-        WHERE sb.supplier_id = ?
-      `;
-      let queryParams = [supplierId];
+        let query = `
+            SELECT 
+                sb.*, 
+                b.deadline, 
+                pr.purpose, 
+                pr.status AS pr_status,
+                b.status AS bidding_status, 
+                pr.pr_id, 
+                pr.lgu, 
+                pr.department,
+                pr.date_requested, 
+                pr.requested_by, 
+                pr.total AS pr_total,
+                COALESCE(e.employee_name, CONCAT(pr.requested_by)) AS requested_by_name
+            FROM supplier_bids sb
+            JOIN biddings b ON sb.bidding_id = b.bidding_id
+            JOIN purchase_requests pr ON b.pr_id = pr.pr_id
+            LEFT JOIN employees e ON pr.requested_by = e.employee_id
+            WHERE sb.supplier_id = ?
+        `;
+        let queryParams = [supplierId];
 
-      // Apply status filter
-      if (statusFilter !== 'all') {
-        const validStatuses = ['pending', 'approved', 'declined', 'closed', 'awarded'];
-        if (validStatuses.includes(statusFilter)) {
-          if (['closed', 'awarded'].includes(statusFilter)) {
-            query += ` AND b.status = ?`;
-          } else {
-            query += ` AND sb.status = ?`;
-          }
-          queryParams.push(statusFilter);
+        if (statusFilter !== 'all') {
+            const validStatuses = ['pending', 'approved', 'declined', 'closed', 'awarded'];
+            if (validStatuses.includes(statusFilter)) {
+                if (['closed', 'awarded'].includes(statusFilter)) {
+                    query += ` AND b.status = ?`;
+                } else {
+                    query += ` AND sb.status = ?`;
+                }
+                queryParams.push(statusFilter);
+            }
         }
-      }
 
-      query += ` ORDER BY sb.submitted_at DESC`;
+        query += ` ORDER BY sb.submitted_at DESC`;
 
-      const bids = await db.query(query, queryParams);
+        const bids = await db.query(query, queryParams);
 
-      // Fetch items for each bid
-      const itemsQuery = `
-        SELECT 
-          bi.*, 
-          pri.item_description, 
-          pri.unit, 
-          pri.item_no,
-          pri.unit_cost AS estimated_unit_cost
-        FROM bid_items bi
-        JOIN purchase_request_items pri ON bi.item_id = pri.item_id
-        WHERE bi.bid_id = ?
-      `;
+        for (let bid of bids) {
+            // Get all PR items first
+            const prItemsQuery = `
+                SELECT item_id, item_no, unit, item_description, quantity, unit_cost
+                FROM purchase_request_items 
+                WHERE pr_id = ? 
+                ORDER BY item_no
+            `;
+            const prItems = await db.query(prItemsQuery, [bid.pr_id]);
+            
+            // Get all bid items
+            const bidItemsQuery = `
+                SELECT bid_item_id, item_id, quantity, unit_price, total_price
+                FROM bid_items 
+                WHERE bid_id = ?
+            `;
+            const bidItems = await db.query(bidItemsQuery, [bid.bid_id]);
+            
+            // Match by item_id or by index if item_id doesn't match
+            bid.items = prItems.map((prItem, index) => {
+                const bidItem = bidItems.find(bi => bi.item_id === prItem.item_id) || bidItems[index];
+                
+                return {
+                    item_no: prItem.item_no || (index + 1),
+                    unit: prItem.unit || 'N/A',
+                    item_description: prItem.item_description || 'N/A',
+                    quantity: bidItem ? bidItem.quantity : prItem.quantity,
+                    unit_price: bidItem ? bidItem.unit_price : 0,
+                    total_price: bidItem ? bidItem.total_price : 0,
+                    estimated_unit_cost: prItem.unit_cost
+                };
+            });
+        }
 
-      for (let bid of bids) {
-        const items = await db.query(itemsQuery, [bid.bid_id]);
-        bid.items = items;
-      }
-
-      return bids;
+        return bids;
     } catch (error) {
-      console.error('Error fetching supplier bids:', error);
-      throw error;
+        console.error('Error fetching supplier bids:', error);
+        throw error;
     }
-  },
+},
 
   getSupplierBidsReport: async (supplierId, statusFilter = 'all', department = '', dateStart = '', dateEnd = '') => {
     try {
