@@ -4,130 +4,543 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign Up</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="/src/login.css" rel="stylesheet"/>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png">
+  <style>
+    :root {
+      --primary: #0052cc;
+      --secondary: #6b7280;
+      --success: #22c55e;
+      --info: #06b6d4;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --light: #f9fafb;
+      --dark: #1f2937;
+      --calapan-blue: #003087;
+      --calapan-green: #16a34a;
+      --header-bg: linear-gradient(135deg, #ffffff, #f1f5f9);
+      --header-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+      --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      color: #1f2937;
+      background: #f8fafc;
+      line-height: 1.7;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Back Button */
+    .back-btn {
+      position: absolute;
+      top: 2rem;
+      left: 2rem;
+      z-index: 10;
+      background: white;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transition: var(--transition);
+      color: var(--calapan-blue);
+      text-decoration: none;
+    }
+    
+    .back-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+      color: var(--calapan-blue);
+    }
+    
+    /* Sign Up Container */
+    .signup-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+      flex: 1;
+    }
+    
+    .signup-card {
+      box-shadow: var(--card-shadow);
+      border-radius: 20px;
+      overflow: hidden;
+      width: 100%;
+      max-width: 1000px;
+      display: flex;
+      background: white;
+    }
+    
+    /* Left Side: Sign Up Form */
+    .signup-form-section {
+      flex: 1;
+      padding: 3rem;
+      background: white;
+    }
+    
+    .signup-header {
+      margin-bottom: 2rem;
+    }
+    
+    .signup-header h2 {
+      font-weight: 700;
+      font-size: 2rem;
+      color: var(--calapan-blue);
+      margin-bottom: 0.5rem;
+    }
+    
+    .signup-header p {
+      color: var(--secondary);
+      font-size: 1rem;
+    }
+    
+    .form-control {
+      padding: 0.875rem 1rem;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      font-size: 1rem;
+      transition: var(--transition);
+      background-color: #f8fafc;
+    }
+    
+    .form-control:focus {
+      border-color: var(--calapan-blue);
+      box-shadow: 0 0 0 3px rgba(0, 80, 179, 0.1);
+    }
+    
+    .form-label {
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: var(--dark);
+    }
+    
+    .password-toggle {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--secondary);
+      cursor: pointer;
+    }
+    
+    .password-toggle:hover {
+      color: var(--calapan-blue);
+    }
+    
+    .signup-btn {
+      padding: 1rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1rem;
+      background: linear-gradient(135deg, var(--calapan-blue), #2563eb);
+      border: none;
+      transition: var(--transition);
+      box-shadow: 0 4px 12px rgba(0, 80, 179, 0.3);
+    }
+    
+    .signup-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 80, 179, 0.4);
+      background: linear-gradient(135deg, #2563eb, var(--calapan-blue));
+    }
+    
+    .login-link {
+      color: var(--calapan-blue);
+      text-decoration: none;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+    
+    .login-link:hover {
+      text-decoration: underline;
+    }
+    
+    /* Right Side: Welcome Section */
+    .welcome-section {
+      flex: 1;
+      background: linear-gradient(135deg, var(--calapan-blue), #2563eb);
+      color: white;
+      padding: 3rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .welcome-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.05)"/></svg>');
+      background-size: cover;
+    }
+    
+    .welcome-logo {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 1.5rem;
+      border-radius: 20px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+      z-index: 1;
+    }
+    
+    .welcome-content h2 {
+      font-weight: 700;
+      font-size: 1.75rem;
+      margin-bottom: 1rem;
+      z-index: 1;
+      position: relative;
+    }
+    
+    .welcome-content p {
+      margin-bottom: 2rem;
+      opacity: 0.9;
+      z-index: 1;
+      position: relative;
+    }
+    
+    .login-redirect-btn {
+      padding: 0.75rem 2rem;
+      border: 2px solid white;
+      border-radius: 50px;
+      background: transparent;
+      color: white;
+      font-weight: 600;
+      transition: var(--transition);
+      z-index: 1;
+      position: relative;
+    }
+    
+    .login-redirect-btn:hover {
+      background: white;
+      color: var(--calapan-blue);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* Error Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+    }
+    
+    .modal-overlay.active .modal-content {
+      transform: translateY(0);
+    }
+    
+    .modal-icon {
+      font-size: 3rem;
+      color: var(--danger);
+      margin-bottom: 1rem;
+    }
+    
+    .modal-title {
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: var(--dark);
+      margin-bottom: 0.5rem;
+    }
+    
+    .modal-message {
+      color: var(--secondary);
+      margin-bottom: 1.5rem;
+    }
+    
+    .modal-btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 600;
+      background: var(--calapan-blue);
+      color: white;
+      border: none;
+      transition: var(--transition);
+      width: 100%;
+    }
+    
+    .modal-btn:hover {
+      background: #2563eb;
+      transform: translateY(-2px);
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 992px) {
+      .signup-card {
+        flex-direction: column;
+        max-width: 500px;
+      }
+      
+      .welcome-section {
+        order: -1;
+        padding: 2rem;
+      }
+      
+      .signup-form-section {
+        padding: 2rem;
+      }
+    }
+    
+    @media (max-width: 576px) {
+      .signup-container {
+        padding: 1rem;
+      }
+      
+      .back-btn {
+        top: 1rem;
+        left: 1rem;
+        width: 40px;
+        height: 40px;
+      }
+      
+      .welcome-section, .signup-form-section {
+        padding: 1.5rem;
+      }
+      
+      .signup-header h2 {
+        font-size: 1.75rem;
+      }
+    }
+  </style>
 </head>
-<body class="bg-blue-50 font-sans">
-  <!-- Sign Up Container -->
-  <div class="flex items-center justify-center min-h-screen">
-    <div class="flex shadow-lg rounded overflow-hidden w-full max-w-4xl">
-      <!-- Left Side: Welcome Message -->
-      <div class="w-full lg:w-1/2 bg-blue-700 text-white flex flex-col items-center justify-center p-10">
-        <img src="/img/Calapan_City_Logo.png" alt="Calapan City Logo" class="mb-4" width="200" height="200">
-        <h2 class="text-center text-2xl font-bold mb-2">City General Services Department - Calapan</h2>
-        <p class="text-center mb-4">Fill in the details below to add a new employee.</p>
-        <button class="px-4 py-2 border border-white rounded-lg hover:bg-white hover:text-blue-700 transition duration-300" onclick="window.location.href='/login'">
-          SIGN IN
-        </button>
-      </div>
 
-      <!-- Right Side: Sign Up Form -->
-      <div class="w-full lg:w-1/2 bg-white p-10">
-        <h2 class="text-2xl font-bold text-blue-700 mb-2">Sign Up</h2>
-        <br>
+<body>
+  <!-- Back Button -->
+  <a href="/" class="back-btn">
+    <i class="bi bi-arrow-left-short" style="font-size: 1.5rem;"></i>
+  </a>
+
+  <!-- Sign Up Container -->
+  <div class="signup-container">
+    <div class="signup-card">
+      <!-- Left Side: Sign Up Form -->
+      <div class="signup-form-section">
+        <div class="signup-header">
+          <h2>Create New Account</h2>
+          <p>Fill in the details below to add a new employee</p>
+        </div>
+
         <!-- Error Message (for server-side errors) -->
         <% if (typeof error !== 'undefined' && error) { %>
-          <p class="text-red-500 mb-4"><%= error %></p>
+          <div class="alert alert-danger" role="alert">
+            <%= error %>
+          </div>
         <% } %>
+
         <!-- Sign Up Form -->
         <form id="signupForm" action="/signup" method="POST">
+          <!-- Email -->
+          <div class="mb-3">
+            <label for="email" class="form-label">Email Address</label>
+            <input type="email" id="email" name="email" class="form-control" placeholder="Enter email address" required>
+          </div>
 
-                  <!-- Email -->
-                  <div class="mb-4">
-                    <input type="email" name="email" class="w-full p-3 border rounded-lg bg-blue-50" placeholder="Email" required>
-                  </div>
-      
           <!-- Employee Name -->
-          <div class="mb-4">
-            <input type="text" name="employee_name" class="w-full p-3 border rounded-lg bg-blue-50" placeholder="Employee Name" required>
+          <div class="mb-3">
+            <label for="employee_name" class="form-label">Employee Name</label>
+            <input type="text" id="employee_name" name="employee_name" class="form-control" placeholder="Enter employee name" required>
           </div>
           
           <!-- Position -->
-          <div class="mb-4">
-            <input type="text" name="position" class="w-full p-3 border rounded-lg bg-blue-50" placeholder="Position" required>
+          <div class="mb-3">
+            <label for="position" class="form-label">Position</label>
+            <input type="text" id="position" name="position" class="form-control" placeholder="Enter position" required>
           </div>
                     
           <!-- Password -->
-          <div class="mb-4">
-            <input type="password" name="password" class="w-full p-3 border rounded-lg bg-blue-50" placeholder="Password" required>
+          <div class="mb-3 position-relative">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" id="password" name="password" class="form-control" placeholder="Create password" required>
           </div>
           
           <!-- Department -->
           <div class="mb-4">
-            <select name="department_id" class="w-full p-3 border rounded-lg bg-blue-50" required>
+            <label for="department_id" class="form-label">Department</label>
+            <select name="department_id" id="department_id" class="form-control" required>
               <option value="">Select Department</option>
               <% departments.forEach(department => { %>
                 <option value="<%= department.department_id %>"><%= department.department_name %></option>
               <% }); %>
             </select>
           </div>
+
+          <input type="hidden" name="profile_image" value="default_profile.png">
           
           <!-- Submit Button -->
-          <button type="submit" class="w-full py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition duration-300">
+          <button type="submit" class="btn btn-primary signup-btn w-100">
             Sign Up
           </button>
         </form>
-        <!-- Login Link -->
-        <div class="mt-4 text-center">
-          <span>Already have an account? <a href="/login" class="text-blue-700 hover:underline">Log in</a></span>
+
+        <div class="text-center mt-4">
+          <p>Already have an account? <a href="/login" class="login-link">Log in here</a></p>
+        </div>
+      </div>
+
+      <!-- Right Side: Welcome Message -->
+      <div class="welcome-section">
+        <img src="/img/Calapan_City_Logo.png" alt="Calapan City Logo" class="welcome-logo">
+        <div class="welcome-content">
+          <h2>City General Services Department - Calapan</h2>
+          <p>Fill in the details to add a new employee to the eGOV-RMS system</p>
+          <button class="login-redirect-btn" onclick="window.location.href='/login'">
+            Sign In
+          </button>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Error Modal -->
-  <div id="errorModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-    <div class="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
-      <h2 class="text-xl font-bold text-red-500 mb-4">Error</h2>
-      <p id="errorMessage" class="text-gray-700"></p>
-      <button onclick="closeModal()" class="mt-4 px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition duration-300">
-        Close
-      </button>
+  <div class="modal-overlay" id="errorModal">
+    <div class="modal-content">
+      <div class="text-center">
+        <div class="modal-icon">
+          <i class="bi bi-exclamation-circle-fill"></i>
+        </div>
+        <h3 class="modal-title">Sign Up Failed</h3>
+        <p class="modal-message" id="errorMessage">There was an error creating your account. Please try again.</p>
+        <button class="modal-btn" onclick="closeModal()">Try Again</button>
+      </div>
     </div>
   </div>
 
-  <!-- JavaScript for Form Handling -->
+  <!-- JavaScript -->
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const signupForm = document.getElementById("signupForm");
-      const errorModal = document.getElementById("errorModal");
-      const errorMessage = document.getElementById("errorMessage");
+    // Password visibility toggle
+    const passwordToggle = document.getElementById('passwordToggle');
+    const passwordInput = document.getElementById('password');
+    
+    if (passwordToggle && passwordInput) {
+      passwordToggle.addEventListener('click', function() {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        
+        // Toggle eye icon
+        const eyeIcon = this.querySelector('i');
+        eyeIcon.classList.toggle('bi-eye');
+        eyeIcon.classList.toggle('bi-eye-slash');
+      });
+    }
+    
+    // Function to show the error modal with a message
+    function showError(message) {
+      document.getElementById("errorMessage").textContent = message;
+      document.getElementById("errorModal").classList.add("active");
+    }
 
-      // Function to show the error modal with a message
-      function showError(message) {
-        errorMessage.innerText = message;
-        errorModal.classList.remove("hidden");
+    // Function to close the error modal
+    function closeModal() {
+      document.getElementById("errorModal").classList.remove("active");
+    }
+
+    // Handle form submission
+    document.getElementById("signupForm").addEventListener("submit", async function(event) {
+      event.preventDefault(); // Prevent the default form submission
+      
+      // Get form values
+      const email = document.getElementById('email').value;
+      const employeeName = document.getElementById('employee_name').value;
+      const position = document.getElementById('position').value;
+      const password = document.getElementById('password').value;
+      const department = document.getElementById('department_id').value;
+      
+      // Simple validation
+      if (!email || !employeeName || !position || !password || !department) {
+        showError('Please fill in all fields');
+        return;
+      }
+      
+      // Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        showError('Please enter a valid email address');
+        return;
       }
 
-      // Function to close the error modal
-      function closeModal() {
-        errorModal.classList.add("hidden");
-      }
-
-      // Handle form submission
-      signupForm.addEventListener("submit", async function (event) {
-        event.preventDefault(); // Prevent the default form submission
-
-        const formData = new FormData(signupForm); // Get form data
+      try {
+        // Create form data for submission
+        const formData = new FormData();
+        formData.append('email', email);
+        formData.append('employee_name', employeeName);
+        formData.append('position', position);
+        formData.append('password', password);
+        formData.append('department_id', department);
+        formData.append('profile_image', 'default_profile.png'); // Add this line
+        
+        // Send the request to the server
         const response = await fetch("/signup", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(Object.fromEntries(formData)), // Convert form data to JSON
+          body: formData
         });
-
-        const result = await response.json(); // Parse the response
-
-        if (result.success) {
-          window.location.href = "/login"; // Redirect to login page on success
+        
+        // Handle the response
+        if (response.ok) {
+          // Successful signup - redirect to login
+          window.location.href = "/login";
         } else {
-          showError(result.message); // Display the error message in the modal
+          // Try to parse error message from response
+          const result = await response.json().catch(() => null);
+          if (result && result.message) {
+            showError(result.message);
+          } else if (response.status === 500) {
+            showError('Server error. Please try again later.');
+          } else {
+            showError('Sign up failed. Please try again.');
+          }
         }
-      });
+      } catch (error) {
+        showError('Network error. Please check your connection and try again.');
+      }
     });
   </script>
 </body>

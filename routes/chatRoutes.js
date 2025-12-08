@@ -8,7 +8,7 @@ const db = require("../config/db");
 const regression = require('regression');
 
 async function predictBudgets(icsData, months = 12) {
-    const INFLATION_RATE = 0.05; // 5% inflation rate - adjust as needed
+    const INFLATION_RATE = 0.08;
     const departmentData = {};
     
     icsData.forEach(record => {
@@ -185,7 +185,7 @@ ${userDeptRequests.length > 3 ? `\n...and ${userDeptRequests.length - 3} more` :
             (['superadmin', 'admin', 'budget'].includes(userType))) {
             
             const icsData = await new Promise((resolve, reject) => {
-                const sql = `SELECT department, date_encode, unit_amount FROM ics_2024`;
+                const sql = `SELECT department, date_encode, unit_amount FROM ics`;
                 db.query(sql, (err, results) => {
                     if (err) reject(err);
                     else resolve(results);

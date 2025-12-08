@@ -3,125 +3,867 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Predictive Analysis - By Department</title>
+  <title>Predictive Analysis - Department Budget Allocation</title>
   <link href="/src/table.css" rel="stylesheet"/>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
   <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png"/>
+  <style>
+    /* Modern UI Enhancements */
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #1d4ed8;
+      --secondary: #10b981;
+      --accent: #8b5cf6;
+      --light: #f8fafc;
+      --dark: #1e293b;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      transition: all 0.3s ease;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    .stat-card {
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      border: none;
+    }
+    
+    .stat-card i {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .filter-section {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .modern-table {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    }
+    
+    .modern-table thead {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    }
+    
+    .modern-table th {
+      padding: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: white;
+    }
+    
+    .modern-table td {
+      padding: 1rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .modern-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    .modern-table tr:hover {
+      background-color: #f8fafc;
+    }
+    
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    
+    .chip-primary {
+      background: #dbeafe;
+      color: var(--primary-dark);
+    }
+    
+    .chip-success {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    
+    .chip-warning {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    
+    .trend-up {
+      color: var(--secondary);
+    }
+    
+    .trend-down {
+      color: #ef4444;
+    }
+    
+    .insight-card {
+      border-left: 4px solid var(--primary);
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    }
+    
+    .visualization-container {
+      min-height: 400px;
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .prediction-explanation {
+      background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
+      border: 1px solid #fde047;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+    
+    .prediction-model-badge {
+      background: linear-gradient(135deg, var(--accent), #7c3aed);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    
+    .loading-spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid var(--primary);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .department-selector {
+      position: relative;
+    }
+    
+    .department-selector select {
+      padding-right: 2.5rem;
+      border-radius: 8px;
+      border: 2px solid #e2e8f0;
+      transition: all 0.3s ease;
+      background: white;
+    }
+    
+    .department-selector select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .department-selector::after {
+      content: '▼';
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--primary);
+      pointer-events: none;
+    }
+    
+    /* Progress bar fix */
+    .progress-container {
+      width: 100%;
+      background: #e2e8f0;
+      border-radius: 4px;
+      overflow: hidden;
+      height: 8px;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+    
+    /* Center align for total budget section */
+    .center-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      width: 100%;
+    }
+    
+    .total-budget-header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    /* Action buttons container */
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    }
+    
+    /* Confidence indicator */
+    .confidence-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .confidence-bar {
+      width: 60px;
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    
+    .confidence-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+    
+    .confidence-high {
+      background: linear-gradient(90deg, #10b981, #059669);
+    }
+    
+    .confidence-medium {
+      background: linear-gradient(90deg, #f59e0b, #d97706);
+    }
+    
+    .confidence-low {
+      background: linear-gradient(90deg, #ef4444, #dc2626);
+    }
+    
+    /* AI Recommendations */
+    .ai-recommendations {
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-top: 1rem;
+      border-left: 4px solid var(--primary);
+    }
+    
+    .ai-icon {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    
+    /* AI Recommendations Styling */
+    .ai-recommendations-list {
+      list-style-type: disc;
+      padding-left: 1.5rem;
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .ai-recommendations-list li {
+      margin-bottom: 0.5rem;
+    }
+    
+    .ai-recommendation-header {
+      font-weight: 600;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+      color: #1e40af;
+    }
+    
+    .ai-recommendation-text {
+      margin-bottom: 0.75rem;
+      line-height: 1.6;
+    }
+    
+    .prose {
+      line-height: 1.6;
+    }
+    
+    .prose p {
+      margin-bottom: 0.75rem;
+    }
+    
+    .prose ul {
+      list-style-type: disc;
+      padding-left: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .prose li {
+      margin-bottom: 0.5rem;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .grid-cols-1 {
+        grid-template-columns: 1fr;
+      }
+      
+      .card {
+        padding: 1rem;
+      }
+      
+      .filter-section {
+        padding: 1rem;
+      }
+      
+      .action-buttons {
+        flex-direction: column;
+        width: 100%;
+      }
+      
+      .action-buttons button {
+        width: 100%;
+      }
+      
+      .modern-table {
+        font-size: 0.875rem;
+      }
+      
+      .prediction-model-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+      }
+    }
+  </style>
 </head>
-<body class="bg-blue-50 font-sans">
+<body class="bg-gradient-to-br from-blue-50 to-gray-100 font-sans">
   <!-- Include Sidebar -->
   <%- include('../partials/sidebar') %>
 
   <!-- Main Content -->
-  <div class="lg:ml-64 p-7 lg:p-10">
-    <div class="bg-white p-6 lg:p-10 rounded-lg shadow-sm">
-      <h2 class="text-2xl font-bold text-blue-700 mb-6">Predictive Analysis - Department Budget Allocation</h2>
+  <div class="lg:ml-64 p-4 lg:p-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex flex-col items-center text-center gap-4">
+        <div>
+          <h1 class="flex items-center text-3xl font-bold text-gray-800 justify-center">
+            Predictive Budget Analysis
+          </h1>
+          <p class="text-gray-600 mt-2">AI-powered budget predictions and visualizations for departmental planning</p>
+        </div>
 
-      <!-- Summary Stats -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-          <div class="flex items-center">
-            <div class="bg-blue-100 p-3 rounded-lg mr-4">
-              <i class="fas fa-crown text-blue-600"></i>
+        <div class="flex items-center gap-3">
+          <div class="prediction-model-badge">
+            <i class="fas fa-brain mr-1"></i> Cohere + ARIMA + Linear Regression
+          </div>
+          <!-- <% if (currentInflationRate) { %>
+            <div class="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg text-sm font-medium">
+              <i class="fas fa-chart-line mr-1"></i> Inflation: <%= currentInflationRate %>%
             </div>
-            <div>
-              <p class="text-sm text-gray-600 font-medium">Highest Budget</p>
-              <% if (sortedDepartments && sortedDepartments.length > 0) { %>
-                <p class="font-bold text-lg text-blue-700"><%= sortedDepartments[0][0] %></p>
+          <% } %> -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Budget & Actions - Centered -->
+    <div class="card mb-8 center-content">
+      <div class="total-budget-header">
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">Forecasted Budget Requirements</h3>
+        <p class="text-gray-600">Total predicted budget allocation for FY <%= new Date().getFullYear() + 1 %></p>
+      </div>
+      
+      <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-lg border border-blue-200 mb-4">
+        <div class="text-sm text-gray-600 font-medium mb-1 text-center">Total Predicted Budget</div>
+        <div class="text-3xl font-bold text-blue-700 text-center">
+          ₱<%= totalAmount ? totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00' %>
+        </div>
+        <div class="text-sm text-gray-500 mt-2 text-center">
+          <i class="fas fa-calendar-alt mr-1"></i>
+          Fiscal Year <%= new Date().getFullYear() + 1 %>
+          <% if (currentInflationRate) { %>
+            <span class="ml-3">
+              <i class="fas fa-chart-line mr-1"></i>
+              Includes <%= currentInflationRate %>% AI inflation adjustment
+            </span>
+          <% } %>
+        </div>
+      </div>
+      
+      <!-- AI Recommendations -->
+      <% if (selectedDepartment && selectedDepartment !== 'all') { %>
+        <div class="ai-recommendations w-full max-w-2xl mt-4">
+          <div class="flex items-center gap-3 mb-3">
+            <h4 class="font-semibold text-gray-800">AI Recommendations</h4>
+            <button id="getAIRecommendations" class="ml-auto bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 py-1 rounded text-sm hover:from-blue-700 hover:to-blue-800 transition-all duration-300">
+              <i class="fas fa-sync-alt mr-1"></i> Generate
+            </button>
+          </div>
+          <div id="aiRecommendationsContent" class="text-gray-700 prose prose-sm max-w-none">
+            <div class="text-center py-4">
+              <div class="loading-spinner mx-auto mb-3 hidden" id="aiLoadingSpinner"></div>
+              <p class="text-gray-500 text-sm">Click "Generate" to get AI-powered budget recommendations</p>
+            </div>
+          </div>
+        </div>
+      <% } %>
+      
+      <!-- Action Buttons - Now Always Visible -->
+      <div class="action-buttons flex gap-3 mt-6">
+        <button id="exportBtn"
+          class="bg-blue-600 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-blue-700 transition-all duration-300 flex items-center gap-2">
+          <i class="fas fa-file-export"></i>
+          Export Report
+        </button>
+
+        <button id="visualizeBtn"
+          class="bg-blue-600 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-blue-700 transition-all duration-300 flex items-center gap-2">
+          <i class="fas fa-chart-bar"></i>
+          Visualize
+        </button>
+
+        <button id="detailedAnalysisBtn"
+          class="bg-blue-600 text-white px-6 py-3 rounded-lg shadow-sm hover:bg-blue-700 transition-all duration-300 flex items-center gap-2">
+          <i class="fas fa-chart-line"></i>
+          Detailed Analysis
+        </button>
+      </div>
+    </div>
+
+    <!-- Visualization Section -->
+    <div id="visualizationSection" class="mb-8" style="display: none;">
+      <div class="card">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-semibold text-gray-800">Data Visualization</h3>
+          <div class="flex gap-2">
+            <button onclick="changeChartType('bar')" class="px-3 py-1 text-sm rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors">
+              <i class="fas fa-chart-bar mr-1"></i>Bar Chart
+            </button>
+            <button onclick="changeChartType('pie')" class="px-3 py-1 text-sm rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors">
+              <i class="fas fa-chart-pie mr-1"></i>Pie Chart
+            </button>
+            <button onclick="changeChartType('line')" class="px-3 py-1 text-sm rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors">
+              <i class="fas fa-chart-line mr-1"></i>Line Chart
+            </button>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="visualization-container">
+            <canvas id="budgetChart"></canvas>
+          </div>
+          <div class="visualization-container">
+            <canvas id="trendChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detailed Analysis Section -->
+    <div id="detailedAnalysisSection" class="mb-8" style="display: none;">
+      <div class="card">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-800">
+              <i class="fas fa-microscope mr-2 text-blue-600"></i>
+              Detailed Analysis & Insights
+            </h3>
+            <p class="text-gray-600 text-sm">Comprehensive department-level analysis</p>
+          </div>
+          <button onclick="toggleDetailedAnalysis()" class="text-gray-400 hover:text-gray-600">
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+        
+        <div id="analysisContent" class="space-y-6">
+          <!-- Content will be loaded here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Department Filter -->
+    <div class="filter-section mb-8">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="text-center">
+          <h3 class="text-lg font-semibold text-gray-800">
+            Department Selection
+          </h3>
+          <p class="text-gray-600 text-sm">
+            Select a department to view detailed predictions
+          </p>
+        </div>
+
+        <div class="department-selector flex-1 max-w-md">
+          <select id="departmentSelect" class="w-full p-3 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="all" <%= !selectedDepartment || selectedDepartment === 'all' ? 'selected' : '' %>>All Departments</option>
+            <% departments.forEach(dept => { %>
+              <option value="<%= dept.department_code %>" 
+                      <%= selectedDepartment === dept.department_code ? 'selected' : '' %>>
+                <%= dept.department_name %> (<%= dept.department_code %>)
+              </option>
+            <% }); %>
+          </select>
+        </div>
+        <button id="refreshBtn" class="bg-blue-600 text-white px-4 py-3 rounded-lg shadow-sm hover:bg-blue-700 transition-colors flex items-center gap-2">
+          <i class="fas fa-sync-alt"></i>
+          Refresh Data
+        </button>
+      </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="card stat-card">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="flex items-center gap-3 mb-2">
+              <div class="bg-blue-100 p-2 rounded-lg">
+                <i class="fas fa-crown text-blue-600 text-lg"></i>
+              </div>
+              <span class="text-sm text-gray-600 font-medium">Top Department</span>
+            </div>
+            <% if (sortedDepartments && sortedDepartments.length > 0) { 
+              const topDept = sortedDepartments[0];
+            %>
+              <p class="text-xl font-bold text-gray-800 mb-1 truncate"><%= topDept[0] %></p>
+              <p class="text-gray-600 text-sm">
+                ₱<%= topDept[1].toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+              </p>
+            <% } else { %>
+              <p class="text-xl font-bold text-gray-800 mb-1">N/A</p>
+              <p class="text-gray-600 text-sm">No data available</p>
+            <% } %>
+          </div>
+          <div class="text-right">
+            <span class="chip chip-success">
+              <i class=" mr-1"></i> 1
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card stat-card">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="flex items-center gap-3 mb-2">
+              <div class="bg-green-100 p-2 rounded-lg">
+                <i class="fas fa-chart-line text-green-600 text-lg"></i>
+              </div>
+              <span class="text-sm text-gray-600 font-medium">Trend Analysis</span>
+            </div>
+            <p class="text-xl font-bold text-gray-800 mb-1">
+              <% if (averageIncrease > 0) { %>
+                <span class="trend-up">+<%= averageIncrease.toFixed(1) %>%</span>
+              <% } else if (averageIncrease < 0) { %>
+                <span class="trend-down"><%= averageIncrease.toFixed(1) %>%</span>
               <% } else { %>
-                <p class="font-bold text-lg text-blue-700">N/A</p>
+                <span class="text-gray-600">0%</span>
+              <% } %>
+            </p>
+            <p class="text-gray-600 text-sm">Year-over-Year Change</p>
+          </div>
+          <div class="text-right">
+            <span class="chip <%= averageIncrease >= 0 ? 'chip-success' : 'chip-warning' %>">
+              <% if (averageIncrease >= 0) { %>
+                <i class=" mr-1"></i> Growing
+              <% } else { %>
+                <i class=" mr-1"></i> Declining
+              <% } %>
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card stat-card">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="flex items-center gap-3 mb-2">
+              <div class="bg-purple-100 p-2 rounded-lg">
+                <i class="fas fa-lightbulb text-purple-600 text-lg"></i>
+              </div>
+              <span class="text-sm text-gray-600 font-medium">AI Recommendation</span>
+            </div>
+            <p class="text-xl font-bold text-gray-800 mb-1">+<%= recommendedIncrease.toFixed(1) %>% Budget</p>
+            <p class="text-gray-600 text-sm">For FY <%= new Date().getFullYear() + 1 %></p>
+          </div>
+          <div class="text-right">
+            <span class="chip chip-primary">
+              <i class=" mr-1"></i> AI Suggestion
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card stat-card">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="flex items-center gap-3 mb-2">
+              <div class="bg-orange-100 p-2 rounded-lg">
+                <i class="fas fa-chart-pie text-orange-600 text-lg"></i>
+              </div>
+              <span class="text-sm text-gray-600 font-medium">Data Confidence</span>
+            </div>
+            <% if (sortedDepartments && sortedDepartments.length > 0) { 
+              let totalConfidence = 0;
+              let count = 0;
+              departmentData.forEach(dept => {
+                if (dept.confidence) {
+                  totalConfidence += dept.confidence;
+                  count++;
+                }
+              });
+              const avgConfidence = count > 0 ? Math.round(totalConfidence / count) : 0;
+            %>
+              <p class="text-xl font-bold text-gray-800 mb-1"><%= avgConfidence %>%</p>
+              <div class="confidence-indicator">
+                <div class="confidence-bar">
+                  <div class="confidence-fill <%= avgConfidence >= 70 ? 'confidence-high' : avgConfidence >= 40 ? 'confidence-medium' : 'confidence-low' %>" 
+                       style="width: <%= avgConfidence %>%"></div>
+                </div>
+                <span class="text-sm <%= avgConfidence >= 70 ? 'text-green-600' : avgConfidence >= 40 ? 'text-yellow-600' : 'text-red-600' %>">
+                  <%= avgConfidence >= 70 ? 'High' : avgConfidence >= 40 ? 'Medium' : 'Low' %>
+                </span>
+              </div>
+            <% } else { %>
+              <p class="text-xl font-bold text-gray-800 mb-1">N/A</p>
+              <p class="text-gray-600 text-sm">No predictions</p>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Insights - Only show when viewing a specific department -->
+    <% if (selectedDepartment && selectedDepartment !== 'all') { 
+      const selectedDept = departments.find(d => d.department_code === selectedDepartment);
+      const deptName = selectedDept ? selectedDept.department_name : selectedDepartment;
+    %>
+      <div class="card mb-8 insight-card">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-800">Department Insights - <%= deptName %></h3>
+          <!-- <button onclick="loadDetailedAnalysis('<%= selectedDepartment %>')" 
+                  class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1">
+            <i class="fas fa-external-link-alt"></i> Full Analysis
+          </button> -->
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="p-4 bg-blue-50 rounded-lg">
+            <div class="flex items-center gap-2 mb-2">
+              <i class="fas fa-calendar-alt text-blue-600"></i>
+              <span class="font-medium text-gray-700">Peak Spending Months</span>
+            </div>
+            <% if (spendingPatterns.peakMonths && spendingPatterns.peakMonths.length > 0) { %>
+              <div class="space-y-2">
+                <% spendingPatterns.peakMonths.forEach(month => { %>
+                  <div class="flex justify-between items-center">
+                    <span class="text-gray-600"><%= month.name %></span>
+                    <span class="font-semibold text-blue-700"><%= month.percentage %>%</span>
+                  </div>
+                <% }); %>
+              </div>
+            <% } else { %>
+              <p class="text-gray-500 text-sm text-center py-2">No peak month data</p>
+            <% } %>
+          </div>
+          
+          <div class="p-4 bg-green-50 rounded-lg">
+            <div class="flex items-center gap-2 mb-2">
+              <i class="fas fa-history text-green-600"></i>
+              <span class="font-medium text-gray-700">Historical Trend</span>
+            </div>
+            <div class="space-y-2">
+              <% if (spendingPatterns.yearly && spendingPatterns.yearly.length > 0) { 
+                const yearlyData = spendingPatterns.yearly;
+                if (yearlyData.length >= 2) {
+                  const latest = yearlyData[yearlyData.length - 1];
+                  const previous = yearlyData[yearlyData.length - 2];
+                  const change = latest.totalAmount && previous.totalAmount ? 
+                    ((latest.totalAmount - previous.totalAmount) / previous.totalAmount * 100).toFixed(1) : 0;
+              %>
+                <div class="text-center">
+                  <div class="text-2xl font-bold <%= parseFloat(change) >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                    <%= change %>%
+                  </div>
+                  <p class="text-gray-600 text-sm">Last year change</p>
+                </div>
+              <% } } else { %>
+                <p class="text-gray-500 text-sm text-center py-2">Insufficient data</p>
               <% } %>
             </div>
           </div>
-        </div>
-        
-        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-          <div class="flex items-center">
-            <div class="bg-blue-100 p-3 rounded-lg mr-4">
-              <i class="fas fa-arrow-trend-up text-blue-600"></i>
+          
+          <div class="p-4 bg-purple-50 rounded-lg">
+            <div class="flex items-center gap-2 mb-2">
+              <i class="fas fa-boxes text-purple-600"></i>
+              <span class="font-medium text-gray-700">Asset Mix</span>
             </div>
-            <div>
-              <p class="text-sm text-gray-600 font-medium">Average Increase</p>
-              <p class="font-bold text-lg text-blue-700">12.5% YoY</p>
-            </div>
+            <% if (spendingPatterns.itemClasses && spendingPatterns.itemClasses.length > 0) { %>
+              <div class="text-center">
+                <div class="text-2xl font-bold text-purple-600">
+                  <%= spendingPatterns.itemClasses.length %>
+                </div>
+                <p class="text-gray-600 text-xs mt-1">Item Categories</p>
+              </div>
+            <% } else { %>
+              <p class="text-gray-500 text-sm text-center py-2">No class data</p>
+            <% } %>
           </div>
-        </div>
-        
-        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-          <div class="flex items-center">
-            <div class="bg-blue-100 p-3 rounded-lg mr-4">
-              <i class="fas fa-lightbulb text-blue-600"></i>
+          
+          <div class="p-4 bg-orange-50 rounded-lg">
+            <div class="flex items-center gap-2 mb-2">
+              <i class="fas fa-calculator text-orange-600"></i>
+              <span class="font-medium text-gray-700">Prediction Model</span>
             </div>
-            <div>
-              <p class="text-sm text-gray-600 font-medium">Recommendation</p>
-              <p class="font-bold text-lg text-blue-700">+5% overall budget</p>
+            <div class="space-y-1">
+              <div class="flex justify-between">
+                <span class="text-gray-600 text-sm">Algorithm:</span>
+                <span class="font-medium text-sm">Linear Regression</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600 text-sm">Inflation Rate:</span>
+                <span class="font-medium text-sm">5%</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600 text-sm">Confidence:</span>
+                <span class="font-medium text-sm">High</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
+    <% } %>
 
-      <!-- Total Budget Info -->
-      <div class="mb-6 flex flex-col md:flex-row md:justify-between md:items-center">
+    <!-- Department Predictions Table -->
+    <div class="card">
+      <div class="flex items-center justify-between mb-6">
         <div>
-          <p class="text-lg font-semibold text-gray-700">Forecasted budget requirements for FY <%= new Date().getFullYear() + 1 %></p>
+          <h3 class="text-lg font-semibold text-gray-800">Department Budget Predictions</h3>
+          <p class="text-gray-600 text-sm">Sorted by predicted budget (highest to lowest)</p>
         </div>
-        
-        <div class="mt-4 md:mt-0 flex items-center space-x-3">
-          <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
-            <span class="text-gray-700 font-medium">Total Predicted Budget: </span>
-            <span class="font-bold text-blue-700" id="totalPredicted">
-              ₱<%= 
-                totalAmount ? totalAmount.toLocaleString('en-US', { 
-                  minimumFractionDigits: 2, 
-                  maximumFractionDigits: 2 
-                }) : '0.00'
-              %>
-            </span>
-          </div>
-          <button id="exportBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-blue-700 transition-colors">
-            <i class="fas fa-file-export mr-2"></i>
-            Export Report
-          </button>
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-gray-600"><%= sortedDepartments ? sortedDepartments.length : 0 %> Departments</span>
+          <span class="chip chip-primary">
+            <i class=" mr-1"></i> AI Generated
+          </span>
         </div>
       </div>
-
-      <!-- Department Predictions Table -->
+      
       <% if (sortedDepartments && sortedDepartments.length > 0) { %>
-        <div class="overflow-x-auto">
-          <table class="w-full border-collapse">
+        <div class="overflow-x-auto modern-table">
+          <table class="w-full">
             <thead>
-              <tr class="bg-blue-700 text-white">
-                <th class="p-3 text-left">Department</th>
-                <th class="p-3 text-left">Predicted Budget</th>
-                <th class="p-3 text-left">Percentage</th>
-                <th class="p-3 text-left">Budget Visualization</th>
+              <tr>
+                <th class="text-left p-4">
+                  <div class="flex items-center gap-2">
+                    <i class="fas fa-building"></i>
+                    <span>Department</span>
+                  </div>
+                </th>
+                <th class="text-left p-4">
+                  <div class="flex items-center gap-2">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Predicted Budget</span>
+                  </div>
+                </th>
+                <th class="text-left p-4">
+                  <div class="flex items-center gap-2">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Percentage</span>
+                  </div>
+                </th>
+                <th class="text-left p-4">
+                  <div class="flex items-center gap-2">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Confidence</span>
+                  </div>
+                </th>
+                <th class="text-left p-4">
+                  <div class="flex items-center gap-2">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Distribution</span>
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody>
-              <% sortedDepartments.forEach(([department, amount]) => { 
-                const percentage = totalAmount > 0 ? (amount / totalAmount * 100).toFixed(1) : 0; %>
-                <tr class="border-b hover:bg-blue-50">
-                  <td class="p-3 font-medium">
-                    <i class="fas fa-building mr-2 text-blue-500"></i>
-                    <%= department %>
+              <% sortedDepartments.forEach(([deptCode, amount, deptId, deptName, confidence], index) => { 
+                const percentage = totalAmount > 0 ? (amount / totalAmount * 100).toFixed(1) : 0;
+                const progressWidth = maxAmount > 0 ? (amount / maxAmount) * 100 : 0;
+                const confidenceValue = confidence || 0;
+              %>
+                <tr class="hover:bg-blue-50 transition-colors">
+                  <td class="p-4">
+                    <div class="flex items-center gap-3">
+                      <div>
+                        <div class="font-semibold text-gray-800"><%= deptName || deptCode %></div>
+                        <div class="text-sm text-gray-500">
+                          <%= deptCode %>
+                        </div>
+                      </div>
+                    </div>
                   </td>
-                  <td class="p-3 font-semibold text-blue-700">
-                    ₱<%= amount.toLocaleString('en-US', { 
-                        minimumFractionDigits: 2, 
-                        maximumFractionDigits: 2 
-                    }) %>
+                  
+                  <td class="p-4">
+                    <div class="font-bold text-blue-700 text-lg">
+                      ₱<%= amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                    </div>
+                    <div class="text-sm text-gray-500">
+                      <% if (index === 0) { %>
+                        <span class="chip chip-success text-xs">
+                          <i class=" mr-1"></i>Highest
+                        </span>
+                      <% } else if (index === sortedDepartments.length - 1) { %>
+                        <span class="chip chip-warning text-xs">
+                          <i class=" mr-1"></i>Lowest
+                        </span>
+                      <% } %>
+                    </div>
                   </td>
-                  <td class="p-3">
-                    <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-sm font-medium">
-                      <%= percentage %>%
-                    </span>
+                  
+                  <td class="p-4">
+                    <div class="flex items-center gap-3">
+                      <span class="chip chip-primary font-bold"><%= percentage %>%</span>
+                      <div class="text-sm text-gray-600">
+                        of total budget
+                      </div>
+                    </div>
                   </td>
-                  <td class="p-3">
-                    <div class="w-full bg-gray-200 rounded-full h-3">
-                      <div class="bg-blue-600 h-3 rounded-full" 
-                          style="width: <%= maxAmount > 0 ? (amount / maxAmount) * 100 : 0 %>%"></div>
+                  
+                  <td class="p-4">
+                    <div class="flex items-center gap-2">
+                      <div class="confidence-bar">
+                        <div class="confidence-fill <%= confidenceValue >= 70 ? 'confidence-high' : confidenceValue >= 40 ? 'confidence-medium' : 'confidence-low' %>" 
+                             style="width: <%= confidenceValue %>%"></div>
+                      </div>
+                      <span class="text-sm font-medium <%= confidenceValue >= 70 ? 'text-green-600' : confidenceValue >= 40 ? 'text-yellow-600' : 'text-red-600' %>">
+                        <%= confidenceValue %>%
+                      </span>
+                    </div>
+                  </td>
+                  
+                  <td class="p-4">
+                    <div class="space-y-2">
+                      <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Budget Share</span>
+                        <span class="font-medium"><%= percentage %>%</span>
+                      </div>
+                      <div class="progress-container">
+                        <div class="progress-fill" style="width: <%= progressWidth %>%"></div>
+                      </div>
                     </div>
                   </td>
                 </tr>
@@ -130,145 +872,771 @@
           </table>
         </div>
       <% } else { %>
-        <div class="text-center py-12">
-          <i class="fas fa-chart-pie text-4xl text-gray-300 mb-4"></i>
-          <h3 class="text-gray-500 text-lg font-medium">No prediction data available</h3>
-          <p class="text-gray-400 mt-1">Please run the prediction model first</p>
+        <div class="text-center py-16">
+          <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-blue-100 flex items-center justify-center">
+            <i class="fas fa-chart-pie text-3xl text-blue-600"></i>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-700 mb-2">No Prediction Data Available</h3>
+          <p class="text-gray-500 mb-6">Please select a department or run the prediction model to generate predictions</p>
+          <button onclick="window.location.reload()" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+            <i class="fas fa-sync-alt mr-2"></i>
+            Generate Predictions
+          </button>
         </div>
       <% } %>
+    </div>
+
+    <!-- Prediction Explanation - Only show when viewing all departments -->
+    <% if (!selectedDepartment || selectedDepartment === 'all') { %>
+    <div class="prediction-explanation">
+      <div class="flex items-start gap-4">
+        <div class="flex-shrink-0">
+          <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center">
+            <i class="fas fa-info-circle text-yellow-600 text-xl"></i>
+          </div>
+        </div>
+        <div class="flex-1">
+          <h4 class="font-semibold text-gray-800 mb-2">How Predictions Are Generated</h4>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <div class="bg-white p-4 rounded-lg">
+              <div class="flex items-center gap-2 mb-2">
+                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                  <i class="fas fa-history text-blue-600"></i>
+                </div>
+                <span class="font-medium">Historical Analysis</span>
+              </div>
+              <p class="text-sm text-gray-600">Past 3 years of spending data analyzed for patterns</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg">
+              <div class="flex items-center gap-2 mb-2">
+                <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                  <i class="fas fa-chart-line text-green-600"></i>
+                </div>
+                <span class="font-medium">Linear Regression</span>
+              </div>
+              <p class="text-sm text-gray-600">Statistical modeling to predict future trends</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg">
+              <div class="flex items-center gap-2 mb-2">
+                <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+                  <i class="fas fa-robot text-purple-600"></i>
+                </div>
+                <span class="font-medium">AI Inflation</span>
+              </div>
+              <p class="text-sm text-gray-600">Dynamic inflation rates from AI + economic indicators</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg">
+              <div class="flex items-center gap-2 mb-2">
+                <div class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
+                  <i class="fas fa-shield-alt text-orange-600"></i>
+                </div>
+                <span class="font-medium">Confidence Scoring</span>
+              </div>
+              <p class="text-sm text-gray-600">Multi-factor confidence scores based on data quality</p>
+            </div>
+          </div>
+          <p class="text-sm text-gray-600">
+            <strong>Note:</strong> Predictions use real-time AI adjustments and comprehensive historical analysis for enhanced accuracy.
+          </p>
+        </div>
+      </div>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- Department Details Modal -->
+  <div id="departmentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+            <i class="fas fa-building text-blue-600"></i>
+            <span id="modalTitle">Department Details</span>
+          </h3>
+          <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+        <div id="departmentDetails" class="space-y-6">
+          <!-- Content will be loaded here -->
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- Toast Container -->
-  <div id="toastContainer" class="fixed bottom-4 right-4 z-50"></div>
+  <div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
 
   <script>
+    // Chart instances
+    let budgetChart = null;
+    let trendChart = null;
+    let currentChartType = 'bar';
+
     document.addEventListener('DOMContentLoaded', function() {
-      // Export button functionality with loading state
-      document.getElementById('exportBtn').addEventListener('click', async function() {
+      // Initialize charts if data exists
+      if (<%= sortedDepartments && sortedDepartments.length > 0 %>) {
+        initializeCharts();
+      }
+
+      // Department selector change
+      document.getElementById('departmentSelect').addEventListener('change', function() {
+        const department = this.value;
+        window.location.href = `/predictive/department?department=${encodeURIComponent(department)}`;
+      });
+
+      // Refresh button
+      document.getElementById('refreshBtn').addEventListener('click', async function() {
         const btn = this;
-        const originalContent = btn.innerHTML;
+        const originalHTML = btn.innerHTML;
         
-        // Set loading state
-        btn.innerHTML = `
-          <i class="fas fa-circle-notch fa-spin mr-2"></i>
-          Exporting...
-        `;
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
         btn.disabled = true;
-        btn.classList.remove('hover:bg-blue-700');
-        btn.classList.add('bg-blue-400', 'cursor-not-allowed');
         
-        try {
-          // Show preparing notification
-          showToast('Preparing your export...', 'info');
-          
-          // Small delay for better UX
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          // Generate report
-          await exportReport();
-          
-          // Show success notification
-          showToast('Export completed successfully!', 'success');
-        } catch (error) {
-          console.error('Export failed:', error);
-          showToast('Export failed. Please try again.', 'error');
-        } finally {
-          // Restore button state
-          btn.innerHTML = originalContent;
-          btn.disabled = false;
-          btn.classList.remove('bg-blue-400', 'cursor-not-allowed');
-          btn.classList.add('hover:bg-blue-700');
+        showToast('Refreshing prediction data...', 'info');
+        
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      });
+
+      // Export button
+      document.getElementById('exportBtn').addEventListener('click', async function() {
+        await exportReport();
+      });
+
+      // Visualize button
+      document.getElementById('visualizeBtn').addEventListener('click', function() {
+        const section = document.getElementById('visualizationSection');
+        if (section.style.display === 'none') {
+          section.style.display = 'block';
+          if (!budgetChart) {
+            initializeCharts();
+          }
+          showToast('Visualization loaded successfully', 'success');
+          this.innerHTML = '<i class="fas fa-eye-slash"></i> Hide Visualization';
+        } else {
+          section.style.display = 'none';
+          this.innerHTML = '<i class="fas fa-chart-bar"></i> Visualize';
         }
       });
+
+      // Detailed Analysis button - FIXED to use the correct endpoint
+      document.getElementById('detailedAnalysisBtn').addEventListener('click', function() {
+        const section = document.getElementById('detailedAnalysisSection');
+        const selectedDepartment = document.getElementById('departmentSelect').value;
+        
+        if (section.style.display === 'none') {
+          section.style.display = 'block';
+          loadDetailedAnalysis(selectedDepartment);
+          showToast('Loading detailed analysis...', 'info');
+        } else {
+          section.style.display = 'none';
+        }
+      });
+
+      // AI Recommendations button
+      const aiRecommendationsBtn = document.getElementById('getAIRecommendations');
+      if (aiRecommendationsBtn) {
+        aiRecommendationsBtn.addEventListener('click', async function() {
+          await getAIRecommendations();
+        });
+      }
+    });
+
+    function initializeCharts() {
+      // Destroy existing charts
+      if (budgetChart) {
+        budgetChart.destroy();
+      }
+      if (trendChart) {
+        trendChart.destroy();
+      }
+
+      // Get data from table
+      const tableRows = document.querySelectorAll('tbody tr');
+      const departments = [];
+      const amounts = [];
+      const percentages = [];
+      const confidences = [];
+
+      tableRows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length >= 5) {
+          const deptElement = cells[0];
+          const deptName = deptElement.querySelector('.font-semibold').textContent.trim();
+          const amountText = cells[1].querySelector('.text-lg').textContent.trim();
+          const percentageText = cells[2].querySelector('.chip').textContent.trim();
+          const confidenceElement = cells[3].querySelector('.font-medium');
+          const confidenceText = confidenceElement ? confidenceElement.textContent.trim() : '0%';
+          
+          const amount = parseFloat(amountText.replace(/[^\d.-]/g, ''));
+          const percentage = parseFloat(percentageText.replace('%', ''));
+          const confidence = parseFloat(confidenceText.replace('%', ''));
+          
+          if (!isNaN(amount) && !isNaN(percentage)) {
+            departments.push(deptName.length > 15 ? deptName.substring(0, 12) + '...' : deptName);
+            amounts.push(amount);
+            percentages.push(percentage);
+            confidences.push(confidence);
+          }
+        }
+      });
+
+      // Budget Distribution Chart
+      const budgetCtx = document.getElementById('budgetChart').getContext('2d');
+      budgetChart = new Chart(budgetCtx, {
+        type: currentChartType,
+        data: {
+          labels: departments,
+          datasets: [{
+            label: 'Predicted Budget (₱)',
+            data: amounts,
+            backgroundColor: generateColors(departments.length),
+            borderColor: '#3b82f6',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const index = context.dataIndex;
+                  return `₱${context.raw.toLocaleString('en-US', { 
+                    minimumFractionDigits: 2, 
+                    maximumFractionDigits: 2 
+                  })} (${percentages[index]}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // Trend Chart
+      const trendCtx = document.getElementById('trendChart').getContext('2d');
+      trendChart = new Chart(trendCtx, {
+        type: 'line',
+        data: {
+          labels: departments,
+          datasets: [{
+            label: 'Budget Percentage',
+            data: percentages,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top',
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Percentage of Total Budget'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function changeChartType(type) {
+      currentChartType = type;
+      if (budgetChart) {
+        budgetChart.config.type = type;
+        budgetChart.update();
+      }
+    }
+
+    function generateColors(count) {
+      const colors = [];
+      const baseColors = [
+        '#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444',
+        '#06b6d4', '#84cc16', '#f97316', '#6366f1', '#ec4899'
+      ];
       
-      function showToast(message, type = 'info') {
-        const colors = {
-          info: 'bg-blue-500',
-          success: 'bg-green-500',
-          error: 'bg-red-500'
-        };
-        
-        const icons = {
-          info: 'fa-info-circle',
-          success: 'fa-check-circle',
-          error: 'fa-exclamation-circle'
-        };
-        
-        const toast = document.createElement('div');
-        toast.className = `${colors[type]} text-white px-4 py-3 rounded-lg shadow-lg flex items-center mb-2 opacity-0 transform translate-y-2 transition-all duration-300`;
-        toast.innerHTML = `
-          <i class="fas ${icons[type]} mr-2"></i>
-          ${message}
-        `;
-        
-        const container = document.getElementById('toastContainer');
-        container.appendChild(toast);
-        
-        // Animate in
-        setTimeout(() => {
-          toast.classList.remove('opacity-0', 'translate-y-2');
-          toast.classList.add('opacity-100', 'translate-y-0');
-        }, 100);
-        
-        // Remove toast after 3 seconds
-        setTimeout(() => {
-          toast.classList.remove('opacity-100', 'translate-y-0');
-          toast.classList.add('opacity-0', 'translate-y-2');
-          setTimeout(() => toast.remove(), 300);
-        }, 3000);
+      for (let i = 0; i < count; i++) {
+        colors.push(baseColors[i % baseColors.length]);
       }
       
-      async function exportReport() {
-        const currentDate = new Date().toLocaleDateString();
-        const fiscalYear = new Date().getFullYear() + 1;
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      return colors;
+    }
+
+    async function exportReport() {
+      const btn = document.getElementById('exportBtn');
+      const originalContent = btn.innerHTML;
+      
+      btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> Exporting...';
+      btn.disabled = true;
+      
+      try {
+        showToast('Preparing export...', 'info');
         
-        // Prepare data for export
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const currentDate = new Date();
+        const fiscalYear = currentDate.getFullYear() + 1;
+        const timestamp = currentDate.toISOString().replace(/[:.]/g, '-');
+        
         const data = [
           ['Department Budget Predictions Report'],
-          ['Generated on:', currentDate],
+          ['Generated on:', currentDate.toLocaleDateString()],
+          ['Generated at:', currentDate.toLocaleTimeString()],
           ['Fiscal Year:', fiscalYear],
-          ['Prediction Model:', 'ARIMA with seasonal adjustment'],
+          ['Prediction Model:', 'ARIMA + Linear Regression with AI inflation'],
+          ['AI Inflation Rate:', '<%= currentInflationRate %>%'],
+          ['Total Predicted Budget:', document.querySelector('.text-3xl.font-bold.text-blue-700').textContent.trim()],
+          ['Average Confidence Score:', '<%= departmentData && departmentData.length > 0 ? Math.round(departmentData.reduce((sum, dept) => sum + (dept.confidence || 0), 0) / departmentData.length) : 0 %>%'],
           [],
-          ['Department', 'Predicted Amount', 'Percentage of Total']
+          ['Rank', 'Department', 'Department Code', 'Predicted Amount', 'Percentage', 'Confidence', 'Share of Total']
         ];
         
-        // Add department data from table
         const tableRows = document.querySelectorAll('tbody tr');
+        let rank = 1;
+        
         tableRows.forEach(row => {
           const cells = row.querySelectorAll('td');
-          if (cells.length >= 3) {
-            const dept = cells[0].textContent.trim().replace(/^\s*\S+\s*/, ''); // Remove icon
-            const amount = cells[1].textContent.trim();
-            const percentage = cells[2].textContent.trim();
-            data.push([dept, amount, percentage]);
+          if (cells.length >= 5) {
+            const deptElement = cells[0];
+            const deptName = deptElement.querySelector('.font-semibold').textContent.trim();
+            const deptCode = deptElement.querySelector('.text-sm').textContent.trim();
+            const amount = cells[1].querySelector('.text-lg').textContent.trim();
+            const percentage = cells[2].querySelector('.chip').textContent.replace('%', '').trim();
+            const confidenceElement = cells[3].querySelector('.font-medium');
+            const confidence = confidenceElement ? confidenceElement.textContent.replace('%', '').trim() : '0';
+            const share = (parseFloat(percentage) / 100).toFixed(3);
+            
+            data.push([
+              rank,
+              deptName,
+              deptCode,
+              amount,
+              `${percentage}%`,
+              `${confidence}%`,
+              share
+            ]);
+            rank++;
           }
         });
         
-        // Add total row
-        data.push([]);
-        data.push(['Total Predicted Budget:', document.getElementById('totalPredicted').textContent.trim(), '100%']);
-        
-        // Create workbook
         const ws = XLSX.utils.aoa_to_sheet(data);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Budget Predictions");
         
-        // Formatting
+        // Apply styling through column widths
+        ws['!cols'] = [
+          {wch: 6},   // Rank
+          {wch: 30},  // Department
+          {wch: 15},  // Code
+          {wch: 20},  // Amount
+          {wch: 12},  // Percentage
+          {wch: 12},  // Confidence
+          {wch: 12}   // Share
+        ];
+        
+        // Merge title cells
         if (!ws['!merges']) ws['!merges'] = [];
         ws['!merges'].push(
-          { s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }  // Title merge
+          {s: {r: 0, c: 0}, e: {r: 0, c: 6}},
+          {s: {r: 1, c: 1}, e: {r: 1, c: 2}},
+          {s: {r: 2, c: 1}, e: {r: 2, c: 2}}
         );
         
-        // Set column widths
-        ws['!cols'] = [{wch: 30}, {wch: 20}, {wch: 15}];
-        
-        // Export the file
         const fileName = `Budget_Predictions_FY${fiscalYear}_${timestamp}.xlsx`;
-        await XLSX.writeFile(wb, fileName);
+        XLSX.writeFile(wb, fileName);
+        
+        showToast('Report exported successfully!', 'success');
+      } catch (error) {
+        console.error('Export failed:', error);
+        showToast('Export failed. Please try again.', 'error');
+      } finally {
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
       }
-    });
+    }
+
+    async function loadDepartmentDetails(deptId, deptCode) {
+      try {
+        showToast('Loading department details...', 'info');
+        
+        const response = await fetch(`/predictive/department/details?id=${deptId || deptCode}`);
+        const result = await response.json();
+        
+        if (result.success) {
+          const modal = document.getElementById('departmentModal');
+          const content = document.getElementById('departmentDetails');
+          const title = document.getElementById('modalTitle');
+          
+          title.textContent = result.department.department_name;
+          
+          content.innerHTML = `
+            <div class="space-y-6">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-blue-50 p-4 rounded-lg">
+                  <div class="text-sm text-gray-600 mb-1">Department Code</div>
+                  <div class="font-bold text-blue-700">${result.department.department_code}</div>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg">
+                  <div class="text-sm text-gray-600 mb-1">Total Historical Spending</div>
+                  <div class="font-bold text-green-700">₱${parseFloat(result.totalSpending).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-lg">
+                  <div class="text-sm text-gray-600 mb-1">Average Monthly</div>
+                  <div class="font-bold text-purple-700">₱${parseFloat(result.avgMonthly).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                </div>
+              </div>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 class="font-semibold text-gray-800 mb-3">Spending Patterns</h4>
+                  ${result.spendingPatterns.peakMonths.length > 0 ? `
+                    <div class="space-y-3">
+                      ${result.spendingPatterns.peakMonths.map(month => `
+                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                          <span class="text-gray-700">${month.name}</span>
+                          <span class="font-bold text-blue-600">${month.percentage}% (₱${parseFloat(month.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})</span>
+                        </div>
+                      `).join('')}
+                    </div>
+                  ` : '<p class="text-gray-500 text-sm">No peak month data available</p>'}
+                </div>
+                
+                <div>
+                  <h4 class="font-semibold text-gray-800 mb-3">Prediction Factors</h4>
+                  <div class="space-y-2">
+                    <div class="flex justify-between">
+                      <span class="text-gray-600">Inflation Rate:</span>
+                      <span class="font-medium">${(result.predictionFactors.inflationRate * 100).toFixed(2)}%</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-gray-600">Seasonality:</span>
+                      <span class="font-medium">${result.predictionFactors.seasonality}</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-gray-600">Data Quality:</span>
+                      <span class="font-medium">${result.predictionFactors.dataQuality}</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-gray-600">Department Age:</span>
+                      <span class="font-medium">${result.predictionFactors.departmentAge}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              ${result.spendingPatterns.itemClasses && result.spendingPatterns.itemClasses.length > 0 ? `
+                <div>
+                  <h4 class="font-semibold text-gray-800 mb-3">Item Class Distribution</h4>
+                  <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    ${result.spendingPatterns.itemClasses.map(item => `
+                      <div class="bg-gray-50 p-3 rounded text-center">
+                        <div class="text-xs text-gray-500 mb-1 truncate">${item.classification}</div>
+                        <div class="font-bold text-sm">${item.count} items</div>
+                        <div class="text-xs text-gray-600">${item.percentage}%</div>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              ` : ''}
+              
+              <div class="text-sm text-gray-600">
+                <i class="fas fa-info-circle mr-1 text-blue-600"></i>
+                Based on ${result.dataPoints} data points with ${result.spendingPatterns.yearlyTrend.length} years of historical data
+              </div>
+            </div>
+          `;
+          
+          modal.style.display = 'flex';
+        } else {
+          showToast('Failed to load department details', 'error');
+        }
+      } catch (error) {
+        console.error('Error loading department details:', error);
+        showToast('Error loading department details', 'error');
+      }
+    }
+
+    // FIXED: Use the correct endpoint for detailed analysis
+    async function loadDetailedAnalysis(departmentId) {
+      try {
+        showToast('Loading detailed analysis...', 'info');
+        
+        const content = document.getElementById('analysisContent');
+        content.innerHTML = `
+          <div class="text-center py-8">
+            <div class="loading-spinner mx-auto mb-4"></div>
+            <p class="text-gray-600">Generating comprehensive analysis...</p>
+          </div>
+        `;
+        
+        // Use the correct endpoint that matches your controller
+        const response = await fetch(`/predictive/detailed-analysis?department=${encodeURIComponent(departmentId)}`);
+        const result = await response.json();
+        
+        if (result.success) {
+          content.innerHTML = `
+            <div class="space-y-6">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="col-span-2">
+                  <h4 class="font-semibold text-gray-800 mb-4">Monthly Spending Patterns</h4>
+                  <div class="bg-gray-50 p-4 rounded-lg">
+                    <canvas id="monthlyPatternChart"></canvas>
+                  </div>
+                </div>
+                <div>
+                  <h4 class="font-semibold text-gray-800 mb-4">Key Metrics</h4>
+                  <div class="space-y-4">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                      <div class="text-sm text-gray-600 mb-1">Avg Transaction Value</div>
+                      <div class="font-bold text-blue-700 text-xl">₱${parseFloat(result.avgTransaction || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                      <div class="text-sm text-gray-600 mb-1">Items per Year</div>
+                      <div class="font-bold text-green-700 text-xl">${result.itemsPerYear || 0}</div>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-lg">
+                      <div class="text-sm text-gray-600 mb-1">Growth Rate</div>
+                      <div class="font-bold text-purple-700 text-xl">${result.growthRate || 0}%</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h4 class="font-semibold text-gray-800 mb-4">Yearly Trend</h4>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                  <canvas id="yearlyTrendChart"></canvas>
+                </div>
+              </div>
+              
+              ${result.recommendations ? `
+                <div class="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg border border-blue-200">
+                  <h4 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                    <i class="text-blue-600"></i>
+                    AI Recommendations
+                  </h4>
+                  <div class="text-gray-700 prose max-w-none">
+                    ${result.recommendations}
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          `;
+          
+          // Initialize charts after content is loaded
+          setTimeout(() => {
+            if (result.monthlyData) {
+              renderMonthlyChart(result.monthlyData);
+            }
+            if (result.yearlyData && result.yearlyData.labels && result.yearlyData.values) {
+              renderYearlyChart(result.yearlyData);
+            }
+          }, 100);
+          
+        } else {
+          content.innerHTML = `
+            <div class="text-center py-8">
+              <div class="text-red-500 text-lg mb-2">Analysis Failed</div>
+              <p class="text-gray-600">${result.error || 'Unable to generate analysis'}</p>
+            </div>
+          `;
+        }
+      } catch (error) {
+        console.error('Error loading analysis:', error);
+        content.innerHTML = `
+          <div class="text-center py-8">
+            <div class="text-red-500 text-lg mb-2">Error Loading Analysis</div>
+            <p class="text-gray-600">${error.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    // FIXED: AI Recommendations function to properly handle HTML content
+    async function getAIRecommendations() {
+      const department = '<%= selectedDepartment %>';
+      if (!department || department === 'all') {
+        showToast('Please select a specific department first', 'warning');
+        return;
+      }
+      
+      const btn = document.getElementById('getAIRecommendations');
+      const originalContent = btn.innerHTML;
+      const contentDiv = document.getElementById('aiRecommendationsContent');
+      const spinner = document.getElementById('aiLoadingSpinner');
+      
+      btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-1"></i>';
+      btn.disabled = true;
+      spinner.style.display = 'block';
+      contentDiv.innerHTML = '<div class="text-center py-4"><p class="text-gray-500 text-sm">Generating AI recommendations...</p></div>';
+      
+      try {
+        const response = await fetch(`/predictive/ai-recommendations?department=${encodeURIComponent(department)}`);
+        const result = await response.json();
+        
+        if (result.success) {
+          // Directly set the HTML content (it's already formatted from backend)
+          contentDiv.innerHTML = `
+            <div class="space-y-4">
+              ${result.recommendations}
+              <div class="text-xs text-gray-500 text-right mt-4 pt-3 border-t border-gray-200">
+                <i class=" mr-1"></i>
+                AI-generated at ${result.metadata?.generatedAt ? new Date(result.metadata.generatedAt).toLocaleTimeString() : 'just now'}
+                ${result.metadata?.inflationRate ? `<span class="ml-3"><i class="fas fa-chart-line mr-1"></i>Inflation: ${result.metadata.inflationRate}</span>` : ''}
+              </div>
+            </div>
+          `;
+          showToast('AI recommendations generated successfully!', 'success');
+        } else {
+          contentDiv.innerHTML = `
+            <div class="text-center py-4">
+              <div class="text-red-500 text-sm mb-2">Failed to generate recommendations</div>
+              <p class="text-gray-500 text-sm">${result.error || 'Please try again'}</p>
+            </div>
+          `;
+          showToast('Failed to generate AI recommendations', 'error');
+        }
+      } catch (error) {
+        console.error('Error getting AI recommendations:', error);
+        contentDiv.innerHTML = `
+          <div class="text-center py-4">
+            <div class="text-red-500 text-sm mb-2">Connection Error</div>
+            <p class="text-gray-500 text-sm">Unable to connect to AI service</p>
+          </div>
+        `;
+        showToast('AI service unavailable', 'warning');
+      } finally {
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
+        spinner.style.display = 'none';
+      }
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('departmentModal');
+      modal.style.display = 'none';
+    }
+
+    function toggleDetailedAnalysis() {
+      const section = document.getElementById('detailedAnalysisSection');
+      section.style.display = 'none';
+    }
+
+    function showToast(message, type = 'info') {
+      const colors = {
+        info: 'bg-blue-500',
+        success: 'bg-green-500',
+        error: 'bg-red-500',
+        warning: 'bg-yellow-500'
+      };
+      
+      const icons = {
+        info: 'fa-info-circle',
+        success: 'fa-check-circle',
+        error: 'fa-exclamation-circle',
+        warning: 'fa-exclamation-triangle'
+      };
+      
+      const toast = document.createElement('div');
+      toast.className = `${colors[type]} text-white px-4 py-3 rounded-lg shadow-lg flex items-center transform translate-y-2 opacity-0 transition-all duration-300`;
+      toast.innerHTML = `
+        <i class="fas ${icons[type]} mr-3"></i>
+        <span>${message}</span>
+      `;
+      
+      const container = document.getElementById('toastContainer');
+      container.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+      }, 10);
+      
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-2', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    // Utility function for chart rendering in detailed analysis
+    function renderMonthlyChart(monthlyData) {
+      const ctx = document.getElementById('monthlyPatternChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+          datasets: [{
+            label: 'Average Spending',
+            data: monthlyData,
+            backgroundColor: 'rgba(59, 130, 246, 0.5)',
+            borderColor: '#3b82f6',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Amount (₱)'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function renderYearlyChart(yearlyData) {
+      const ctx = document.getElementById('yearlyTrendChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: yearlyData.labels,
+          datasets: [{
+            label: 'Yearly Spending',
+            data: yearlyData.values,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Amount (₱)'
+              }
+            }
+          }
+        }
+      });
+    }
   </script>
 </body>
 </html>

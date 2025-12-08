@@ -2,7 +2,16 @@ const jwt = require('jsonwebtoken');
 
 // Main authentication middleware
 const requireAuth = (req, res, next) => {
-  const publicRoutes = ['/', '/login', '/signup', '/static', '/supplier/login', '/supplier/register'];
+  const publicRoutes = [
+  '/',
+  '/homepage',        // Allow homepage without authentication
+  '/login',
+  '/signup',
+  '/static',
+  '/supplier/login',
+  '/supplier/register'
+];
+
 
   // Allow public routes and static assets
   if (publicRoutes.includes(req.path) || req.path.startsWith('/static')) {
@@ -86,7 +95,7 @@ const authenticateSupplier = (req, res, next) => {
     }
 
     try {
-        const jwtSecret = process.env.JWT_SECRET || 'eGOV-RMS';
+        const jwtSecret = process.env.JWT_SECRET || 'hareneth';
         const decoded = jwt.verify(token, jwtSecret);
         
         console.log('Decoded supplier token:', decoded);

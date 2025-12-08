@@ -1,10 +1,14 @@
 const db = require("../config/db");
 
 const Department = {
+
+    // Create a department
     create: (departmentData, callback) => {
-        const sql = `INSERT INTO departments 
-                    (department_code, department_name, department_head, position, contact_person, contact_number) 
-                    VALUES (?, ?, ?, ?, ?, ?)`;
+        const sql = `
+            INSERT INTO departments 
+            (department_code, department_name, department_head, position, contact_person, contact_number) 
+            VALUES (?, ?, ?, ?, ?, ?)
+        `;
         const values = [
             departmentData.department_code,
             departmentData.department_name,
@@ -23,15 +27,18 @@ const Department = {
         });
     },
 
+    // Update a department
     update: (id, departmentData, callback) => {
-        const sql = `UPDATE departments SET 
-                    department_code = ?, 
-                    department_name = ?, 
-                    department_head = ?, 
-                    position = ?, 
-                    contact_person = ?, 
-                    contact_number = ? 
-                    WHERE department_id = ?`;
+        const sql = `
+            UPDATE departments SET 
+            department_code = ?, 
+            department_name = ?, 
+            department_head = ?, 
+            position = ?, 
+            contact_person = ?, 
+            contact_number = ?
+            WHERE department_id = ?
+        `;
         const values = [
             departmentData.department_code,
             departmentData.department_name,
@@ -51,6 +58,7 @@ const Department = {
         });
     },
 
+    // Get all departments
     getAll: (callback) => {
         const sql = `SELECT * FROM departments ORDER BY department_name`;
         db.query(sql, (err, results) => {
@@ -62,6 +70,7 @@ const Department = {
         });
     },
 
+    // Get department by ID
     getById: (id, callback) => {
         const sql = `SELECT * FROM departments WHERE department_id = ?`;
         db.query(sql, [id], (err, result) => {
@@ -73,6 +82,7 @@ const Department = {
         });
     },
 
+    // Delete a department
     delete: (id, callback) => {
         const sql = `DELETE FROM departments WHERE department_id = ?`;
         db.query(sql, [id], (err, result) => {
@@ -84,10 +94,14 @@ const Department = {
         });
     },
 
+    // Autocomplete for department codes
     searchByCode: (query, callback) => {
-        const sql = `SELECT department_code FROM departments 
-                    WHERE department_code LIKE ? 
-                    LIMIT 10`;
+        const sql = `
+            SELECT department_code 
+            FROM departments 
+            WHERE department_code LIKE ?
+            LIMIT 10
+        `;
         db.query(sql, [`%${query}%`], (err, results) => {
             if (err) {
                 console.error('Department search error:', err);
@@ -97,13 +111,17 @@ const Department = {
         });
     },
 
+    // 🔥 UPDATED: Department Spending Summary using NEW `ics` table
     getDepartmentSpending: (departmentName, callback) => {
-        const sql = `SELECT 
-                    MONTH(date_encode) as month, 
-                    SUM(unit_amount) as total 
-                    FROM ics_2024 
-                    WHERE department = ? 
-                    GROUP BY MONTH(date_encode)`;
+        const sql = `
+            SELECT 
+                MONTH(date_acq) AS month,
+                SUM(unit_of_value) AS total
+            FROM ics
+            WHERE dept = ?
+            GROUP BY MONTH(date_acq)
+        `;
+
         db.query(sql, [departmentName], (err, results) => {
             if (err) {
                 console.error('Department spending error:', err);
@@ -113,14 +131,17 @@ const Department = {
         });
     },
 
-    // New method to verify ICS data
+    // 🔥 UPDATED: ICS Data Verification using NEW `ics` fields
     verifyICSData: (callback) => {
-        const sql = `SELECT 
-                    COUNT(*) as total,
-                    SUM(CASE WHEN department IS NULL OR department = '' THEN 1 ELSE 0 END) as missing_dept,
-                    SUM(CASE WHEN date_encode IS NULL THEN 1 ELSE 0 END) as missing_date,
-                    SUM(CASE WHEN unit_amount IS NULL THEN 1 ELSE 0 END) as missing_amount
-                    FROM ics_2024`;
+        const sql = `
+            SELECT 
+                COUNT(*) AS total,
+                SUM(CASE WHEN dept IS NULL OR dept = '' THEN 1 ELSE 0 END) AS missing_dept,
+                SUM(CASE WHEN date_acq IS NULL THEN 1 ELSE 0 END) AS missing_date,
+                SUM(CASE WHEN unit_of_value IS NULL THEN 1 ELSE 0 END) AS missing_amount
+            FROM ics
+        `;
+
         db.query(sql, (err, results) => {
             if (err) {
                 console.error('ICS verification error:', err);
@@ -129,8 +150,8 @@ const Department = {
             callback(null, results[0]);
         });
     }
-};
 
+};
 
 
 module.exports = Department;

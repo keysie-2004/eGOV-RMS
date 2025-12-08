@@ -4,346 +4,1182 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>eGOV-RMS | Calapan City Government Resource Management</title>
-    <link rel="stylesheet" href="/css/bootstrap.min.css"/>
-    <link rel="stylesheet" href="/icons/bootstrap-icons.css"/>
-    <link rel="stylesheet" href="/fa/all.min.css"/>
-    <link rel="stylesheet" href="/css/poppins.css"/>
-    <link rel="stylesheet" href="/css/noto-sans.css"/>    
-    <link href="/src/login.css" rel="stylesheet"/>
-    <link rel="icon" href="/img/Calapan_City_Logo.png" type="image/png"/>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <!-- Custom CSS -->
     <style>
+        :root {
+            --primary: #0052cc;
+            --secondary: #6b7280;
+            --success: #22c55e;
+            --info: #06b6d4;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --light: #f9fafb;
+            --dark: #1f2937;
+            --calapan-blue: #003087;
+            --calapan-green: #16a34a;
+            --header-bg: linear-gradient(135deg, #ffffff, #f1f5f9);
+            --header-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+            --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #1f2937;
+            background: #f8fafc;
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+        
+        /* Navbar Styles */
+        .navbar {
+            padding: 1.5rem 0;
+            background: var(--header-bg);
+            box-shadow: var(--header-shadow);
+            transition: var(--transition);
+        }
+        
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .navbar-brand img {
+            width: 72px;
+            height: 72px;
+            transition: var(--transition);
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        }
+        
+        .brand-text h1 {
+            font-size: 2.1rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--calapan-blue);
+            letter-spacing: -0.025em;
+        }
+        
+        .brand-text p {
+            font-size: 1rem;
+            margin: 0;
+            color: var(--secondary);
+            font-weight: 400;
+        }
+        
+        .navbar .nav-link {
+            font-weight: 500;
+            font-size: 1.1rem;
+            padding: 0.75rem 1.25rem !important;
+            color: #374151;
+            transition: var(--transition);
+            border-radius: 8px;
+        }
+        
+        .navbar .nav-link:hover,
+        .navbar .nav-link:focus {
+            color: var(--calapan-blue);
+            background: rgba(0, 80, 179, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        .navbar .nav-link.dropdown-toggle:focus,
+        .navbar .nav-link.dropdown-toggle.show {
+            background: var(--calapan-blue);
+            color: white !important;
+            box-shadow: 0 4px 12px rgba(0, 80, 179, 0.3);
+            transform: scale(1.05);
+        }
+        
+        .navbar .dropdown-menu {
+            border: none;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            padding: 1rem;
+            margin-top: 0.5rem;
+            background: #ffffff;
+            animation: dropdownFade 0.3s ease;
+        }
+        
+        @keyframes dropdownFade {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .navbar .dropdown-item {
+            font-size: 1rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+        
+        .navbar .dropdown-item:hover {
+            background: #eff6ff;
+            color: var(--calapan-blue);
+            transform: translateX(4px);
+        }
+        
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, rgba(0, 80, 179, 0.9), rgba(0, 80, 179, 0.7)), url('https://images.unsplash.com/photo-1519501025264-65ba15a82390?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: white;
+            padding: 140px 0 120px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 120px;
+            background: linear-gradient(to bottom, transparent, #f8fafc);
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .hero h2 {
+            font-weight: 700;
+            font-size: 3.5rem;
+            letter-spacing: -0.03em;
+            text-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+            margin-bottom: 1.5rem;
+        }
+        
+        .hero p {
+            font-size: 1.25rem;
+            max-width: 800px;
+            margin: 0 auto 2.5rem;
+            opacity: 0.9;
+        }
+        
+        .btn-hero {
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: var(--transition);
+            margin: 0 12px 16px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-hero:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(135deg, #ffffff, #e6f0fa);
+            color: var(--calapan-blue);
+        }
+        
+        .btn-hero.btn-outline-light:hover {
+            background: white;
+            color: var(--calapan-blue);
+        }
+        
+        /* Section Titles */
+        .section-title {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+        
+        .section-title h2 {
+            font-weight: 700;
+            font-size: 2.5rem;
+            color: var(--calapan-blue);
+            position: relative;
+            margin-bottom: 1rem;
+        }
+        
+        .section-title h2::after {
+            content: '';
+            position: absolute;
+            width: 100px;
+            height: 5px;
+            background: linear-gradient(to right, var(--calapan-blue), var(--info));
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 3px;
+        }
+        
+        .section-title p {
+            font-size: 1.15rem;
+            color: var(--secondary);
+            max-width: 700px;
+            margin: 1.5rem auto 0;
+        }
+        
+        /* Demo Section */
+        .demo-video {
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+        }
+        
+        .demo-video:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+        }
+        
+        .video-placeholder {
+            background: url('https://images.unsplash.com/photo-1581276879432-15e50529f34b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
+            background-size: cover;
+            background-position: center;
+            height: 360px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .video-placeholder::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0, 80, 179, 0.3), rgba(0, 80, 179, 0.6));
+        }
+        
+        .play-button {
+            width: 90px;
+            height: 90px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--calapan-blue);
+            font-size: 32px;
+            z-index: 1;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+        }
+        
+        .play-button:hover {
+            transform: scale(1.15);
+            background: white;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+        }
+        
+        /* Demo Steps */
+        .demo-step {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--card-shadow);
+            height: 100%;
+            transition: var(--transition);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+        
+        .demo-step:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+        }
+        
+        .demo-step .step-number {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--calapan-blue), #2563eb);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 80, 179, 0.3);
+        }
+        
+        .demo-step h4 {
+            font-weight: 600;
+            font-size: 1.25rem;
+            color: var(--calapan-blue);
+            margin-bottom: 1rem;
+        }
+        
+        .demo-step p {
+            color: var(--secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        
+        /* Process Steps */
+        .process-row {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 1.5rem;
+            padding: 1rem 0;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: thin;
+            scrollbar-color: var(--calapan-blue) #e6f0fa;
+        }
+        
+        .process-row::-webkit-scrollbar {
+            height: 8px;
+        }
+        
+        .process-row::-webkit-scrollbar-track {
+            background: #e6f0fa;
+            border-radius: 4px;
+        }
+        
+        .process-row::-webkit-scrollbar-thumb {
+            background: var(--calapan-blue);
+            border-radius: 4px;
+        }
+        
+        .process-row::-webkit-scrollbar-thumb:hover {
+            background: #2563eb;
+        }
+        
+        .process-step {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            flex: 0 0 300px;
+            min-height: 360px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            scroll-snap-align: start;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .process-step::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--calapan-blue), var(--info));
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .process-step:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+        }
+        
+        .process-step .step-number {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--calapan-blue), #2563eb);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 80, 179, 0.3);
+        }
+        
+        .process-step h3 {
+            font-weight: 600;
+            font-size: 1.3rem;
+            color: var(--calapan-blue);
+            margin-bottom: 0.75rem;
+        }
+        
+        .process-step .step-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .process-step p {
+            font-size: 0.95rem;
+            color: var(--secondary);
+            margin-bottom: 1rem;
+            flex-grow: 1;
+        }
+        
+        .step-features {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+        
+        .step-features li {
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .step-features i {
+            color: var(--success);
+            margin-right: 0.75rem;
+            font-size: 1rem;
+        }
+        
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding: 3rem 0;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--calapan-blue), var(--info));
+            border-radius: 3px;
+        }
+        
+        .timeline-item {
+            width: 50%;
+            padding: 1.5rem 3rem;
+            position: relative;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+        
+        .timeline-item.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .timeline-item:nth-child(odd) {
+            left: 0;
+            padding-right: 4rem;
+        }
+        
+        .timeline-item:nth-child(even) {
+            left: 50%;
+            padding-left: 4rem;
+        }
+        
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            top: 2rem;
+            width: 28px;
+            height: 28px;
+            background: var(--calapan-blue);
+            border-radius: 50%;
+            box-shadow: 0 0 0 8px rgba(0, 80, 179, 0.15);
+        }
+        
+        .timeline-item:nth-child(odd)::after {
+            right: -14px;
+        }
+        
+        .timeline-item:nth-child(even)::after {
+            left: -14px;
+        }
+        
+        .timeline-content {
+            background: white;
+            padding: 1.75rem;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: var(--transition);
+        }
+        
+        .timeline-content:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+        }
+        
+        .timeline-content h3 {
+            font-weight: 600;
+            font-size: 1.3rem;
+            color: var(--calapan-blue);
+            margin-bottom: 1rem;
+        }
+        
+        /* Footer */
+        footer {
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            color: white;
+            padding: 5rem 0 2rem;
+            position: relative;
+        }
+        
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(to right, var(--calapan-blue), var(--info));
+        }
+        
+        .footer-logo img {
+            width: 100px;
+            margin-bottom: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+        }
+        
+        .footer-links h4 {
+            font-weight: 600;
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            padding-bottom: 0.75rem;
+        }
+        
+        .footer-links h4::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 50px;
+            height: 3px;
+            background: var(--calapan-green);
+            border-radius: 2px;
+        }
+        
+        .footer-links ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .footer-links li {
+            margin-bottom: 0.75rem;
+        }
+        
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+        
+        .footer-links a:hover {
+            color: white;
+            transform: translateX(6px);
+        }
+        
+        .social-links a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            color: white;
+            margin-right: 0.75rem;
+            font-size: 1.3rem;
+            transition: var(--transition);
+        }
+        
+        .social-links a:hover {
+            background: var(--calapan-green);
+            transform: translateY(-4px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+        }
+        
+        .copyright {
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            padding-top: 2rem;
+            margin-top: 3rem;
+            text-align: center;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        /* Buttons */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--calapan-blue), #2563eb);
+            border: none;
+            border-radius: 8px;
+            padding: 0.9rem 2rem;
+            font-weight: 500;
+            font-size: 1rem;
+            transition: var(--transition);
+            box-shadow: 0 4px 12px rgba(0, 80, 179, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 80, 179, 0.4);
+            background: linear-gradient(135deg, #2563eb, var(--calapan-blue));
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 1400px) {
+            .process-step {
+                flex: 0 0 280px;
+                min-height: 340px;
+            }
+            
+            .process-step h3 {
+                font-size: 1.2rem;
+            }
+            
+            .step-features {
+                font-size: 0.85rem;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .navbar-brand img {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .brand-text h1 {
+                font-size: 1.8rem;
+            }
+            
+            .brand-text p {
+                font-size: 0.9rem;
+            }
+            
+            .hero {
+                padding: 100px 0 80px;
+                background-attachment: scroll;
+            }
+            
+            .hero h2 {
+                font-size: 2.5rem;
+            }
+            
+            .process-row {
+                gap: 1rem;
+            }
+            
+            .process-step {
+                flex: 0 0 260px;
+                min-height: 320px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 1.2rem 0;
+            }
+            
+            .navbar-brand {
+                margin-right: 0;
+            }
+            
+            .brand-text h1 {
+                font-size: 1.5rem;
+            }
+            
+            .brand-text p {
+                font-size: 0.8rem;
+            }
+            
+            .timeline::before {
+                left: 20px;
+            }
+            
+            .timeline-item {
+                width: 100%;
+                padding-left: 3rem;
+                padding-right: 1.5rem;
+            }
+            
+            .timeline-item:nth-child(even) {
+                left: 0;
+            }
+            
+            .timeline-item::after {
+                left: 6px !important;
+            }
+            
+            .hero h2 {
+                font-size: 2rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+            }
+            
+            .btn-hero {
+                padding: 0.8rem 2rem;
+                font-size: 1rem;
+            }
+            
+            .process-row {
+                gap: 0.75rem;
+            }
+            
+            .process-step {
+                flex: 0 0 240px;
+                min-height: 300px;
+                padding: 1.5rem;
+            }
+            
+            .process-step .step-number {
+                width: 40px;
+                height: 40px;
+                font-size: 1.3rem;
+            }
+            
+            .process-step h3 {
+                font-size: 1.1rem;
+            }
+            
+            .process-step p {
+                font-size: 0.9rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .brand-text h1 {
+                font-size: 1.3rem;
+            }
+            
+            .navbar .nav-link {
+                font-size: 1rem;
+                padding: 0.5rem 1rem !important;
+            }
+            
+            .process-row {
+                gap: 0.5rem;
+            }
+            
+            .process-step {
+                flex: 0 0 220px;
+                min-height: 280px;
+                padding: 1.25rem;
+            }
+            
+            .process-step h3 {
+                font-size: 1rem;
+            }
+            
+            .process-step p {
+                font-size: 0.85rem;
+            }
+            
+            .step-features {
+                font-size: 0.8rem;
+            }
+        }
     </style>
 </head>
 <body>    
-<header>
-    <div class="header-container">
-        <div class="logo">
-            <img alt="Logo" class="w-10 h-10 mr-3" src="/img/Calapan_City_Logo.png"/>
-            <div class="logo-text">
-                <h1>eGOV-RMS</h1>
-                <p>Calapan City Government Resource Management</p>
-            </div>
-        </div>
-        <div class="auth-buttons">
-            <div class="dropdown">
-                <button class="btn btn-login dropdown-toggle" type="button" id="loginDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    Employee
-                </button>
-                <ul class="dropdown-menu" aria-labelledby="loginDropdown">
-                    <li><a class="dropdown-item" href="/login">Employee Signup</a></li>
-                    <li><a class="dropdown-item" href="/signup">Employee Login</a></li>
+    <!-- Header/Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <img src="/img/Calapan_City_Logo.png" alt="Calapan City Logo">
+                <div class="brand-text">
+                    <h1>eGOV-RMS</h1>
+                    <p>Calapan City Government Resource Management</p>
+                </div>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-expanded="false">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle mx-2" href="#" id="employeeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle me-1"></i> Employee
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="employeeDropdown">
+                            <li><a class="dropdown-item" href="/login"><i class="bi bi-box-arrow-in-right me-2"></i>Employee Login</a></li>
+                            <li><a class="dropdown-item" href="/signup"><i class="bi bi-person-plus me-2"></i>Employee Signup</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle mx-2" href="#" id="supplierDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-building me-1"></i> Supplier
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="supplierDropdown">
+                            <li><a class="dropdown-item" href="/supplier/login"><i class="bi bi-box-arrow-in-right me-2"></i>Supplier Login</a></li>
+                            <li><a class="dropdown-item" href="/supplier/register"><i class="bi bi-person-plus me-2"></i>Supplier Signup</a></li>
+                        </ul>
+                    </li>
                 </ul>
             </div>
-            <div class="dropdown">
-                <button class="btn btn-signup dropdown-toggle" type="button" id="signupDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    Supplier
-                </button>
-                <ul class="dropdown-menu" aria-labelledby="signupDropdown">
-                    <li><a class="dropdown-item" href="/supplier/register">Supplier Signup</a></li>
-                    <li><a class="dropdown-item" href="/supplier/login">Supplier Login</a></li>
-                </ul>
-            </div>
         </div>
-    </div>
-</header>    
+    </nav>
+
+    <!-- Hero Section -->
     <section class="hero">
-        <div class="hero-content">
-            <h2>Optimizing City Resources Through Smart Management</h2>
-            <p>eGOV-RMS is a comprehensive web-based solution that streamlines resource allocation, budget management, and supply chain operations across all Calapan City Government departments.</p>
-            <div class="cta-buttons">
-                <button class="btn-primary">Learn More</button>
-                <button class="btn-secondary">View Demo</button>
+        <div class="container hero-content">
+            <div class="row justify-content-center">
+                <div class="col-lg-10 text-center">
+                    <h2 class="display-4 fw-bold mb-4 animate__animated animate__fadeInDown">Optimize City Resources with Smart Management</h2>
+                    <p class="lead mb-5 animate__animated animate__fadeIn animate__delay-1s">eGOV-RMS streamlines resource allocation, budget management, and supply chain operations for Calapan City Government.</p>
+                    <div class="d-flex flex-wrap justify-content-center gap-3 animate__animated animate__fadeInUp animate__delay-1s">
+                        <button class="btn btn-light btn-hero">Explore Features</button>  
+                        <button class="btn btn-outline-light btn-hero">Watch Demo</button>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
-    <section class="demo-section">
-        <div class="demo-container">
-            <div class="section-title">
-                <h2>See eGOV-RMS in Action</h2>
-                <p>Watch our tutorial video to understand how eGOV-RMS can transform your department's resource management</p>
+    <!-- Demo Section -->
+    <section class="py-5 my-5">
+        <div class="container">
+            <div class="section-title mb-5">
+                <h2 class="animate__animated animate__fadeInUp">Discover eGOV-RMS</h2>
+                <p class="animate__animated animate__fadeInUp animate__delay-1s">See how eGOV-RMS transforms resource management with our interactive tutorial video.</p>
             </div>
             
-            <div class="demo-content">
-                <div class="demo-text">
-                    <h3>Streamlined Resource Management</h3>
-                    <p>Our platform provides a unified interface for all city government departments to manage their resources efficiently. From budget allocation to inventory tracking, eGOV-RMS brings all essential functions under one roof.</p>
-                    <p>The tutorial demonstrates how department heads can easily request resources, track approvals, and monitor utilization in real-time, reducing paperwork and improving transparency.</p>
-                    <button class="btn-primary" style="margin-top: 15px;">Request Full Demo</button>
+            <div class="row align-items-center mb-5">
+                <div class="col-lg-6 mb-4 mb-lg-0 animate__animated animate__fadeInLeft">
+                    <h3 class="fw-bold mb-3">Efficient Resource Management</h3>
+                    <p class="text-muted">eGOV-RMS offers a unified platform for city departments to manage resources seamlessly, from budgeting to inventory tracking.</p>
+                    <p class="text-muted">Our tutorial showcases real-time resource requests, approvals, and monitoring, enhancing transparency and efficiency.</p>
+                    <button class="btn btn-primary mt-3 px-4 py-3 fw-bold">Request Full Demo</button>
                 </div>
                 
-                <div class="demo-video">
-                    <div class="video-placeholder">
-                        <div class="play-button">
-                            <i class="fas fa-play"></i>
+                <div class="col-lg-6 animate__animated animate__fadeInRight">
+                    <div class="demo-video">
+                        <div class="video-placeholder">
+                            <div class="play-button">
+                                <i class="bi bi-play-fill"></i>
+                            </div>
                         </div>
-                        <p>eGOV-RMS System Demo</p>
+                        <div class="p-4 text-center bg-light">
+                            <p class="mb-0 fw-medium">eGOV-RMS System Demo</p>
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <div class="demo-steps">
-                <div class="demo-step">
-                    <div class="step-number">1</div>
-                    <h4>User Authentication</h4>
-                    <p>Secure login with department-specific credentials and role-based access control to ensure data security and proper authorization levels.</p>
+            <div class="row mt-5">
+                <div class="col-md-6 col-lg-3 mb-4 mb-lg-0">
+                    <div class="demo-step animate__animated">
+                        <div class="step-number">1</div>
+                        <h4 class="fw-bold mb-3">User Authentication</h4>
+                        <p class="text-muted">Secure, role-based login ensures data protection and appropriate access for each department.</p>
+                    </div>
                 </div>
                 
-                <div class="demo-step">
-                    <div class="step-number">2</div>
-                    <h4>Dashboard Overview</h4>
-                    <p>Personalized dashboard showing key metrics, pending requests, budget status, and important notifications for quick decision-making.</p>
+                <div class="col-md-6 col-lg-3 mb-4 mb-lg-0">
+                    <div class="demo-step animate__animated">
+                        <div class="step-number">2</div>
+                        <h4 class="fw-bold mb-3">Dashboard Overview</h4>
+                        <p class="text-muted">A personalized dashboard displays key metrics, pending requests, and budget status for quick decisions.</p>
+                    </div>
                 </div>
                 
-                <div class="demo-step">
-                    <div class="step-number">3</div>
-                    <h4>Resource Request</h4>
-                    <p>Intuitive form to request resources with automated validation and approval workflow routing to streamline the procurement process.</p>
+                <div class="col-md-6 col-lg-3 mb-4 mb-lg-0">
+                    <div class="demo-step animate__animated">
+                        <div class="step-number">3</div>
+                        <h4 class="fw-bold mb-3">Resource Request</h4>
+                        <p class="text-muted">Streamlined forms with automated validation and approval workflows simplify procurement.</p>
+                    </div>
                 </div>
                 
-                <div class="demo-step">
-                    <div class="step-number">4</div>
-                    <h4>Reporting & Analytics</h4>
-                    <p>Generate comprehensive reports and visualize data trends to support evidence-based decision making and budget planning.</p>
+                <div class="col-md-6 col-lg-3">
+                    <div class="demo-step animate__animated">
+                        <div class="step-number">4</div>
+                        <h4 class="fw-bold mb-3">Reporting & Analytics</h4>
+                        <p class="text-muted">Generate detailed reports and visualize trends for informed decision-making and planning.</p>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Resource Allocation Process Section -->
-<section class="process-section">
-    <div class="container">
-        <div class="section-title">
-            <h2>Resource Allocation Process</h2>
-            <p>Transparent workflow for efficient government resource management</p>
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="section-title mb-5">
+                <h2 class="animate__animated animate__fadeInUp">Resource Allocation Process</h2>
+                <p class="animate__animated animate__fadeInUp animate__delay-1s">A transparent, efficient workflow for government resource management</p>
+            </div>
+            
+            <div class="process-row">
+                <div class="process-step animate__animated">
+                    <div class="step-header mb-4">
+                        <div class="step-number">1</div>
+                        <h3 class="fw-bold mt-3">Department Request</h3>
+                    </div>
+                    <div class="step-content">
+                        <p class="text-muted">Departments submit detailed resource requests with justifications.</p>
+                        <ul class="step-features mt-4">
+                            <li><i class="bi bi-check-circle-fill"></i> Digital forms</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Document uploads</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Auto-validation</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="process-step animate__animated">
+                    <div class="step-header mb-4">
+                        <div class="step-number">2</div>
+                        <h3 class="fw-bold mt-3">Budget Review</h3>
+                    </div>
+                    <div class="step-content">
+                        <p class="text-muted">Budget verification ensures compliance and fund availability.</p>
+                        <ul class="step-features mt-4">
+                            <li><i class="bi bi-check-circle-fill"></i> Real-time checks</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Compliance audit</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Prioritization</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="process-step animate__animated">
+                    <div class="step-header mb-4">
+                        <div class="step-number">3</div>
+                        <h3 class="fw-bold mt-3">Procurement</h3>
+                    </div>
+                    <div class="step-content">
+                        <p class="text-muted">BAC oversees transparent bidding and contract processes.</p>
+                        <ul class="step-features mt-4">
+                            <li><i class="bi bi-check-circle-fill"></i> Vendor management</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Bid evaluation</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Contract awards</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="process-step animate__animated">
+                    <div class="step-header mb-4">
+                        <div class="step-number">4</div>
+                        <h3 class="fw-bold mt-3">Delivery & Inventory</h3>
+                    </div>
+                    <div class="step-content">
+                        <p class="text-muted">CGSD manages resource receipt and distribution.</p>
+                        <ul class="step-features mt-4">
+                            <li><i class="bi bi-check-circle-fill"></i> Barcode/RFID tags</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Digital receipts</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Distribution</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="process-step animate__animated">
+                    <div class="step-header mb-4">
+                        <div class="step-number">5</div>
+                        <h3 class="fw-bold mt-3">Utilization Reporting</h3>
+                    </div>
+                    <div class="step-content">
+                        <p class="text-muted">Departments report resource usage with evidence.</p>
+                        <ul class="step-features mt-4">
+                            <li><i class="bi bi-check-circle-fill"></i> Periodic reports</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Photo evidence</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Metrics</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
-        
-        <div class="process-steps">
-            <div class="process-step">
-                <div class="step-header">
-                    <div class="step-number">1</div>
-                    <h3>Department Request</h3>
-                </div>
-                <div class="step-content">
-                    <p>Department heads submit resource requests through the system with detailed specifications and justifications.</p>
-                    <ul class="step-features">
-                        <li><i class="fas fa-check-circle"></i> Digital request forms</li>
-                        <li><i class="fas fa-check-circle"></i> Attach supporting documents</li>
-                        <li><i class="fas fa-check-circle"></i> Automatic validation</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="process-step">
-                <div class="step-header">
-                    <div class="step-number">2</div>
-                    <h3>Budget Review</h3>
-                </div>
-                <div class="step-content">
-                    <p>Budget department verifies fund availability and compliance with financial regulations.</p>
-                    <ul class="step-features">
-                        <li><i class="fas fa-check-circle"></i> Real-time budget checking</li>
-                        <li><i class="fas fa-check-circle"></i> Compliance auditing</li>
-                        <li><i class="fas fa-check-circle"></i> Priority assessment</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="process-step">
-                <div class="step-header">
-                    <div class="step-number">3</div>
-                    <h3>Procurement</h3>
-                </div>
-                <div class="step-content">
-                    <p>BAC manages competitive bidding process with full transparency and documentation.</p>
-                    <ul class="step-features">
-                        <li><i class="fas fa-check-circle"></i> Vendor management</li>
-                        <li><i class="fas fa-check-circle"></i> Bid evaluation</li>
-                        <li><i class="fas fa-check-circle"></i> Contract awarding</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="process-step">
-                <div class="step-header">
-                    <div class="step-number">4</div>
-                    <h3>Delivery & Inventory</h3>
-                </div>
-                <div class="step-content">
-                    <p>CGSD receives and distributes resources with proper documentation and tracking.</p>
-                    <ul class="step-features">
-                        <li><i class="fas fa-check-circle"></i> Barcode/RFID tagging</li>
-                        <li><i class="fas fa-check-circle"></i> Digital receipts</li>
-                        <li><i class="fas fa-check-circle"></i> Department distribution</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="process-step">
-                <div class="step-header">
-                    <div class="step-number">5</div>
-                    <h3>Utilization Reporting</h3>
-                </div>
-                <div class="step-content">
-                    <p>Departments report resource utilization with evidence of proper usage.</p>
-                    <ul class="step-features">
-                        <li><i class="fas fa-check-circle"></i> Periodic reporting</li>
-                        <li><i class="fas fa-check-circle"></i> Photo documentation</li>
-                        <li><i class="fas fa-check-circle"></i> Performance metrics</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+    </section>
 
- <!-- Roadmap Section -->
- <section class="roadmap-section">
-    <div class="roadmap-container">
-        <div class="section-title">
-            <h2>Department Integration Roadmap</h2>
-            <p>How eGOV-RMS connects and streamlines operations across key Calapan City Government departments</p>
+    <!-- Roadmap Section -->
+    <section class="py-5 my-5">
+        <div class="container">
+            <div class="section-title mb-5">
+                <h2 class="animate__animated animate__fadeInUp">Department Integration Roadmap</h2>
+                <p class="animate__animated animate__fadeInUp animate__delay-1s">Connecting Calapan City departments for streamlined operations</p>
+            </div>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3 class="fw-bold">1. Bids and Awards Committee</h3>
+                        <p class="text-muted">Initiates procurement, selects vendors, and awards contracts transparently.</p>
+                        <div class="mt-3">
+                            <span class="badge bg-primary me-2">Procurement</span>
+                            <span class="badge bg-primary">Vendor Mgmt</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3 class="fw-bold">2. Budget Department</h3>
+                        <p class="text-muted">Verifies budgets and authorizes expenditures before procurement.</p>
+                        <div class="mt-3">
+                            <span class="badge bg-success me-2">Budget Control</span>
+                            <span class="badge bg-success">Fund Tracking</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3 class="fw-bold">3. Treasury Department</h3>
+                        <p class="text-muted">Handles payments and financial records with real-time updates.</p>
+                        <div class="mt-3">
+                            <span class="badge bg-warning text-dark me-2">Payments</span>
+                            <span class="badge bg-warning text-dark">Accounting</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3 class="fw-bold">4. Mayor's Office</h3>
+                        <p class="text-muted">Provides oversight and final approvals for major expenditures.</p>
+                        <div class="mt-3">
+                            <span class="badge bg-info text-dark me-2">Approvals</span>
+                            <span class="badge bg-info text-dark">Oversight</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <h3 class="fw-bold">5. City General Services</h3>
+                        <p class="text-muted">Manages assets, inventory, and resource distribution.</p>
+                        <div class="mt-3">
+                            <span class="badge bg-danger me-2">Inventory</span>
+                            <span class="badge bg-danger">Asset Mgmt</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        
-        <div class="timeline">
-            <div class="timeline-item left">
-                <div class="timeline-content">
-                    <h3>1. Bids and Awards Committee (BAC)</h3>
-                    <p>Procurement process initiation, vendor selection, and contract awarding with full transparency and audit trail.</p>
-                    <div class="mt-3">
-                        <span class="badge bg-primary me-2">Procurement</span>
-                        <span class="badge bg-primary">Vendor Mgmt</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="timeline-item right">
-                <div class="timeline-content">
-                    <h3>2. Budget Department</h3>
-                    <p>Budget allocation verification, fund availability checks, and expenditure authorization before procurement proceeds.</p>
-                    <div class="mt-3">
-                        <span class="badge bg-success me-2">Budget Control</span>
-                        <span class="badge bg-success">Fund Tracking</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="timeline-item left">
-                <div class="timeline-content">
-                    <h3>3. Treasury Department</h3>
-                    <p>Payment processing, fund disbursement, and financial record-keeping with real-time budget updates.</p>
-                    <div class="mt-3">
-                        <span class="badge bg-warning text-dark me-2">Payments</span>
-                        <span class="badge bg-warning text-dark">Accounting</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="timeline-item right">
-                <div class="timeline-content">
-                    <h3>4. Mayor's Office</h3>
-                    <p>Executive oversight, final approvals for major expenditures, and strategic resource allocation decisions.</p>
-                    <div class="mt-3">
-                        <span class="badge bg-info text-dark me-2">Approvals</span>
-                        <span class="badge bg-info text-dark">Oversight</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="timeline-item left">
-                <div class="timeline-content">
-                    <h3>5. City General Services (CGSD)</h3>
-                    <p>Physical asset management, inventory tracking, and resource distribution to requesting departments.</p>
-                    <div class="mt-3">
-                        <span class="badge bg-danger me-2">Inventory</span>
-                        <span class="badge bg-danger">Asset Mgmt</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+    </section>
     
+    <!-- Footer -->
     <footer>
-        <div class="footer-container">
-            <div class="footer-logo">
-                <div class="footer-logos">
-                    <img alt="Calapan City Logo" src="/img/Calapan_City_Logo.png"/>
-                                </div>
-                <p>eGOV-RMS is a capstone project developed by BSIT students from Mindoro State University to modernize resource management across Calapan City Government departments through innovative technology solutions.</p>
-                <div class="social-links">
-                    <a href="#"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#"><i class="fab fa-twitter"></i></a>
-                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
-                    <a href="#"><i class="fab fa-youtube"></i></a>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-5 mb-lg-0">
+                    <div class="footer-logo">
+                        <img src="/img/Calapan_City_Logo.png" alt="Calapan City Logo">
+                        <p class="mt-3 mb-4">eGOV-RMS, a capstone project by Mindoro State University BSIT students, modernizes resource management for Calapan City Government.</p>
+                        <div class="social-links">
+                            <a href="#"><i class="bi bi-facebook"></i></a>
+                            <a href="#"><i class="bi bi-twitter"></i></a>
+                            <a href="#"><i class="bi bi-linkedin"></i></a>
+                            <a href="#"><i class="bi bi-youtube"></i></a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-sm-6 col-lg-2 mb-4 mb-sm-0">
+                    <div class="footer-links">
+                        <h4>Quick Links</h4>
+                        <ul>
+                            <li><a href="#">Home</a></li>
+                            <li><a href="#">Features</a></li>
+                            <li><a href="#">Departments</a></li>
+                            <li><a href="#">About Project</a></li>
+                            <li><a href="#">Contact</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="col-sm-6 col-lg-2 mb-4 mb-sm-0">
+                    <div class="footer-links">
+                        <h4>Resources</h4>
+                        <ul>
+                            <li><a href="#">Documentation</a></li>
+                            <li><a href="#">API</a></li>
+                            <li><a href="#">Help Center</a></li>
+                            <li><a href="#">Training</a></li>
+                            <li><a href="#">Status</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="col-sm-6 col-lg-2">
+                    <div class="footer-links">
+                        <h4>Legal</h4>
+                        <ul>
+                            <li><a href="#">Privacy Policy</a></li>
+                            <li><a href="#">Terms of Service</a></li>
+                            <li><a href="#">Security</a></li>
+                            <li><a href="#">Accessibility</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
             
-            <div class="footer-links">
-                <h4>Quick Links</h4>
-                <ul>
-                    <li><a href="#">Home</a></li>
-                    <li><a href="#">Features</a></li>
-                    <li><a href="#">Departments</a></li>
-                    <li><a href="#">About Project</a></li>
-                    <li><a href="#">Contact</a></li>
-                </ul>
+            <div class="copyright text-center">
+                <p>© 2025 eGOV-RMS: Calapan City Resource Management System. All rights reserved.</p>
             </div>
-            
-            <div class="footer-links">
-                <h4>Resources</h4>
-                <ul>
-                    <li><a href="#">Documentation</a></li>
-                    <li><a href="#">API</a></li>
-                    <li><a href="#">Help Center</a></li>
-                    <li><a href="#">Training</a></li>
-                    <li><a href="#">Status</a></li>
-                </ul>
-            </div>
-            
-            <div class="footer-links">
-                <h4>Legal</h4>
-                <ul>
-                    <li><a href="#">Privacy Policy</a></li>
-                    <li><a href="#">Terms of Service</a></li>
-                    <li><a href="#">Security</a></li>
-                    <li><a href="#">Accessibility</a></li>
-                </ul>
-            </div>
-        </div>
-        
-        <div class="copyright">
-            <p>© 2025 eGOV-RMS: A Web-Based Calapan City Government Resource Management System. All rights reserved.</p>
         </div>
     </footer>
 
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Timeline animation
+        // Animation for elements in view
         document.addEventListener('DOMContentLoaded', function() {
-            const timelineItems = document.querySelectorAll('.timeline-item');
+            const animatedElements = document.querySelectorAll('.process-step, .demo-step, .timeline-item');
             
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
-                        entry.target.classList.add('visible');
+                        entry.target.classList.add('animate__animated', 'animate__fadeInUp');
+                        if (entry.target.classList.contains('timeline-item')) {
+                            entry.target.classList.add('visible');
+                        }
                     }
                 });
-            }, { threshold: 0.1 });
+            }, { threshold: 0.2 });
             
-            timelineItems.forEach(item => {
-                observer.observe(item);
-            });
+            animatedElements.forEach(element => observer.observe(element));
 
             // Smooth scrolling for anchor links
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 anchor.addEventListener('click', function(e) {
                     e.preventDefault();
-                    document.querySelector(this.getAttribute('href')).scrollIntoView({
-                        behavior: 'smooth'
-                    });
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth' });
+                    }
                 });
+            });
+
+            // Navbar scroll effect
+            const navbar = document.querySelector('.navbar');
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 50) {
+                    navbar.style.padding = '1rem 0';
+                    navbar.style.background = 'linear-gradient(135deg, #ffffff, #e6f0fa)';
+                    document.querySelector('.navbar-brand img').style.width = '60px';
+                    document.querySelector('.navbar-brand img').style.height = '60px';
+                } else {
+                    navbar.style.padding = '1.5rem 0';
+                    navbar.style.background = 'linear-gradient(135deg, #ffffff, #f1f5f9)';
+                    document.querySelector('.navbar-brand img').style.width = '72px';
+                    document.querySelector('.navbar-brand img').style.height = '72px';
+                }
             });
         });
     </script>

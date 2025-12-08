@@ -4,12 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>eGOV-RMS Dashboard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/src/output.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
   <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
 </head>
-
 
 <!-- Modern Sidebar - Clean Version -->
 <div class="w-64 bg-gradient-to-b from-blue-50 to-white h-screen p-5 fixed hidden lg:flex flex-col border-r border-gray-200 shadow-sm overflow-y-auto" id="sidebar">
@@ -193,6 +191,26 @@
               <a class="flex items-center px-3 py-1.5 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/conditions" id="conditionsListLink">
                 <i class="fas fa-list w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
                 Condition List
+              </a>
+            </div>
+          </div>
+          
+          <!-- Charging -->
+          <div class="relative">
+            <button class="flex items-center w-full px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" onclick="toggleChargingDropdown()" id="chargingButton">
+              <div class="flex items-center">
+                <i class="fas fa-list w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+                Charging
+              </div>
+            </button>
+            <div id="chargingDropdown" class="pl-8 mt-1 space-y-1 hidden overflow-hidden transition-all duration-300">
+              <a class="flex items-center px-3 py-1.5 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/add-charging" id="addChargingLink">
+                <i class="fas fa-plus w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+                Add Charging
+              </a>
+              <a class="flex items-center px-3 py-1.5 text-sm rounded-lg transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group" href="/charging" id="chargingListLink">
+                <i class="fas fa-list w-5 text-gray-400 group-hover:text-blue-500 mr-3 text-center"></i>
+                Charging List
               </a>
             </div>
           </div>
@@ -401,81 +419,8 @@
 <!-- Mobile Overlay -->
 <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
 
-<!-- Modern Chatbot UI - Fixed Position -->
-<div id="chatbotContainer" class="hidden fixed bottom-4 right-4 w-full max-w-md h-[600px] bg-white rounded-xl shadow-2xl border border-gray-200 flex flex-col z-50 overflow-hidden transform transition-all duration-300 ease-in-out">
-  <!-- Chatbot Header -->
-  <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-4 rounded-t-xl flex justify-between items-center">
-    <div class="flex items-center">
-      <div class="w-8 h-8 rounded-full bg-blue-400 flex items-center justify-center mr-3">
-        <i class="fas fa-robot text-white"></i>
-      </div>
-      <div>
-        <span class="font-semibold">eGOV-RMS AI Assistant</span>
-        <div class="text-xs text-blue-100">Powered by Cohere</div>
-      </div>
-    </div>
-    <div class="flex items-center space-x-2">
-      <button id="clearChat" class="text-white hover:text-blue-200 p-1 rounded-full hover:bg-blue-700 transition-colors" title="Clear Conversation">
-        <i class="fas fa-trash-alt text-sm"></i>
-      </button>
-      <button id="closeChatbot" class="text-white hover:text-blue-200 p-1 rounded-full hover:bg-blue-700 transition-colors">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-  </div>
-  
-  <!-- Chat Messages Area -->
-  <div id="chatMessages" class="flex-1 p-4 overflow-y-auto bg-gray-50 space-y-4">
-    <!-- Welcome message -->
-    <div class="chat-message bot-message">
-      <div class="flex items-start">
-        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3 flex-shrink-0">
-          <i class="fas fa-robot text-blue-600"></i>
-        </div>
-        <div class="flex-1 min-w-0">
-          <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 markdown-content">
-            <p class="text-gray-800">Hello! I'm your eGOV-RMS AI Assistant. I can help you with:</p>
-            <div class="mt-3 text-xs text-gray-500">
-              <p>Type your question or select a suggested query below.</p>
-            </div>
-          </div>
-          <!-- Suggested queries -->
-          <div class="mt-2 grid grid-cols-2 gap-2">
-            <button class="suggested-query text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full transition-colors">
-              Generate Predicted Budget
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Chat Input Area -->
-  <div class="p-4 border-t border-gray-200 bg-white">
-    <div class="relative flex items-center">
-      <button id="attachButton" class="absolute left-3 text-gray-400 hover:text-blue-600 transition-colors">
-        <i class="fas fa-paperclip"></i>
-      </button>
-      <input 
-        type="text" 
-        id="chatInput" 
-        placeholder="Ask about inventory, requests, or reports..." 
-        class="w-full border border-gray-300 rounded-full pl-10 pr-12 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-        autocomplete="off"
-      >
-      <button 
-        id="sendMessage" 
-        class="absolute right-3 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        disabled
-      >
-        <i class="fas fa-paper-plane"></i>
-      </button>
-    </div>
-    <div class="text-xs text-gray-500 mt-2 text-center">
-      AI responses may not always be accurate.
-    </div>
-  </div>
-</div>
+<!-- Include chatbot partial -->
+<%- include('../partials/chatbot') %>
 
 <script>
   // Toggle sidebar on mobile with overlay
@@ -790,348 +735,19 @@
     }
   }
 
-  // Enhanced markdown parser function
-  function parseMarkdown(text) {
-    if (!text) return '';
-
-    let html = text
-      // Headers
-      .replace(/^# (.*$)/gm, '<h1 class="text-xl font-bold mb-2 mt-4">$1</h1>')
-      .replace(/^## (.*$)/gm, '<h2 class="text-lg font-semibold mb-2 mt-3">$1</h2>')
-      .replace(/^### (.*$)/gm, '<h3 class="text-md font-medium mb-1 mt-2">$1</h3>')
-      // Bold and italic
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/\_\_(.*?)\_\_/g, '<strong>$1</strong>')
-      .replace(/\_(.*?)\_/g, '<em>$1</em>')
-      // Lists
-      .replace(/^\s*\*\s(.*$)/gm, '<li class="ml-4 list-disc">$1</li>')
-      .replace(/^\s*-\s(.*$)/gm, '<li class="ml-4 list-disc">$1</li>')
-      .replace(/^\s*\+\s(.*$)/gm, '<li class="ml-4 list-disc">$1</li>')
-      // Links
-      .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-blue-600 hover:underline" target="_blank">$1</a>')
-      // Code blocks
-      .replace(/```([\s\S]*?)```/g, '<pre class="bg-gray-100 p-2 rounded-md overflow-x-auto my-2"><code>$1</code></pre>')
-      .replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-1 rounded text-sm">$1</code>')
-      // Blockquotes
-      .replace(/^\>\s(.*$)/gm, '<blockquote class="border-l-4 border-gray-300 pl-3 text-gray-600 my-2">$1</blockquote>')
-      // Horizontal rules
-      .replace(/^\-\-\-$/gm, '<hr class="my-3 border-gray-200">')
-      // Tables
-      .replace(/(\|.+\|.+\|(\r?\n|\r)?\|?\s*\|?.+\|(\r?\n|\r)?)((?:\|.+\|(\r?\n|\r)?)+)/gm, function(match) {
-        const rows = match.trim().split('\n');
-        let tableHtml = '<div class="overflow-x-auto"><table class="min-w-full border border-gray-200 my-3"><thead><tr>';
-        
-        // Header row
-        const headers = rows[0].split('|').filter(h => h.trim() !== '');
-        headers.forEach(header => {
-          tableHtml += `<th class="px-4 py-2 bg-gray-100 border-b border-gray-200 text-left">${header.trim()}</th>`;
-        });
-        tableHtml += '</tr></thead><tbody>';
-        
-        // Data rows
-        for (let i = 2; i < rows.length; i++) {
-          if (rows[i].trim() === '') continue;
-          const cells = rows[i].split('|').filter(c => c.trim() !== '');
-          tableHtml += '<tr>';
-          cells.forEach(cell => {
-            tableHtml += `<td class="px-4 py-2 border-b border-gray-200">${cell.trim()}</td>`;
-          });
-          tableHtml += '</tr>';
-        }
-        
-        tableHtml += '</tbody></table></div>';
-        return tableHtml;
-      })
-      // Paragraphs
-      .replace(/^(?!<[a-z])(.*$)/gm, function(m) {
-        return m.trim() ? '<p class="mb-2">' + m + '</p>' : '';
-      });
-    
-    // Wrap lists in ul tags
-    html = html.replace(/(<li.*?>.*?<\/li>)+/g, function(match) {
-      return '<ul class="list-disc pl-5 space-y-1 my-2">' + match + '</ul>';
-    });
-    
-    return html;
-  }
-
-  // Function to add message to chat with markdown support
-  function addMessageToChat(message, sender) {
-    const chatMessages = document.getElementById('chatMessages');
-    if (!chatMessages) return;
-
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `chat-message ${sender}-message mb-4 animate-message-in`;
-    
-    if (sender === 'user') {
-      messageDiv.innerHTML = `
-        <div class="flex items-start justify-end">
-          <div class="flex flex-col items-end">
-            <div class="bg-blue-600 text-white p-3 rounded-lg shadow-sm max-w-[85%]">
-              <p>${message}</p>
-            </div>
-          </div>
-        </div>
-      `;
-    } else {
-      const parsedMessage = parseMarkdown(message);
-      messageDiv.innerHTML = `
-        <div class="flex items-start">
-          <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3 flex-shrink-0">
-            <i class="fas fa-robot text-blue-600"></i>
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-200 max-w-[85%] markdown-content">
-              ${parsedMessage}
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    chatMessages.appendChild(messageDiv);
-    
-    // Smooth scroll to bottom
-    setTimeout(() => {
-      chatMessages.scrollTo({
-        top: chatMessages.scrollHeight,
-        behavior: 'smooth'
-      });
-    }, 50);
-  }
-
-  // Typing animation with smooth appearance
-  function showTypingIndicator() {
-    const chatMessages = document.getElementById('chatMessages');
-    if (!chatMessages) return;
-
-    const typingIndicator = document.createElement('div');
-    typingIndicator.id = 'typingIndicator';
-    typingIndicator.className = 'chat-message bot-message mb-4 opacity-0 animate-fade-in';
-    typingIndicator.innerHTML = `
-      <div class="flex items-start">
-        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3 flex-shrink-0">
-          <i class="fas fa-robot text-blue-600"></i>
-        </div>
-        <div>
-          <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-200 w-24">
-            <div class="flex space-x-1">
-              <div class="w-2 h-2 rounded-full bg-gray-400 animate-bounce"></div>
-              <div class="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style="animation-delay: 0.2s"></div>
-              <div class="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style="animation-delay: 0.4s"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-    chatMessages.appendChild(typingIndicator);
-    chatMessages.scrollTo({
-      top: chatMessages.scrollHeight,
-      behavior: 'smooth'
-    });
-  }
-
-  // Remove typing indicator with fade out
-  function hideTypingIndicator() {
-    const indicator = document.getElementById('typingIndicator');
-    if (indicator) {
-      indicator.classList.add('animate-fade-out');
-      setTimeout(() => {
-        indicator.remove();
-      }, 300);
-    }
-  }
-
-  // Enhanced send message function with markdown support
-  async function sendUserMessage() {
-    const chatInput = document.getElementById('chatInput');
-    const sendMessage = document.getElementById('sendMessage');
-    if (!chatInput || !sendMessage) return;
-
-    const message = chatInput.value.trim();
-    if (message === '') return;
-
-    addMessageToChat(message, 'user');
-    chatInput.value = '';
-    sendMessage.disabled = true;
-
-    showTypingIndicator();
-
-    try {
-      const response = await generateAIResponse(message);
-      hideTypingIndicator();
-      
-      // Split response into chunks for smooth streaming effect
-      const words = response.split(' ');
-      let currentChunk = '';
-      let chunkCount = 0;
-      
-      // Create a temporary div for the message
-      const tempDiv = document.createElement('div');
-      tempDiv.className = 'chat-message bot-message mb-4 opacity-0 animate-fade-in';
-      tempDiv.innerHTML = `
-        <div class="flex items-start">
-          <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3 flex-shrink-0">
-            <i class="fas fa-robot text-blue-600"></i>
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-200 max-w-[85%] markdown-content">
-              ${parseMarkdown(currentChunk)}
-            </div>
-          </div>
-        </div>
-      `;
-      document.getElementById('chatMessages').appendChild(tempDiv);
-      
-      // Stream words with slight delay for smooth appearance
-      const streamInterval = setInterval(() => {
-        if (words.length === 0) {
-          clearInterval(streamInterval);
-          return;
-        }
-        
-        currentChunk += (currentChunk ? ' ' : '') + words.shift();
-        chunkCount++;
-        
-        // Update content every few chunks to reduce DOM operations
-        if (chunkCount % 5 === 0 || words.length === 0) {
-          tempDiv.querySelector('.markdown-content').innerHTML = parseMarkdown(currentChunk);
-          
-          // Scroll to bottom
-          document.getElementById('chatMessages').scrollTo({
-            top: document.getElementById('chatMessages').scrollHeight,
-            behavior: 'smooth'
-          });
-        }
-      }, 50);
-      
-    } catch (error) {
-      hideTypingIndicator();
-      addMessageToChat("Sorry, I'm having trouble connecting to the AI service.", 'bot');
-      console.error('Chatbot error:', error);
-    }
-  }
-
-  // Initialize chatbot event listeners
+  // Initialize chatbot toggle (just the toggle functionality)
   document.addEventListener('DOMContentLoaded', function() {
     loadUserProfile();
     loadNotificationCount();
 
+    // Chatbot toggle functionality
     const chatbotToggle = document.getElementById('chatbotToggle');
-    const chatbotContainer = document.getElementById('chatbotContainer');
-    const closeChatbot = document.getElementById('closeChatbot');
-    const chatInput = document.getElementById('chatInput');
-    const sendMessage = document.getElementById('sendMessage');
-    const chatMessages = document.getElementById('chatMessages');
-    const clearChat = document.getElementById('clearChat');
-
-    if (chatbotToggle && chatbotContainer) {
-      // Toggle chatbot visibility with animation
+    if (chatbotToggle) {
       chatbotToggle.addEventListener('click', function() {
-        chatbotContainer.classList.toggle('hidden');
-        if (!chatbotContainer.classList.contains('hidden')) {
-          chatbotContainer.classList.add('animate-scale-in');
-          setTimeout(() => {
-            chatbotContainer.classList.remove('animate-scale-in');
-          }, 300);
-        }
+        // This will be handled by the chatbot partial
+        console.log('AI Assistant button clicked');
+        // You can add any initialization logic here if needed
       });
     }
-
-    if (closeChatbot && chatbotContainer) {
-      closeChatbot.addEventListener('click', function() {
-        chatbotContainer.classList.add('animate-scale-out');
-        setTimeout(() => {
-          chatbotContainer.classList.add('hidden');
-          chatbotContainer.classList.remove('animate-scale-out');
-        }, 300);
-      });
-    }
-
-    if (chatInput && sendMessage) {
-      // Input validation
-      chatInput.addEventListener('input', function() {
-        sendMessage.disabled = this.value.trim() === '';
-      });
-
-      // Send message on Enter
-      chatInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter' && !sendMessage.disabled) {
-          sendUserMessage();
-        }
-      });
-
-      sendMessage.addEventListener('click', sendUserMessage);
-    }
-
-    if (clearChat && chatMessages) {
-      // Clear chat history with confirmation
-      clearChat.addEventListener('click', function() {
-        if (chatMessages.children.length > 1) {
-          if (confirm('Clear all chat history?')) {
-            chatMessages.innerHTML = `
-              <div class="chat-message bot-message animate-fade-in">
-                <div class="flex items-start">
-                  <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-3 flex-shrink-0">
-                    <i class="fas fa-robot text-blue-600"></i>
-                  </div>
-                  <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 markdown-content">
-                    <p class="text-gray-800">Conversation cleared. How can I assist you now?</p>
-                  </div>
-                </div>
-              </div>
-            `;
-          }
-        }
-      });
-    }
-
-    // Suggested queries functionality
-    document.querySelectorAll('.suggested-query').forEach(button => {
-      button.addEventListener('click', function() {
-        if (chatInput && sendMessage) {
-          chatInput.value = this.textContent;
-          chatInput.focus();
-          sendMessage.disabled = false;
-        }
-      });
-    });
   });
-
-  // AI backend route
-  const COHERE_API_URL = '/api/cohere-chat';
-
-  async function generateAIResponse(message) {
-    try {
-      const response = await fetch(COHERE_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ message })
-      });
-
-      if (!response.ok) throw new Error(`API error: ${response.status}`);
-      const data = await response.json();
-      return data.response || "I couldn't generate a response. Please try again.";
-    } catch (error) {
-      console.error('Error getting AI response:', error);
-      return getFallbackResponse(message);
-    }
-  }
-
-  function getFallbackResponse(message) {
-    const lower = message.toLowerCase();
-    if (lower.includes('inventory') || lower.includes('stock')) {
-      return "For inventory help, please check the Inventory section in the sidebar.";
-    }
-    if (lower.includes('request') || lower.includes('rfq')) {
-      return "You can manage requests through the Requests section.";
-    }
-    if (lower.includes('report')) {
-      return "Reports are available in the Reports section.";
-    }
-    return "I'm here to help with the eGOV-RMS system. Could you ask your question differently?";
-  }
 </script>
