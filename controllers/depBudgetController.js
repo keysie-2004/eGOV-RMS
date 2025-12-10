@@ -68,12 +68,26 @@ exports.getBudgetView = (req, res) => {
       return res.redirect('/dashboard');
     }
     
+    // ADD THESE DEBUG LINES
+    console.log('=== BUDGET DEBUG ===');
+    console.log('User department_id:', user.department_id);
+    console.log('Budget object:', budget);
+    console.log('Budget department_name:', budget?.department_name);
+    console.log('===================');
+    
     DepBudgetModel.getBudgetHistory(user.department_id, (err, history) => {
       if (err) {
         console.error('Error fetching budget history:', err);
         req.flash('error', 'Error fetching budget history');
         return res.redirect('/dashboard');
       }
+      
+      // ADD THESE DEBUG LINES
+      console.log('=== HISTORY DEBUG ===');
+      console.log('History query parameter (department_id):', user.department_id);
+      console.log('History result:', history);
+      console.log('History length:', history ? history.length : 0);
+      console.log('====================');
       
       // Ensure budget object is properly formatted
       const budgetData = budget && budget.budget_amount !== undefined && budget.remaining_budget !== undefined

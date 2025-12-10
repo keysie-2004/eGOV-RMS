@@ -94,18 +94,22 @@ getBudgetByDepartment: (department_id, callback) => {
     db.query(sql, [amount, department_id], callback);
   },
 
-  // Get budget history for reporting
 getBudgetHistory: (department_id, callback) => {
   const sql = `
-    SELECT pr.pr_id, pr.total, pr.purpose, pr.date_requested, 
-           pr.status, d.department_name
+    SELECT 
+      pr.pr_id, 
+      pr.total, 
+      pr.purpose, 
+      pr.date_requested, 
+      pr.status, 
+      d.department_name
     FROM purchase_requests pr
-    JOIN departments d ON pr.department = d.department_id
-    WHERE pr.department = ? AND pr.status = 'approved'
+    INNER JOIN departments d ON pr.department = d.department_name
+    WHERE d.department_id = ? AND pr.status = 'approved'
     ORDER BY pr.date_requested DESC
   `;
+  
   db.query(sql, [department_id], callback);
-},
-};
+},};
 
 module.exports = DepBudgetModel;
