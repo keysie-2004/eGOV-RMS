@@ -14,7 +14,8 @@ const NotificationModel = {
     const query = `
       SELECT email 
       FROM employees 
-      WHERE user_type = 'bac' OR bac_position IS NOT NULL
+      WHERE user_type IN ('superadmin', 'bac', 'accounting', 'mo', 'gso') 
+         OR bac_position IS NOT NULL
     `;
     db.query(query, callback);
   },
