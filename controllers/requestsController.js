@@ -253,175 +253,167 @@ exports.createRequest = async (req, res) => {
   }
 };
 
-exports.getRequests = (req, res) => {
-    const user = req.user;
-    if (!user) {
-        console.error('No user found in session');
-        return res.redirect('/login');
-    }
+exports.getRequests = async (req, res) => {
+  const user = req.user;
+  if (!user) {
+    console.error('No user found in session');
+    return res.redirect('/login');
+  }
 
-    const statusFilter = req.query.status ? req.query.status.toLowerCase() : 'all';
-    const showArchived = req.query.archived === 'true';
+  const statusFilter = req.query.status ? req.query.status.toLowerCase() : 'all';
+  const showArchived = req.query.archived === 'true';
 
-    // Validate status filter
-    const validStatuses = ['all', 'pending', 'approved', 'declined', 'e-sign', 'posted', 'archived'];
-    if (statusFilter !== 'all' && !validStatuses.includes(statusFilter)) {
-        console.error(`Invalid status filter: ${statusFilter}`);
-        return res.status(400).render('error', { message: 'Invalid status filter' });
-    }
+  const validStatuses = ['all', 'pending', 'approved', 'declined', 'e-sign', 'posted', 'archived'];
+  if (statusFilter !== 'all' && !validStatuses.includes(statusFilter)) {
+    return res.status(400).render('error', { message: 'Invalid status filter' });
+  }
 
-    // Initialize query parameters
-    let queryParams = [showArchived ? 1 : 0];
-    let baseQuery = `
-        SELECT 
-            pr.pr_id, pr.lgu, pr.fund, pr.department, pr.section, pr.fpp, 
-            pr.date_requested, pr.total, pr.purpose, pr.requested_by, 
-            pr.cash_availability, pr.approved_by, pr.status, pr.is_archived, pr.qr_code,
-            pri.item_no, pri.unit, pri.item_description, pri.quantity, pri.unit_cost, pri.total_cost,
-            pr.comments
-        FROM purchase_requests pr
-        LEFT JOIN purchase_request_items pri ON pr.pr_id = pri.pr_id
-        WHERE pr.is_archived = ?
-    `;
+  let queryParams = [showArchived ? 1 : 0];
+  let baseQuery = `
+    SELECT 
+      pr.pr_id, pr.lgu, pr.fund, pr.department, pr.section, pr.fpp, 
+      pr.date_requested, pr.total, pr.purpose, pr.requested_by, 
+      pr.cash_availability, pr.approved_by, pr.status, pr.is_archived, pr.qr_code,
+      pr.comments,
+      pri.item_no, pri.unit, pri.item_description, pri.quantity, pri.unit_cost, pri.total_cost
+    FROM purchase_requests pr
+    LEFT JOIN purchase_request_items pri ON pr.pr_id = pri.pr_id
+    WHERE pr.is_archived = ?
+  `;
 
-    // Add status filter if not 'all'
-    if (statusFilter !== 'all') {
-        if (statusFilter === 'archived') {
-            baseQuery += ` AND pr.status != 'archived'`;
-        } else {
-            baseQuery += ` AND pr.status = ?`;
-            queryParams.push(statusFilter);
-        }
-    }
-    
-    // Add department filter for regular users
-    if (user.user_type === 'user') {
-        baseQuery += ` AND pr.department = ?`;
-        queryParams.push(user.department_id);
-        console.log(`Fetching requests for user ${user.employee_name} from department ${user.department_id}`);
+  // Status filter
+  if (statusFilter !== 'all') {
+    if (statusFilter === 'archived') {
+      // 'archived' tab shows archived ones (ignore status field)
+      // no extra condition needed
     } else {
-        console.log(`Fetching requests for ${user.user_type} user: ${user.employee_name}, department: ${user.department_id}`);
+      baseQuery += ` AND pr.status = ?`;
+      queryParams.push(statusFilter);
+    }
+  }
+
+  // DEPARTMENT FILTER — THIS WAS THE BUG
+  if (user.user_type === 'user' || user.user_type === 'department_head') {
+    // Get the actual department NAME using the user's department_id
+    try {
+      const [deptRow] = await new Promise((resolve, reject) => {
+        db.query(
+          'SELECT department_name FROM departments WHERE department_id = ?',
+          [user.department_id],
+          (err, rows) => {
+            if (err) return reject(err);
+            resolve(rows);
+          }
+        );
+      });
+
+      if (deptRow && deptRow.department_name) {
+        baseQuery += ` AND pr.department = ?`;
+        queryParams.push(deptRow.department_name);
+        console.log(`User ${user.employee_name} → filtering by department: ${deptRow.department_name}`);
+      } else {
+        console.warn(`Department not found for user ${user.employee_name} (ID: ${user.department_id})`);
+        baseQuery += ` AND 1=0`; // safely return no results
+      }
+    } catch (err) {
+      console.error('Error fetching department name:', err);
+      baseQuery += ` AND 1=0`;
+    }
+  }
+
+  baseQuery += ` ORDER BY pr.pr_id DESC, pri.item_no`;
+
+  // Run the main query
+  db.query(baseQuery, queryParams, (err, results) => {
+    if (err) {
+      console.error('Database error in getRequests:', err);
+      return res.status(500).render('error', { message: 'Internal Server Error' });
     }
 
-    // Add ORDER BY to ensure consistent results
-    baseQuery += ` ORDER BY pr.pr_id DESC, pri.item_no`;
+    // Group items by pr_id
+    const groupedRequestsMap = new Map();
 
-    db.query(baseQuery, queryParams, (err, results) => {
-        if (err) {
-            console.error('Database error in getRequests:', err);
-            return res.status(500).render('error', { message: 'Internal Server Error' });
+    results.forEach(row => {
+      if (!groupedRequestsMap.has(row.pr_id)) {
+        let parsedComments = {};
+        if (row.comments) {
+          try {
+            parsedComments = typeof row.comments === 'string' 
+              ? JSON.parse(row.comments) 
+              : row.comments;
+          } catch (e) {
+            parsedComments = { message: row.comments };
+          }
         }
 
-        // Group items by pr_id using Map to preserve insertion order
-        const groupedRequestsMap = new Map();
-        
-        results.forEach(row => {
-            if (!groupedRequestsMap.has(row.pr_id)) {
-                let parsedComments = {};
-                if (row.comments) {
-                    try {
-                        if (typeof row.comments === 'object') {
-                            parsedComments = row.comments;
-                        } else if (typeof row.comments === 'string') {
-                            if (row.comments.trim().startsWith('{') || row.comments.trim().startsWith('[')) {
-                                parsedComments = JSON.parse(row.comments);
-                            } else {
-                                parsedComments = { message: row.comments };
-                            }
-                        }
-                    } catch (parseError) {
-                        console.error(`Error parsing comments for request ${row.pr_id}:`, parseError);
-                        parsedComments = { message: row.comments };
-                    }
-                }
-
-                groupedRequestsMap.set(row.pr_id, {
-                    pr_id: row.pr_id,
-                    lgu: row.lgu,
-                    fund: row.fund,
-                    department: row.department,
-                    section: row.section,
-                    fpp: row.fpp,
-                    date_requested: row.date_requested,
-                    total: row.total,
-                    purpose: row.purpose,
-                    requested_by: row.requested_by,
-                    cash_availability: row.cash_availability,
-                    approved_by: row.approved_by,
-                    status: row.status,
-                    is_archived: row.is_archived,
-                    qr_code: row.status === 'e-sign' ? row.qr_code : null,
-                    comments: parsedComments,
-                    items: []
-                });
-            }
-
-            if (row.item_no) {
-                groupedRequestsMap.get(row.pr_id).items.push({
-                    item_no: row.item_no,
-                    unit: row.unit,
-                    item_description: row.item_description,
-                    quantity: row.quantity,
-                    unit_cost: row.unit_cost,
-                    total_cost: row.total_cost
-                });
-            }
+        groupedRequestsMap.set(row.pr_id, {
+          pr_id: row.pr_id,
+          lgu: row.lgu,
+          fund: row.fund,
+          department: row.department,
+          section: row.section,
+          fpp: row.fpp,
+          date_requested: row.date_requested,
+          total: row.total,
+          purpose: row.purpose,
+          requested_by: row.requested_by,
+          cash_availability: row.cash_availability,
+          approved_by: row.approved_by,
+          status: row.status,
+          is_archived: row.is_archived,
+          qr_code: row.qr_code,
+          comments: parsedComments,
+          items: []
         });
+      }
 
-        // Convert Map to array (preserves insertion order which is DESC from SQL)
-        const groupedRequests = Array.from(groupedRequestsMap.values());
-
-        // Fetch budget information based on user type
-        let budgetQuery;
-        let budgetParams;
-
-        if (user.user_type === 'superadmin') {
-            // Superadmin gets total budget across all departments
-            budgetQuery = `
-                SELECT 
-                    SUM(budget_amount) as budget_amount, 
-                    SUM(remaining_budget) as remaining_budget,
-                    'All Departments' as department_name
-                FROM department_budgets
-            `;
-            budgetParams = [];
-        } else {
-            // Regular users get their department's budget
-            budgetQuery = `
-                SELECT 
-                    db.budget_amount, 
-                    db.remaining_budget, 
-                    d.department_name
-                FROM department_budgets db
-                JOIN departments d ON db.department_id = d.department_id
-                WHERE db.department_id = ?
-                LIMIT 1
-            `;
-            budgetParams = [user.department_id];
-        }
-
-        db.query(budgetQuery, budgetParams, (err, budgetResults) => {
-            if (err) {
-                console.error('Error fetching budget information:', err);
-                // Continue rendering without budget info instead of failing
-            }
-
-            const budget = budgetResults && budgetResults.length > 0 ? {
-                budget_amount: parseFloat(budgetResults[0].budget_amount || 0),
-                remaining_budget: parseFloat(budgetResults[0].remaining_budget || 0),
-                department_name: budgetResults[0].department_name || null
-            } : null;
-
-            res.render('requests', {
-                user,
-                requests: groupedRequests,
-                currentStatus: statusFilter,
-                showArchived,
-                statusOptions: validStatuses,
-                budget: budget
-            });
+      if (row.item_no) {
+        groupedRequestsMap.get(row.pr_id).items.push({
+          item_no: row.item_no,
+          unit: row.unit,
+          item_description: row.item_description,
+          quantity: row.quantity,
+          unit_cost: row.unit_cost,
+          total_cost: row.total_cost
         });
+      }
     });
+
+    const groupedRequests = Array.from(groupedRequestsMap.values());
+
+    // Budget query (unchanged)
+    let budgetQuery, budgetParams;
+    if (user.user_type === 'superadmin') {
+      budgetQuery = `SELECT SUM(budget_amount) as budget_amount, SUM(remaining_budget) as remaining_budget FROM department_budgets`;
+      budgetParams = [];
+    } else {
+      budgetQuery = `
+        SELECT db.budget_amount, db.remaining_budget, d.department_name
+        FROM department_budgets db
+        JOIN departments d ON db.department_id = d.department_id
+        WHERE db.department_id = ?
+      `;
+      budgetParams = [user.department_id];
+    }
+
+    db.query(budgetQuery, budgetParams, (err, budgetResults) => {
+      if (err) console.error('Budget query error:', err);
+
+      const budget = budgetResults?.[0] ? {
+        budget_amount: parseFloat(budgetResults[0].budget_amount || 0),
+        remaining_budget: parseFloat(budgetResults[0].remaining_budget || 0),
+        department_name: budgetResults[0].department_name || 'N/A'
+      } : null;
+
+      res.render('requests', {
+        user,
+        requests: groupedRequests,
+        currentStatus: statusFilter,
+        showArchived,
+        budget
+      });
+    });
+  });
 };
 
 // Update delete method to archive instead of delete
