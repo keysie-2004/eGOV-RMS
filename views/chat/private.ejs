@@ -6,6 +6,108 @@
   <title><%= receiver ? `Chat with ${receiver.employee_name}` : 'Private Chat' %> | eGOV-RMS</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="/src/requests.css" rel="stylesheet"/>
+  <style>
+    /* Add modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+    
+    .modal-content {
+      background-color: white;
+      margin: 5% auto;
+      padding: 20px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    
+    .user-search-result {
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .user-search-result:hover {
+      background-color: #f3f4f6;
+    }
+    
+    .no-chats-found {
+      padding: 20px;
+      text-align: center;
+      color: #6b7280;
+    }
+    
+    .chat-list-item.active {
+      background-color: #f0f9ff;
+    }
+    
+    .unread-count {
+      background-color: #3b82f6;
+      color: white;
+      border-radius: 9999px;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .e2e-notice {
+      background-color: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+      text-align: center;
+      font-size: 14px;
+      color: #6b7280;
+    }
+    
+    .e2e-notice i {
+      margin-right: 8px;
+      color: #10b981;
+    }
+    
+    .message-in {
+      background-color: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 18px;
+      border-top-left-radius: 4px;
+      max-width: 70%;
+      align-self: flex-start;
+    }
+    
+    .message-out {
+      background-color: #3b82f6;
+      color: white;
+      border-radius: 18px;
+      border-top-right-radius: 4px;
+      max-width: 70%;
+      align-self: flex-end;
+      margin-left: auto;
+    }
+    
+    @keyframes messageSlide {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .animate-message {
+      animation: messageSlide 0.3s ease-out;
+    }
+  </style>
 </head>
 <body class="bg-gray-50" data-user-id="<%= user.employee_id %>">
   <div class="flex h-screen overflow-hidden">
@@ -37,7 +139,7 @@
         <div id="chatListContainer" class="divide-y divide-gray-200">
           <% privateChats.forEach(chat => { %>
             <a href="/chat/private/<%= chat.chat_id %>/<%= chat.other_user_id %>" 
-               class="block p-4 hover:bg-gray-50 relative <%= chat.chat_id === parseInt(chatId) ? 'active' : '' %> chat-list-item">
+               class="block p-4 hover:bg-gray-50 relative <%= chat.chat_id === parseInt(chatId) ? 'bg-blue-50' : '' %> chat-list-item">
               <div class="flex items-center space-x-3">
                 <% if (chat.other_user_image) { %>
                   <img src="<%= chat.other_user_image %>" alt="<%= chat.other_user_name %>" 
@@ -91,7 +193,7 @@
           </div>
           
           <!-- Messages Area -->
-          <div class="chat-messages p-4 bg-gray-50 flex-1" id="chatMessages">
+          <div class="chat-messages p-4 bg-gray-50 flex-1 overflow-y-auto" id="chatMessages">
             <% if (history.length === 0) { %>
               <div class="text-center py-10 text-gray-500">
                 <i class="fas fa-comments text-4xl mb-3"></i>
@@ -106,22 +208,24 @@
                 <i class="fas fa-lock"></i>
                 <span>Messages and calls are secured with end-to-end encryption. Only people in this chat can read or share them.</span>
               </div>
-              <% history.forEach(msg => { %>
-                <div class="mb-4 <%= msg.isCurrentUser ? 'message-out' : 'message-in' %> p-3 animate-message" data-message-id="<%= msg.id %>">
-                  <% if (!msg.isCurrentUser) { %>
-                    <div>
-                      <div class="font-medium text-sm text-gray-700"><%= msg.employee_name %></div>
-                      <div class="text-gray-800"><%= msg.message %></div>
-                      <div class="text-xs text-gray-500 mt-1"><%= msg.formattedTime %></div>
-                    </div>
-                  <% } else { %>
-                    <div class="text-right">
-                      <div class="text-white"><%= msg.message %></div>
-                      <div class="text-xs text-blue-100 mt-1"><%= msg.formattedTime %></div>
-                    </div>
-                  <% } %>
-                </div>
-              <% }); %>
+              <div class="flex flex-col space-y-4">
+                <% history.forEach(msg => { %>
+                  <div class="<%= msg.isCurrentUser ? 'message-out' : 'message-in' %> p-3 animate-message" data-message-id="<%= msg.id %>">
+                    <% if (!msg.isCurrentUser) { %>
+                      <div>
+                        <div class="font-medium text-sm text-gray-700"><%= msg.employee_name %></div>
+                        <div class="text-gray-800"><%= msg.message %></div>
+                        <div class="text-xs text-gray-500 mt-1"><%= msg.formattedTime %></div>
+                      </div>
+                    <% } else { %>
+                      <div class="text-right">
+                        <div class="text-white"><%= msg.message %></div>
+                        <div class="text-xs text-blue-100 mt-1"><%= msg.formattedTime %></div>
+                      </div>
+                    <% } %>
+                  </div>
+                <% }); %>
+              </div>
             <% } %>
           </div>
           
@@ -153,8 +257,8 @@
     </div>
   </div>
 
-  <!-- New Chat Modal -->
-  <div id="newChatModal" class="modal">
+  <!-- New Chat Modal - Only visible when triggered -->
+  <div id="newChatModal" class="modal" style="display: none;">
     <div class="modal-content">
       <div class="flex justify-between items-center mb-4">
         <h3 class="text-lg font-medium">Start New Chat</h3>
@@ -184,12 +288,13 @@
       let lastMessageId = 0;
       let isScrolledUp = false;
 
-      // Chat list search functionality
+      // Chat list search functionality - ONLY if element exists
       const chatListSearch = document.getElementById('chatListSearch');
       const chatListContainer = document.getElementById('chatListContainer');
-      const originalChatList = chatListContainer.innerHTML;
       
-      if (chatListSearch) {
+      if (chatListSearch && chatListContainer) {
+        const originalChatList = chatListContainer.innerHTML;
+        
         chatListSearch.addEventListener('input', function() {
           const searchTerm = this.value.trim().toLowerCase();
           
@@ -228,7 +333,8 @@
         });
       }
 
-      if (messageForm && chatMessages) {
+      // Chat messaging functionality - ONLY if elements exist
+      if (messageForm && chatMessages && chatId) {
         // Initial load
         loadMessages();
         
@@ -412,7 +518,7 @@
           const messageClass = isCurrentUser ? 'message-out' : 'message-in';
           
           const messageDiv = document.createElement('div');
-          messageDiv.className = `mb-4 ${messageClass} p-3 animate-message`;
+          messageDiv.className = `${messageClass} p-3 animate-message`;
           messageDiv.dataset.messageId = msg.id;
           
           if (!isCurrentUser) {
@@ -455,139 +561,145 @@
         }
       }
 
-      // New chat modal functionality
+      // New chat modal functionality - ONLY if elements exist
       const newChatBtn = document.getElementById('newChatBtn');
       const newChatModal = document.getElementById('newChatModal');
-      const closeModal = document.getElementById('closeModal');
-      const userSearch = document.getElementById('userSearch');
-      const searchResults = document.getElementById('searchResults');
       
-      if (newChatBtn) {
+      if (newChatBtn && newChatModal) {
+        const closeModal = document.getElementById('closeModal');
+        const userSearch = document.getElementById('userSearch');
+        const searchResults = document.getElementById('searchResults');
+        
+        // Ensure modal is hidden on load
+        newChatModal.style.display = 'none';
+        
         newChatBtn.addEventListener('click', function() {
           newChatModal.style.display = 'block';
-          userSearch.focus();
+          if (userSearch) userSearch.focus();
         });
-      }
-      
-      if (closeModal) {
-        closeModal.addEventListener('click', function() {
-          newChatModal.style.display = 'none';
-        });
-      }
-      
-      // Close modal when clicking outside
-      window.addEventListener('click', function(event) {
-        if (event.target === newChatModal) {
-          newChatModal.style.display = 'none';
-        }
-      });
-      
-      // User search functionality
-      if (userSearch) {
-        let searchTimeout;
         
-        userSearch.addEventListener('input', function() {
-          clearTimeout(searchTimeout);
-          const searchTerm = this.value.trim();
-          
-          if (searchTerm.length > 1) {
-            searchTimeout = setTimeout(() => {
-              fetch(`/chat/search-employees?term=${encodeURIComponent(searchTerm)}`)
-                .then(response => response.json())
-                .then(data => {
-                  if (data.success && data.employees.length > 0) {
-                    displaySearchResults(data.employees);
-                  } else {
-                    searchResults.innerHTML = '<p class="text-gray-500 p-4">No employees found</p>';
-                  }
-                })
-                .catch(error => {
-                  console.error('Search error:', error);
-                  searchResults.innerHTML = '<p class="text-red-500 p-4">Error searching employees</p>';
-                });
-            }, 300);
-          } else {
-            searchResults.innerHTML = '';
+        if (closeModal) {
+          closeModal.addEventListener('click', function() {
+            newChatModal.style.display = 'none';
+          });
+        }
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+          if (event.target === newChatModal) {
+            newChatModal.style.display = 'none';
           }
         });
-      }
-      
-      function displaySearchResults(employees) {
-        searchResults.innerHTML = '';
-        const currentUserId = parseInt(document.body.dataset.userId);
         
-        employees.forEach(employee => {
-          // Don't show current user in search results
-          if (employee.employee_id === currentUserId) return;
+        // User search functionality
+        if (userSearch && searchResults) {
+          let searchTimeout;
           
-          const employeeDiv = document.createElement('div');
-          employeeDiv.className = 'user-search-result p-3 flex items-center space-x-3';
-          employeeDiv.innerHTML = `
-            ${employee.profile_image ? 
-              `<img src="${employee.profile_image}" alt="${employee.employee_name}" class="w-10 h-10 rounded-full object-cover">` : 
-              `<div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                <i class="fas fa-user text-gray-500"></i>
-              </div>`}
-            <div>
-              <p class="font-medium">${employee.employee_name}</p>
-              <p class="text-sm text-gray-500">${employee.position || ''}</p>
-            </div>
-          `;
-          
-          employeeDiv.addEventListener('click', function() {
-            // Check if a chat already exists with this user
-            checkExistingChat(employee.employee_id, employee.employee_name);
+          userSearch.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const searchTerm = this.value.trim();
+            
+            if (searchTerm.length > 1) {
+              searchTimeout = setTimeout(() => {
+                fetch(`/chat/search-employees?term=${encodeURIComponent(searchTerm)}`)
+                  .then(response => response.json())
+                  .then(data => {
+                    if (data.success && data.employees.length > 0) {
+                      displaySearchResults(data.employees);
+                    } else {
+                      searchResults.innerHTML = '<p class="text-gray-500 p-4">No employees found</p>';
+                    }
+                  })
+                  .catch(error => {
+                    console.error('Search error:', error);
+                    searchResults.innerHTML = '<p class="text-red-500 p-4">Error searching employees</p>';
+                  });
+              }, 300);
+            } else {
+              searchResults.innerHTML = '';
+            }
           });
+        }
+        
+        function displaySearchResults(employees) {
+          if (!searchResults) return;
           
-          searchResults.appendChild(employeeDiv);
-        });
-      }
-      
-      function checkExistingChat(userId, userName) {
-        fetch('/chat/private-chats')
+          searchResults.innerHTML = '';
+          const currentUserId = parseInt(document.body.dataset.userId);
+          
+          employees.forEach(employee => {
+            // Don't show current user in search results
+            if (employee.employee_id === currentUserId) return;
+            
+            const employeeDiv = document.createElement('div');
+            employeeDiv.className = 'user-search-result p-3 flex items-center space-x-3 hover:bg-gray-100 rounded-lg';
+            employeeDiv.innerHTML = `
+              ${employee.profile_image ? 
+                `<img src="${employee.profile_image}" alt="${employee.employee_name}" class="w-10 h-10 rounded-full object-cover">` : 
+                `<div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                  <i class="fas fa-user text-gray-500"></i>
+                </div>`}
+              <div class="flex-1">
+                <p class="font-medium text-gray-900">${employee.employee_name}</p>
+                <p class="text-sm text-gray-500">${employee.position || ''}</p>
+              </div>
+            `;
+            
+            employeeDiv.addEventListener('click', function() {
+              // Check if a chat already exists with this user
+              checkExistingChat(employee.employee_id, employee.employee_name);
+            });
+            
+            searchResults.appendChild(employeeDiv);
+          });
+        }
+        
+        function checkExistingChat(userId, userName) {
+          fetch('/chat/private-chats')
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                const existingChat = data.privateChats.find(chat => 
+                  chat.other_user_id === userId);
+                
+                if (existingChat) {
+                  // Redirect to existing chat
+                  window.location.href = `/chat/private/${existingChat.chat_id}/${userId}`;
+                } else {
+                  // Create new chat and redirect
+                  createNewChat(userId, userName);
+                }
+              }
+            })
+            .catch(error => {
+              console.error('Error checking existing chats:', error);
+            });
+        }
+        
+        function createNewChat(userId, userName) {
+          fetch('/chat/send', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              chatType: 'private',
+              receiverId: userId,
+              message: `Started a new chat with ${userName}`
+            })
+          })
           .then(response => response.json())
           .then(data => {
             if (data.success) {
-              const existingChat = data.privateChats.find(chat => 
-                chat.other_user_id === userId);
-              
-              if (existingChat) {
-                // Redirect to existing chat
-                window.location.href = `/chat/private/${existingChat.chat_id}/${userId}`;
-              } else {
-                // Create new chat and redirect
-                createNewChat(userId, userName);
-              }
+              // Redirect to the new chat
+              window.location.href = `/chat/private/${data.chatId}/${userId}`;
             }
           })
           .catch(error => {
-            console.error('Error checking existing chats:', error);
+            console.error('Error creating new chat:', error);
+            alert('Failed to start new chat. Please try again.');
           });
-      }
-      
-        function createNewChat(userId, userName) {
-        fetch('/chat/send', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            chatType: 'private',
-            receiverId: userId,
-            message: `Started a new chat with ${userName}`
-          })
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            // Redirect to the new chat
-            window.location.href = `/chat/private/${data.chatId}/${userId}`;
-          }
-        })
-        .catch(error => {
-          console.error('Error creating new chat:', error);
-          alert('Failed to start new chat. Please try again.');
-        });
+        }
       }
     });
   </script>
