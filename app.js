@@ -39,11 +39,6 @@ app.use(session({
 }));
 app.use(flash());
 
-// Configure multer for multipart/form-data (no file uploads)
-const multer = require('multer');
-const upload = multer(); // No storage needed since no files are uploaded
-app.use(upload.none()); // Parse multipart/form-data without files
-
 // Flash middleware
 app.use((req, res, next) => {
   res.locals.success = req.flash('success');
