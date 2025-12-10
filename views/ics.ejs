@@ -888,7 +888,6 @@
               <h4 class="text-lg font-semibold">${item.property_no || 'N/A'}</h4>
               <p class="mb-1"><strong>${item.description || 'No Description'}</strong></p>
               <p class="mb-1">Dept: ${item.dept || 'N/A'}</p>
-              <p class="mb-1">Value: ₱${item.unit_of_value ? parseFloat(item.unit_of_value).toLocaleString() : 'N/A'}</p>
               <p class="mb-1">Acquired: ${item.date_acq ? new Date(item.date_acq).toLocaleDateString() : 'N/A'}</p>
             </div>
           `;
