@@ -563,14 +563,9 @@ submitBid: async (req, res) => {
             
             console.log(`Bid items inserted for bid ID: ${bidId}`);
             
-            // Update purchase request status to 'bidding' if it's still 'posted'
-            if (bidding.pr_status === 'posted') {
-                await db.query(
-                    'UPDATE purchase_requests SET status = ? WHERE pr_id = ?',
-                    ['bidding', bidding.pr_id]
-                );
-                console.log(`PR ${bidding.pr_id} status updated to 'bidding'`);
-            }
+            // Don't update PR status - keep it as 'posted'
+            // The bidding status is tracked in the biddings table, not in purchase_requests
+            console.log(`PR ${bidding.pr_id} remains in 'posted' status`);
             
             res.json({ 
                 success: true, 
@@ -604,6 +599,7 @@ submitBid: async (req, res) => {
         });
     }
 },
+
 // Get supplier's bids
     getMyBids: async (req, res) => {
         try {
